@@ -34,6 +34,14 @@ services:
         value: "24"
       - key: Cors__AllowedOrigins__0
         sync: false  # Set this to your frontend URL after deploying
+      - key: AdminSeed__UserName
+        value: admin
+      - key: AdminSeed__Email
+        value: admin@blogspot.com
+      - key: AdminSeed__Password
+        sync: false  # Set a strong password in the Render dashboard
+      - key: AdminSeed__DisplayName
+        value: Administrator
 
   # ---- Angular Frontend ----
   - type: web

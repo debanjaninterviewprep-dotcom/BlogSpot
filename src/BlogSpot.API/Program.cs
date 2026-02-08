@@ -100,6 +100,34 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<BlogSpot.Infrastructure.Data.AppDbContext>();
     db.Database.Migrate();
+
+    // Auto-seed admin account if none exists
+    var adminExists = await db.Set<BlogSpot.Domain.Entities.User>()
+        .AnyAsync(u => u.Role == BlogSpot.Domain.Enums.UserRole.Admin);
+
+    if (!adminExists)
+    {
+        var adminConfig = app.Configuration.GetSection("AdminSeed");
+        var adminUser = new BlogSpot.Domain.Entities.User
+        {
+            UserName = adminConfig["UserName"] ?? "admin",
+            Email = adminConfig["Email"] ?? "admin@blogspot.com",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(adminConfig["Password"] ?? "Admin@123456"),
+            Role = BlogSpot.Domain.Enums.UserRole.Admin,
+            IsActive = true
+        };
+        db.Set<BlogSpot.Domain.Entities.User>().Add(adminUser);
+
+        var adminProfile = new BlogSpot.Domain.Entities.Profile
+        {
+            UserId = adminUser.Id,
+            DisplayName = adminConfig["DisplayName"] ?? "Administrator"
+        };
+        db.Set<BlogSpot.Domain.Entities.Profile>().Add(adminProfile);
+
+        await db.SaveChangesAsync();
+        Log.Information("Admin account seeded: {Username}", adminUser.UserName);
+    }
 }
 
 // Middleware pipeline
