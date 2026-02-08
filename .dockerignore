@@ -1,0 +1,13 @@
+**/.git
+**/.vs
+**/bin
+**/obj
+**/node_modules
+**/dist
+**/.angular
+**/logs
+**/BackUps
+**/*.user
+**/*.suo
+**/Thumbs.db
+**/.DS_Store

@@ -1,0 +1,52 @@
+# =============================================================
+# Render Blueprint — Push to GitHub, then deploy on render.com
+# https://render.com/docs/blueprint-spec
+# =============================================================
+databases:
+  - name: blogspot-db
+    plan: free
+    databaseName: blogspot
+    user: blogspot
+
+services:
+  # ---- .NET Backend API ----
+  - type: web
+    name: blogspot-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ConnectionStrings__DefaultConnection
+        fromDatabase:
+          name: blogspot-db
+          property: connectionURI
+      - key: Jwt__Key
+        generateValue: true
+      - key: Jwt__Issuer
+        value: BlogSpot.API
+      - key: Jwt__Audience
+        value: BlogSpot.Client
+      - key: Jwt__ExpirationInHours
+        value: "24"
+      - key: Cors__AllowedOrigins__0
+        sync: false  # Set this to your frontend URL after deploying
+
+  # ---- Angular Frontend ----
+  - type: web
+    name: blogspot-client
+    runtime: static
+    buildCommand: cd blogspot-client && npm ci && npx ng build --configuration production
+    staticPublishPath: blogspot-client/dist/blogspot-client
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: SAMEORIGIN
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
