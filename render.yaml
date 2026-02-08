@@ -1,11 +1,13 @@
 # =============================================================
 # Render Blueprint — Push to GitHub, then deploy on render.com
 # https://render.com/docs/blueprint-spec
-#
-# Database: Uses external Azure SQL Server (free tier).
-#           Set ConnectionStrings__DefaultConnection in Render
-#           dashboard after creating your Azure SQL database.
 # =============================================================
+databases:
+  - name: blogspot-db
+    plan: free
+    databaseName: blogspot
+    user: blogspot
+
 services:
   # ---- .NET Backend API ----
   - type: web
@@ -17,7 +19,9 @@ services:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
       - key: ConnectionStrings__DefaultConnection
-        sync: false  # Set your Azure SQL connection string in Render dashboard
+        fromDatabase:
+          name: blogspot-db
+          property: connectionString
       - key: Jwt__Key
         generateValue: true
       - key: Jwt__Issuer

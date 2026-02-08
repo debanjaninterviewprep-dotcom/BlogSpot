@@ -3,6 +3,7 @@ using BlogSpot.API.Middleware;
 using BlogSpot.Application;
 using BlogSpot.Infrastructure;
 using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Serilog;
 
@@ -93,6 +94,13 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var app = builder.Build();
+
+// Auto-apply migrations on startup (for deployment)
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<BlogSpot.Infrastructure.Data.AppDbContext>();
+    db.Database.Migrate();
+}
 
 // Middleware pipeline
 if (app.Environment.IsDevelopment())

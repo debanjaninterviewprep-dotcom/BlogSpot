@@ -19,7 +19,7 @@ public static class DependencyInjection
     {
         // Entity Framework Core
         services.AddDbContext<AppDbContext>(options =>
-            options.UseSqlServer(
+            options.UseNpgsql(
                 configuration.GetConnectionString("DefaultConnection"),
                 b => b.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName)));
 
