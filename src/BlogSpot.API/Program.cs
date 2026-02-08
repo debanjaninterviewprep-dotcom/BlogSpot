@@ -103,15 +103,15 @@ using (var scope = app.Services.CreateScope())
 }
 
 // Middleware pipeline
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "BlogSpot API v1"));
-}
+app.UseSwagger();
+app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "BlogSpot API v1"));
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-app.UseHttpsRedirection();
+// Only redirect to HTTPS in development (Render handles SSL at proxy level)
+if (app.Environment.IsDevelopment())
+    app.UseHttpsRedirection();
+
 app.UseStaticFiles(); // For serving uploaded images
 
 app.UseResponseCompression();
@@ -124,5 +124,8 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapHub<NotificationHub>("/hubs/notifications");
+
+// Health check at root
+app.MapGet("/", () => Results.Ok(new { status = "healthy", service = "BlogSpot API", timestamp = DateTime.UtcNow }));
 
 app.Run();
