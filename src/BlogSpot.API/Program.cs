@@ -108,25 +108,41 @@ using (var scope = app.Services.CreateScope())
     if (!adminExists)
     {
         var adminConfig = app.Configuration.GetSection("AdminSeed");
-        var adminUser = new BlogSpot.Domain.Entities.User
-        {
-            UserName = adminConfig["UserName"] ?? "admin",
-            Email = adminConfig["Email"] ?? "admin@blogspot.com",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(adminConfig["Password"] ?? "Admin@123456"),
-            Role = BlogSpot.Domain.Enums.UserRole.Admin,
-            IsActive = true
-        };
-        db.Set<BlogSpot.Domain.Entities.User>().Add(adminUser);
+        var seedEmail = adminConfig["Email"] ?? "admin@blogspot.com";
+        var seedUserName = adminConfig["UserName"] ?? "admin";
 
-        var adminProfile = new BlogSpot.Domain.Entities.Profile
-        {
-            UserId = adminUser.Id,
-            DisplayName = adminConfig["DisplayName"] ?? "Administrator"
-        };
-        db.Set<BlogSpot.Domain.Entities.Profile>().Add(adminProfile);
+        // Check if user with same email or username already exists — promote instead of duplicating
+        var existingUser = await db.Set<BlogSpot.Domain.Entities.User>()
+            .FirstOrDefaultAsync(u => u.Email == seedEmail || u.UserName == seedUserName);
 
-        await db.SaveChangesAsync();
-        Log.Information("Admin account seeded: {Username}", adminUser.UserName);
+        if (existingUser != null)
+        {
+            existingUser.Role = BlogSpot.Domain.Enums.UserRole.Admin;
+            await db.SaveChangesAsync();
+            Log.Information("Existing user '{Username}' promoted to Admin", existingUser.UserName);
+        }
+        else
+        {
+            var adminUser = new BlogSpot.Domain.Entities.User
+            {
+                UserName = seedUserName,
+                Email = seedEmail,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(adminConfig["Password"] ?? "Admin@123456"),
+                Role = BlogSpot.Domain.Enums.UserRole.Admin,
+                IsActive = true
+            };
+            db.Set<BlogSpot.Domain.Entities.User>().Add(adminUser);
+
+            var adminProfile = new BlogSpot.Domain.Entities.Profile
+            {
+                UserId = adminUser.Id,
+                DisplayName = adminConfig["DisplayName"] ?? "Administrator"
+            };
+            db.Set<BlogSpot.Domain.Entities.Profile>().Add(adminProfile);
+
+            await db.SaveChangesAsync();
+            Log.Information("Admin account seeded: {Username}", adminUser.UserName);
+        }
     }
 }
 
