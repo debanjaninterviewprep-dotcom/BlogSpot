@@ -156,12 +156,12 @@ app.UseMiddleware<ExceptionHandlingMiddleware>();
 if (app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 
-app.UseStaticFiles(); // For serving uploaded images
-
 app.UseResponseCompression();
 app.UseResponseCaching();
 
 app.UseCors("AllowAngular");
+
+app.UseStaticFiles(); // Serve uploaded images (after CORS so cross-origin requests work)
 
 app.UseAuthentication();
 app.UseAuthorization();

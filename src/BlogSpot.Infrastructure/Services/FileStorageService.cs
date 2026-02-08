@@ -1,4 +1,5 @@
 using BlogSpot.Application.Interfaces;
+using Microsoft.AspNetCore.Hosting;
 
 namespace BlogSpot.Infrastructure.Services;
 
@@ -6,9 +7,9 @@ public class FileStorageService : IFileStorageService
 {
     private readonly string _uploadPath;
 
-    public FileStorageService()
+    public FileStorageService(IWebHostEnvironment env)
     {
-        _uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+        _uploadPath = Path.Combine(env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"), "uploads");
         Directory.CreateDirectory(_uploadPath);
     }
 

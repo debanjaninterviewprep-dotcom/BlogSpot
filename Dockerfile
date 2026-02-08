@@ -33,7 +33,10 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 
-# Create uploads directory
-RUN mkdir -p wwwroot/uploads
+# Create uploads directory with proper permissions for non-root user
+USER root
+RUN mkdir -p wwwroot/uploads/images wwwroot/uploads/files && \
+    chown -R app:app wwwroot/uploads
+USER app
 
 ENTRYPOINT ["dotnet", "BlogSpot.API.dll"]
