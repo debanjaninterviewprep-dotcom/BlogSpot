@@ -18,6 +18,8 @@ services:
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
+      - key: DatabaseProvider
+        value: PostgreSQL
       - key: ConnectionStrings__DefaultConnection
         fromDatabase:
           name: blogspot-db

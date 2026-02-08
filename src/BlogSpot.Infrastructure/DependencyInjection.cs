@@ -17,11 +17,17 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        // Entity Framework Core
+        // Entity Framework Core — switch provider based on config
+        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        var dbProvider = configuration.GetValue<string>("DatabaseProvider") ?? "SqlServer";
+
         services.AddDbContext<AppDbContext>(options =>
-            options.UseNpgsql(
-                configuration.GetConnectionString("DefaultConnection"),
-                b => b.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName)));
+        {
+            if (dbProvider.Equals("PostgreSQL", StringComparison.OrdinalIgnoreCase))
+                options.UseNpgsql(connectionString, b => b.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName));
+            else
+                options.UseSqlServer(connectionString, b => b.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName));
+        });
 
         // Repositories
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
