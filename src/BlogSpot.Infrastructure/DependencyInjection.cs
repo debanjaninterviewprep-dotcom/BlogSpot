@@ -21,6 +21,15 @@ public static class DependencyInjection
         var connectionString = configuration.GetConnectionString("DefaultConnection");
         var dbProvider = configuration.GetValue<string>("DatabaseProvider") ?? "SqlServer";
 
+        // Render provides PostgreSQL URIs (postgresql://user:pass@host/db)
+        // Convert to Npgsql key-value format if needed
+        if (dbProvider.Equals("PostgreSQL", StringComparison.OrdinalIgnoreCase)
+            && !string.IsNullOrEmpty(connectionString)
+            && connectionString.StartsWith("postgres", StringComparison.OrdinalIgnoreCase))
+        {
+            connectionString = ConvertPostgresUri(connectionString);
+        }
+
         services.AddDbContext<AppDbContext>(options =>
         {
             if (dbProvider.Equals("PostgreSQL", StringComparison.OrdinalIgnoreCase))
@@ -85,5 +94,24 @@ public static class DependencyInjection
         });
 
         return services;
+    }
+
+    /// <summary>
+    /// Converts a PostgreSQL URI (postgresql://user:pass@host:port/dbname) to Npgsql key-value format.
+    /// </summary>
+    private static string ConvertPostgresUri(string uri)
+    {
+        var dbUri = new Uri(uri);
+        var userInfo = dbUri.UserInfo.Split(':');
+        var builder = new Npgsql.NpgsqlConnectionStringBuilder
+        {
+            Host = dbUri.Host,
+            Port = dbUri.Port > 0 ? dbUri.Port : 5432,
+            Database = dbUri.AbsolutePath.TrimStart('/'),
+            Username = userInfo[0],
+            Password = userInfo.Length > 1 ? userInfo[1] : string.Empty,
+            SslMode = Npgsql.SslMode.Require
+        };
+        return builder.ConnectionString;
     }
 }
