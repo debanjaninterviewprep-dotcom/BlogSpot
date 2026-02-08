@@ -18,7 +18,7 @@ import { AuthService } from '@core/services/auth.service';
         <mat-card-content>
           <!-- Cover Photo -->
           <div class="cover-section">
-            <div class="cover-preview" [style.backgroundImage]="coverPreviewUrl ? 'url(' + coverPreviewUrl + ')' : ''">
+            <div class="cover-preview" [style.backgroundImage]="coverPreviewUrl ? 'url(' + (coverPreviewUrl | imageUrl) + ')' : ''">
               <button mat-mini-fab color="primary" (click)="coverInput.click()">
                 <mat-icon>photo_camera</mat-icon>
               </button>
@@ -28,7 +28,7 @@ import { AuthService } from '@core/services/auth.service';
 
           <!-- Avatar -->
           <div class="avatar-section">
-            <img [src]="previewUrl || 'assets/default-avatar.svg'" class="avatar-preview">
+            <img [src]="(previewUrl | imageUrl) || 'assets/default-avatar.svg'" class="avatar-preview">
             <button mat-stroked-button (click)="fileInput.click()">
               <mat-icon>photo_camera</mat-icon>
               Change Photo

@@ -12,13 +12,13 @@ import { MatSnackBar } from '@angular/material/snack-bar';
   template: `
     <div class="profile-container" *ngIf="profile">
       <!-- Cover Photo -->
-      <div class="cover-photo" [style.backgroundImage]="profile.coverPhotoUrl ? 'url(' + profile.coverPhotoUrl + ')' : ''">
+      <div class="cover-photo" [style.backgroundImage]="profile.coverPhotoUrl ? 'url(' + (profile.coverPhotoUrl | imageUrl) + ')' : ''">
         <div class="cover-overlay"></div>
       </div>
 
       <mat-card class="profile-header">
         <div class="profile-top">
-          <img [src]="profile.profilePictureUrl || 'assets/default-avatar.svg'" 
+          <img [src]="(profile.profilePictureUrl | imageUrl) || 'assets/default-avatar.svg'" 
                class="profile-avatar" [alt]="profile.userName">
           <div class="profile-info">
             <h1>{{ profile.displayName || profile.userName }}</h1>

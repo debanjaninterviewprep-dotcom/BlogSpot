@@ -7,7 +7,7 @@ import { BlogPost, ReactionType } from '@core/models/blog.model';
     <mat-card class="post-card" *ngIf="post">
       <mat-card-header>
         <img mat-card-avatar 
-             [src]="post.authorProfilePictureUrl || 'assets/default-avatar.svg'" 
+             [src]="(post.authorProfilePictureUrl | imageUrl) || 'assets/default-avatar.svg'" 
              [alt]="post.authorUserName">
         <mat-card-title>
           <a [routerLink]="['/blog', post.slug]">{{ post.title }}</a>
@@ -36,7 +36,7 @@ import { BlogPost, ReactionType } from '@core/models/blog.model';
 
         <div class="post-images" *ngIf="post.images?.length">
           <img *ngFor="let img of post.images | slice:0:3" 
-               [src]="img.imageUrl" [alt]="img.altText || post.title" 
+               [src]="img.imageUrl | imageUrl" [alt]="img.altText || post.title" 
                class="post-image">
         </div>
       </mat-card-content>

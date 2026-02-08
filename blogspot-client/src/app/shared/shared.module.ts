@@ -28,6 +28,7 @@ import { MatListModule } from '@angular/material/list';
 import { PostCardComponent } from './components/post-card/post-card.component';
 import { UserCardComponent } from './components/user-card/user-card.component';
 import { LoadingSpinnerComponent } from './components/loading-spinner/loading-spinner.component';
+import { ImageUrlPipe } from './pipes/image-url.pipe';
 
 const materialModules = [
   MatToolbarModule,
@@ -56,7 +57,8 @@ const materialModules = [
   declarations: [
     PostCardComponent,
     UserCardComponent,
-    LoadingSpinnerComponent
+    LoadingSpinnerComponent,
+    ImageUrlPipe
   ],
   imports: [
     CommonModule,
@@ -73,7 +75,8 @@ const materialModules = [
     ...materialModules,
     PostCardComponent,
     UserCardComponent,
-    LoadingSpinnerComponent
+    LoadingSpinnerComponent,
+    ImageUrlPipe
   ]
 })
 export class SharedModule { }

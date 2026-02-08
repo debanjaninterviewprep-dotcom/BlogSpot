@@ -6,7 +6,7 @@ import { UserProfile } from '@core/models/user.model';
   template: `
     <mat-card class="user-card" *ngIf="user">
       <div class="user-info">
-        <img [src]="user.profilePictureUrl || 'assets/default-avatar.svg'" 
+        <img [src]="(user.profilePictureUrl | imageUrl) || 'assets/default-avatar.svg'" 
              [alt]="user.userName" class="avatar">
         <div class="details">
           <a [routerLink]="['/profile', user.userName]" class="username">

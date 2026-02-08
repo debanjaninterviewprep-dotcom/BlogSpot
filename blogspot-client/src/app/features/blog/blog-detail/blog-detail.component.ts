@@ -13,7 +13,7 @@ import { BlogPost, Comment, ReactionType, ReactionSummaryDto } from '@core/model
       <mat-card class="post-detail">
         <div class="post-header">
           <div class="author-info">
-            <img [src]="post.authorProfilePictureUrl || 'assets/default-avatar.svg'" 
+            <img [src]="(post.authorProfilePictureUrl | imageUrl) || 'assets/default-avatar.svg'" 
                  class="author-avatar" [alt]="post.authorUserName">
             <div>
               <a [routerLink]="['/profile', post.authorUserName]" class="author-name">
@@ -50,7 +50,7 @@ import { BlogPost, Comment, ReactionType, ReactionSummaryDto } from '@core/model
         </div>
 
         <div class="post-images" *ngIf="post.images?.length">
-          <img *ngFor="let img of post.images" [src]="img.imageUrl" 
+          <img *ngFor="let img of post.images" [src]="img.imageUrl | imageUrl" 
                [alt]="img.altText || post.title" class="post-image">
         </div>
 
@@ -111,7 +111,7 @@ import { BlogPost, Comment, ReactionType, ReactionSummaryDto } from '@core/model
 
           <div *ngFor="let comment of comments" class="comment">
             <div class="comment-header">
-              <img [src]="comment.userProfilePictureUrl || 'assets/default-avatar.svg'" 
+              <img [src]="(comment.userProfilePictureUrl | imageUrl) || 'assets/default-avatar.svg'" 
                    class="comment-avatar">
               <div>
                 <a [routerLink]="['/profile', comment.userName]" class="comment-author">
@@ -144,7 +144,7 @@ import { BlogPost, Comment, ReactionType, ReactionSummaryDto } from '@core/model
             <!-- Replies -->
             <div *ngFor="let reply of comment.replies" class="reply">
               <div class="comment-header">
-                <img [src]="reply.userProfilePictureUrl || 'assets/default-avatar.svg'" 
+                <img [src]="(reply.userProfilePictureUrl | imageUrl) || 'assets/default-avatar.svg'" 
                      class="comment-avatar small">
                 <a [routerLink]="['/profile', reply.userName]" class="comment-author">
                   {{ reply.userDisplayName || reply.userName }}
