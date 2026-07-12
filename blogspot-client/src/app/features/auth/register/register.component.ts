@@ -29,7 +29,7 @@ function passwordStrengthValidator(control: AbstractControl): ValidationErrors |
         <mat-card-content>
           <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
             <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Username*</mat-label>
+              <mat-label>Username</mat-label>
               <input matInput formControlName="userName" autocomplete="username">
               <mat-icon matPrefix>person</mat-icon>
               <mat-error *ngIf="registerForm.get('userName')?.hasError('required')">Username is required</mat-error>
@@ -44,7 +44,7 @@ function passwordStrengthValidator(control: AbstractControl): ValidationErrors |
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Email*</mat-label>
+              <mat-label>Email</mat-label>
               <input matInput formControlName="email" type="email" autocomplete="email">
               <mat-icon matPrefix>email</mat-icon>
               <mat-error *ngIf="registerForm.get('email')?.hasError('required')">Email is required</mat-error>
@@ -52,7 +52,7 @@ function passwordStrengthValidator(control: AbstractControl): ValidationErrors |
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Password*</mat-label>
+              <mat-label>Password</mat-label>
               <input matInput formControlName="password"
                      [type]="hidePassword ? 'password' : 'text'"
                      autocomplete="new-password">
@@ -66,20 +66,20 @@ function passwordStrengthValidator(control: AbstractControl): ValidationErrors |
               <mat-error *ngIf="registerForm.get('password')?.hasError('noUppercase')">Add an uppercase letter</mat-error>
               <mat-error *ngIf="registerForm.get('password')?.hasError('noLowercase')">Add a lowercase letter</mat-error>
               <mat-error *ngIf="registerForm.get('password')?.hasError('noNumber')">Add a number</mat-error>
-              <mat-error *ngIf="registerForm.get('password')?.hasError('noSpecial')">Add a special character (&#64;$!%*?&amp;#)</mat-error>
+              <mat-error *ngIf="registerForm.get('password')?.hasError('noSpecial')">Add a special character (!$%*?#&amp;)</mat-error>
             </mat-form-field>
 
             <!-- Password strength indicator -->
             <div class="password-hints" *ngIf="registerForm.get('password')?.dirty">
-              <span [class.met]="!registerForm.get('password')?.hasError('minlength')">âœ“ 8+ characters</span>
-              <span [class.met]="!registerForm.get('password')?.hasError('noUppercase')">âœ“ Uppercase</span>
-              <span [class.met]="!registerForm.get('password')?.hasError('noLowercase')">âœ“ Lowercase</span>
-              <span [class.met]="!registerForm.get('password')?.hasError('noNumber')">âœ“ Number</span>
-              <span [class.met]="!registerForm.get('password')?.hasError('noSpecial')">âœ“ Special char</span>
+              <span [class.met]="!registerForm.get('password')?.hasError('minlength')"><mat-icon>{{ !registerForm.get('password')?.hasError('minlength') ? 'check_circle' : 'radio_button_unchecked' }}</mat-icon>8+ chars</span>
+              <span [class.met]="!registerForm.get('password')?.hasError('noUppercase')"><mat-icon>{{ !registerForm.get('password')?.hasError('noUppercase') ? 'check_circle' : 'radio_button_unchecked' }}</mat-icon>Uppercase</span>
+              <span [class.met]="!registerForm.get('password')?.hasError('noLowercase')"><mat-icon>{{ !registerForm.get('password')?.hasError('noLowercase') ? 'check_circle' : 'radio_button_unchecked' }}</mat-icon>Lowercase</span>
+              <span [class.met]="!registerForm.get('password')?.hasError('noNumber')"><mat-icon>{{ !registerForm.get('password')?.hasError('noNumber') ? 'check_circle' : 'radio_button_unchecked' }}</mat-icon>Number</span>
+              <span [class.met]="!registerForm.get('password')?.hasError('noSpecial')"><mat-icon>{{ !registerForm.get('password')?.hasError('noSpecial') ? 'check_circle' : 'radio_button_unchecked' }}</mat-icon>Special char</span>
             </div>
 
             <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Confirm Password*</mat-label>
+              <mat-label>Confirm Password</mat-label>
               <input matInput formControlName="confirmPassword" type="password"
                      autocomplete="new-password">
               <mat-icon matPrefix>lock_outline</mat-icon>
@@ -132,7 +132,18 @@ function passwordStrengthValidator(control: AbstractControl): ValidationErrors |
       margin: -4px 0 8px;
       font-size: 12px;
     }
-    .password-hints span { color: #aaa; transition: color 0.2s; }
+    .password-hints span {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      color: #bbb;
+      transition: color 0.2s;
+    }
+    .password-hints span mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+    }
     .password-hints span.met { color: #4caf50; }
     @media (max-width: 480px) {
       .auth-card { padding: 16px; }

@@ -160,6 +160,16 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     .profile-actions { display: flex; flex-direction: column; gap: 8px; }
     .tab-content { padding: 16px 0; }
     .empty-state { text-align: center; padding: 32px; color: #888; }
+    @media (max-width: 600px) {
+      .profile-header { padding: 16px; }
+      .profile-top { flex-wrap: wrap; }
+      .profile-avatar { width: 80px; height: 80px; margin-top: -40px; border-width: 3px; }
+      .profile-info h1 { font-size: 1.2rem; }
+      .profile-actions { flex-direction: row; flex-wrap: wrap; width: 100%; margin-top: 8px; }
+      .profile-actions button { flex: 1; min-width: 120px; }
+      .stats { gap: 16px; font-size: 14px; }
+      .cover-photo { height: 140px; }
+    }
   `]
 })
 export class ProfileViewComponent implements OnInit {
