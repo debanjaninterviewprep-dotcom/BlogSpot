@@ -26,6 +26,9 @@ export class ThemeService {
   setTheme(theme: Theme): void {
     document.body.classList.remove('light-theme', 'dark-theme');
     document.body.classList.add(`${theme}-theme`);
+    // Also toggle on html element so full-page background is dark
+    document.documentElement.classList.remove('light-theme', 'dark-theme');
+    document.documentElement.classList.add(`${theme}-theme`);
     localStorage.setItem('blogspot-theme', theme);
     this.themeSubject.next(theme);
   }

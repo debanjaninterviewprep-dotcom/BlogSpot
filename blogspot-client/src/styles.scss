@@ -9,6 +9,12 @@ html, body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+/* Dark mode on html element (set by ThemeService) */
+html.dark-theme {
+  background-color: #121212;
+  color-scheme: dark;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
@@ -156,9 +162,12 @@ body.dark-theme {
   .handle, .meta span, .post-stats span { color: #888 !important; }
   .bio { color: #bbb !important; }
 
-  /* Cover photo fallback */
+  /* Cover photo — only fallback color, NOT shorthand so inline background-image still works */
   .cover-photo {
-    background: linear-gradient(135deg, #1a237e, #283593) !important;
+    background-color: #1a237e !important;
+  }
+  .cover-photo:not([style*="background-image"]) {
+    background-image: linear-gradient(135deg, #1a237e, #283593) !important;
   }
 
   /* Profile */
@@ -217,33 +226,118 @@ body.dark-theme {
 }
 
 /* =============================
-   MOBILE RESPONSIVE FIXES
+   MOBILE RESPONSIVE — GLOBAL
    ============================= */
 * { box-sizing: border-box; }
 
+/* Global page offset for fixed navbar */
+body { padding-top: 64px; }
+
+/* All page containers */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+/* ---- Small tablets & large phones (≤768px) ---- */
+@media (max-width: 768px) {
+  /* Feed sidebar already hidden via component CSS */
+
+  /* Blog create / edit */
+  .create-container {
+    max-width: 100% !important;
+    padding: 0 8px !important;
+  }
+
+  /* Blog detail */
+  .detail-container {
+    max-width: 100% !important;
+    padding: 0 8px !important;
+  }
+
+  /* Admin container */
+  .admin-container {
+    max-width: 100% !important;
+    padding: 0 8px !important;
+  }
+  .admin-container table {
+    font-size: 13px;
+  }
+
+  /* Profile */
+  .profile-container {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+
+  /* Notifications */
+  .notifications-container {
+    max-width: 100% !important;
+    padding: 0 8px !important;
+  }
+
+  /* Cards */
+  .mat-mdc-card { border-radius: 8px !important; }
+
+  /* Tabs label font */
+  .mat-mdc-tab { min-width: 80px !important; font-size: 13px !important; }
+}
+
+/* ---- Phones (≤599px) ---- */
 @media (max-width: 599px) {
-  /* Auth cards */
+  body { padding-top: 56px; }
+
+  /* Container */
+  .container { padding: 0 8px; }
+
+  /* Auth pages */
   .auth-container {
     align-items: flex-start !important;
-    padding: 16px !important;
+    padding: 12px !important;
+    min-height: calc(100vh - 56px) !important;
   }
   .auth-card {
     max-width: 100% !important;
     padding: 16px !important;
+    border-radius: 12px !important;
   }
-  mat-card-actions {
-    flex-wrap: wrap;
-  }
+  mat-card-actions { flex-wrap: wrap; }
 
-  /* General spacing */
-  .container { padding: 0 8px; }
-
-  /* Tables: horizontal scroll */
+  /* Tables: horizontal scroll on mobile */
   .tab-content { overflow-x: auto; }
-}
+  .mat-mdc-table { min-width: 500px; }
 
-/* Global page offset for fixed navbar */
-body { padding-top: 64px; }
+  /* Typography */
+  h1 { font-size: 1.4rem !important; }
+  h2 { font-size: 1.2rem !important; }
+  h3 { font-size: 1.05rem !important; }
+
+  /* Stat cards on analytics etc */
+  .stats-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+
+  /* Form fields — full width always */
+  .mat-mdc-form-field { width: 100% !important; }
+
+  /* Post card */
+  .post-card { margin: 0 0 12px !important; }
+
+  /* Actions row in blog create */
+  .actions {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  .actions button { flex: 1; min-width: 100px; }
+
+  /* Reaction buttons */
+  .reactions { flex-wrap: wrap !important; gap: 4px !important; }
+
+  /* Chip sets */
+  .mat-mdc-chip-set { flex-wrap: wrap !important; }
+}
 
 /* Skeleton loader animation */
 @keyframes skeleton-loading {

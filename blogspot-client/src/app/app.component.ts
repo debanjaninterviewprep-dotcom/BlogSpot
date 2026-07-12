@@ -10,7 +10,6 @@ import { Component } from '@angular/core';
   `,
   styles: [`
     main {
-      padding-top: 64px;
       min-height: calc(100vh - 64px);
     }
   `]
