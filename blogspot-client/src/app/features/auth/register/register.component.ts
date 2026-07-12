@@ -66,7 +66,7 @@ function passwordStrengthValidator(control: AbstractControl): ValidationErrors |
               <mat-error *ngIf="registerForm.get('password')?.hasError('noUppercase')">Add an uppercase letter</mat-error>
               <mat-error *ngIf="registerForm.get('password')?.hasError('noLowercase')">Add a lowercase letter</mat-error>
               <mat-error *ngIf="registerForm.get('password')?.hasError('noNumber')">Add a number</mat-error>
-              <mat-error *ngIf="registerForm.get('password')?.hasError('noSpecial')">Add a special character (@$!%*?&amp;#)</mat-error>
+              <mat-error *ngIf="registerForm.get('password')?.hasError('noSpecial')">Add a special character (&#64;$!%*?&amp;#)</mat-error>
             </mat-form-field>
 
             <!-- Password strength indicator -->
@@ -173,20 +173,6 @@ export class RegisterComponent {
     const { confirmPassword, ...payload } = this.registerForm.value;
     this.authService.register(payload).subscribe({
       next: () => {
-        this.router.navigate(['/feed']);
-        this.snackBar.open('Welcome to BlogSpot!', 'Close', { duration: 3000 });
-      },
-      error: (err) => {
-        this.isLoading = false;
-        this.snackBar.open(
-          err.error?.message || 'Registration failed. Please try again.',
-          'Close',
-          { duration: 5000 }
-        );
-      }
-    });
-  }
-}
         this.router.navigate(['/feed']);
         this.snackBar.open('Welcome to BlogSpot!', 'Close', { duration: 3000 });
       },
