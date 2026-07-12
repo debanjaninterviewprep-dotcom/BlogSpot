@@ -169,7 +169,8 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapHub<NotificationHub>("/hubs/notifications");
 
-// Health check at root
+// Health check endpoints (root + /api/health for keep-alive cron jobs)
 app.MapGet("/", () => Results.Ok(new { status = "healthy", service = "BlogSpot API", timestamp = DateTime.UtcNow }));
+app.MapGet("/api/health", () => Results.Ok(new { status = "healthy", service = "BlogSpot API", timestamp = DateTime.UtcNow }));
 
 app.Run();
