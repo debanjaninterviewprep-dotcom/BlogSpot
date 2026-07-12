@@ -47,3 +47,10 @@ services:
         sync: false  # Set a strong password in the Render dashboard
       - key: AdminSeed__DisplayName
         value: Administrator
+      # --- Cloudinary (persistent image storage - free at cloudinary.com) ---
+      - key: Cloudinary__CloudName
+        sync: false  # Your Cloudinary cloud name
+      - key: Cloudinary__ApiKey
+        sync: false  # Your Cloudinary API key
+      - key: Cloudinary__ApiSecret
+        sync: false  # Your Cloudinary API secret

@@ -455,7 +455,7 @@ public class BlogService : IBlogService
             draft.Content = dto.Content;
             draft.Summary = dto.Summary;
             draft.Category = dto.Category;
-            draft.Tags = dto.Tags;
+            draft.Tags = dto.Tags.Count > 0 ? string.Join(",", dto.Tags) : null;
             draft.BlogPostId = dto.BlogPostId;
             draft.UpdatedAt = DateTime.UtcNow;
 
@@ -469,7 +469,7 @@ public class BlogService : IBlogService
                 Content = dto.Content,
                 Summary = dto.Summary,
                 Category = dto.Category,
-                Tags = dto.Tags,
+                Tags = dto.Tags.Count > 0 ? string.Join(",", dto.Tags) : null,
                 BlogPostId = dto.BlogPostId,
                 AuthorId = userId
             };
@@ -485,7 +485,7 @@ public class BlogService : IBlogService
             Content = draft.Content,
             Summary = draft.Summary,
             Category = draft.Category,
-            Tags = draft.Tags,
+            Tags = draft.Tags?.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList() ?? new List<string>(),
             BlogPostId = draft.BlogPostId,
             CreatedAt = draft.CreatedAt,
             UpdatedAt = draft.UpdatedAt
@@ -506,7 +506,7 @@ public class BlogService : IBlogService
             Content = d.Content,
             Summary = d.Summary,
             Category = d.Category,
-            Tags = d.Tags,
+            Tags = d.Tags?.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList() ?? new List<string>(),
             BlogPostId = d.BlogPostId,
             CreatedAt = d.CreatedAt,
             UpdatedAt = d.UpdatedAt
@@ -537,7 +537,7 @@ public class BlogService : IBlogService
             Content = draft.Content,
             Summary = draft.Summary,
             Category = draft.Category,
-            Tags = draft.Tags,
+            Tags = draft.Tags?.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList() ?? new List<string>(),
             BlogPostId = draft.BlogPostId,
             CreatedAt = draft.CreatedAt,
             UpdatedAt = draft.UpdatedAt
