@@ -66,7 +66,7 @@ function passwordStrengthValidator(control: AbstractControl): ValidationErrors |
               <mat-error *ngIf="registerForm.get('password')?.hasError('noUppercase')">Add an uppercase letter</mat-error>
               <mat-error *ngIf="registerForm.get('password')?.hasError('noLowercase')">Add a lowercase letter</mat-error>
               <mat-error *ngIf="registerForm.get('password')?.hasError('noNumber')">Add a number</mat-error>
-              <mat-error *ngIf="registerForm.get('password')?.hasError('noSpecial')">Add a special character (@$!%*?&#)</mat-error>
+              <mat-error *ngIf="registerForm.get('password')?.hasError('noSpecial')">Add a special character (@$!%*?&amp;#)</mat-error>
             </mat-form-field>
 
             <!-- Password strength indicator -->
