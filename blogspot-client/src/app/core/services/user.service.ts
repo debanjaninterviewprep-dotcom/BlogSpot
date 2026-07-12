@@ -41,6 +41,10 @@ export class UserService {
     return this.http.post<{ isFollowing: boolean }>(`${this.apiUrl}/${userId}/follow`, {});
   }
 
+  removeFollower(followerId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${followerId}/remove-follower`);
+  }
+
   getFollowers(userId: string, pagination: PaginationParams): Observable<PagedResult<UserProfile>> {
     const params = new HttpParams()
       .set('page', pagination.page.toString())

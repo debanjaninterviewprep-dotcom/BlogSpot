@@ -156,6 +156,25 @@ public class UserService : IUserService
         return true;
     }
 
+    public async Task RemoveFollowerAsync(Guid currentUserId, Guid followerToRemoveId, CancellationToken ct = default)
+    {
+        // Find the person to remove and delete their Follow record pointing to currentUser
+        var followerUser = await _uow.Users.Query()
+            .Include(u => u.Following)
+            .FirstOrDefaultAsync(u => u.Id == followerToRemoveId, ct);
+
+        if (followerUser == null) return;
+
+        var followRecord = followerUser.Following
+            .FirstOrDefault(f => f.FollowingId == currentUserId);
+
+        if (followRecord != null)
+        {
+            followerUser.Following.Remove(followRecord);
+            await _uow.SaveChangesAsync(ct);
+        }
+    }
+
     public async Task<PagedResult<UserProfileDto>> GetFollowersAsync(Guid userId, PaginationParams pagination, Guid? currentUserId = null, CancellationToken ct = default)
     {
         var user = await _uow.Users.Query()

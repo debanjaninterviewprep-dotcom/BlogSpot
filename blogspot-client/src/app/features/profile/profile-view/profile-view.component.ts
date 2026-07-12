@@ -105,7 +105,9 @@ import { MatSnackBar } from '@angular/material/snack-bar';
         <mat-tab [label]="'Followers (' + profile.followersCount + ')'">
           <div class="tab-content">
             <app-user-card *ngFor="let user of followers" [user]="user"
-                           (onFollow)="toggleFollowUser($event)">
+                           [showRemove]="isOwnProfile"
+                           (onFollow)="toggleFollowUser($event)"
+                           (onRemove)="removeFollower($event)">
             </app-user-card>
           </div>
         </mat-tab>
@@ -255,6 +257,17 @@ export class ProfileViewComponent implements OnInit {
         updateUser(this.followers);
         updateUser(this.following);
       }
+    });
+  }
+
+  removeFollower(followerId: string): void {
+    this.userService.removeFollower(followerId).subscribe({
+      next: () => {
+        this.followers = this.followers.filter(u => u.id !== followerId);
+        if (this.profile) this.profile.followersCount = Math.max(0, this.profile.followersCount - 1);
+        this.snackBar.open('Follower removed', 'Close', { duration: 2000 });
+      },
+      error: () => this.snackBar.open('Failed to remove follower', 'Close', { duration: 3000 })
     });
   }
 

@@ -14,6 +14,7 @@ public interface IUserService
 
     // Follow
     Task<bool> ToggleFollowAsync(Guid followerId, Guid followingId, CancellationToken ct = default);
+    Task RemoveFollowerAsync(Guid currentUserId, Guid followerToRemoveId, CancellationToken ct = default);
     Task<PagedResult<UserProfileDto>> GetFollowersAsync(Guid userId, PaginationParams pagination, Guid? currentUserId = null, CancellationToken ct = default);
     Task<PagedResult<UserProfileDto>> GetFollowingAsync(Guid userId, PaginationParams pagination, Guid? currentUserId = null, CancellationToken ct = default);
 

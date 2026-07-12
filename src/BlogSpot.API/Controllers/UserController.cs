@@ -88,6 +88,15 @@ public class UserController : ControllerBase
         return Ok(new { isFollowing });
     }
 
+    [Authorize]
+    [HttpDelete("{followerId:guid}/remove-follower")]
+    public async Task<ActionResult> RemoveFollower(Guid followerId, CancellationToken ct)
+    {
+        var currentUserId = GetCurrentUserId()!.Value;
+        await _userService.RemoveFollowerAsync(currentUserId, followerId, ct);
+        return NoContent();
+    }
+
     [HttpGet("{userId:guid}/followers")]
     public async Task<ActionResult<PagedResult<UserProfileDto>>> GetFollowers(
         Guid userId, [FromQuery] PaginationParams pagination, CancellationToken ct)
