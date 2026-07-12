@@ -62,11 +62,7 @@ function passwordStrengthValidator(control: AbstractControl): ValidationErrors |
                 <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
               </button>
               <mat-error *ngIf="registerForm.get('password')?.hasError('required')">Password is required</mat-error>
-              <mat-error *ngIf="registerForm.get('password')?.hasError('minlength')">Minimum 8 characters</mat-error>
-              <mat-error *ngIf="registerForm.get('password')?.hasError('noUppercase')">Add an uppercase letter</mat-error>
-              <mat-error *ngIf="registerForm.get('password')?.hasError('noLowercase')">Add a lowercase letter</mat-error>
-              <mat-error *ngIf="registerForm.get('password')?.hasError('noNumber')">Add a number</mat-error>
-              <mat-error *ngIf="registerForm.get('password')?.hasError('noSpecial')">Add a special character (!$%*?#&amp;)</mat-error>
+              <mat-error *ngIf="registerForm.get('password')?.invalid && !registerForm.get('password')?.hasError('required')">Password does not meet requirements</mat-error>
             </mat-form-field>
 
             <!-- Password strength indicator -->
@@ -181,8 +177,7 @@ export class RegisterComponent {
     if (this.registerForm.invalid) return;
 
     this.isLoading = true;
-    const { confirmPassword, ...payload } = this.registerForm.value;
-    this.authService.register(payload).subscribe({
+    this.authService.register(this.registerForm.value).subscribe({
       next: () => {
         this.router.navigate(['/feed']);
         this.snackBar.open('Welcome to BlogSpot!', 'Close', { duration: 3000 });
