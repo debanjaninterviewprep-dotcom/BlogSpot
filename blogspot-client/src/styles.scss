@@ -175,7 +175,75 @@ body.dark-theme {
   /* Empty states */
   .empty-state { color: #666 !important; }
   .empty-state mat-icon { color: #444 !important; }
+
+  /* Unselected / outlined buttons */
+  .mat-mdc-outlined-button:not(:disabled) {
+    border-color: #666 !important;
+    color: #e0e0e0 !important;
+  }
+  .mat-mdc-button:not([color]):not(:disabled) {
+    color: #ccc !important;
+  }
+  .mat-mdc-stroked-button:not(:disabled) {
+    border-color: #666 !important;
+    color: #e0e0e0 !important;
+  }
+
+  /* Tab group background */
+  .mat-mdc-tab-group, .mat-mdc-tab-body-wrapper {
+    background-color: transparent !important;
+  }
+  .mdc-tab--active .mdc-tab__text-label { color: #90caf9 !important; }
+  .mdc-tab:not(.mdc-tab--active) .mdc-tab__text-label { color: #aaa !important; }
+
+  /* Placeholder text */
+  input::placeholder, textarea::placeholder { color: #777 !important; }
+  .mat-mdc-form-field .mat-mdc-floating-label { color: #999 !important; }
+  .mdc-text-field__input { color: #e0e0e0 !important; }
+
+  /* Select dropdown */
+  .mat-mdc-option { color: #e0e0e0 !important; }
+  .mat-mdc-option:hover { background: rgba(255,255,255,0.08) !important; }
+  .mat-mdc-select-value-text { color: #e0e0e0 !important; }
+
+  /* Paginator */
+  .mat-mdc-paginator { background: transparent !important; color: #ccc !important; }
+  .mat-mdc-paginator-icon { fill: #ccc !important; }
+
+  /* Table */
+  .mat-mdc-table { background: #1e1e1e !important; }
+  .mat-mdc-row, .mat-mdc-header-row { border-bottom-color: #333 !important; }
+  .mat-mdc-cell, .mat-mdc-header-cell { color: #e0e0e0 !important; border-bottom-color: #333 !important; }
 }
+
+/* =============================
+   MOBILE RESPONSIVE FIXES
+   ============================= */
+* { box-sizing: border-box; }
+
+@media (max-width: 599px) {
+  /* Auth cards */
+  .auth-container {
+    align-items: flex-start !important;
+    padding: 16px !important;
+  }
+  .auth-card {
+    max-width: 100% !important;
+    padding: 16px !important;
+  }
+  mat-card-actions {
+    flex-wrap: wrap;
+  }
+
+  /* General spacing */
+  .container { padding: 0 8px; }
+
+  /* Tables: horizontal scroll */
+  .tab-content { overflow-x: auto; }
+}
+
+/* Global page offset for fixed navbar */
+body { padding-top: 64px; }
 
 /* Skeleton loader animation */
 @keyframes skeleton-loading {

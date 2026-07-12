@@ -17,23 +17,21 @@ import { AuthService } from '@core/services/auth.service';
         <mat-card-content>
           <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
             <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Email</mat-label>
-              <input matInput formControlName="email" type="email">
-              <mat-icon matPrefix>email</mat-icon>
-              <mat-error *ngIf="loginForm.get('email')?.hasError('required')">
-                Email is required
-              </mat-error>
-              <mat-error *ngIf="loginForm.get('email')?.hasError('email')">
-                Invalid email format
+              <mat-label>Email or Username</mat-label>
+              <input matInput formControlName="emailOrUsername" autocomplete="username">
+              <mat-icon matPrefix>person</mat-icon>
+              <mat-error *ngIf="loginForm.get('emailOrUsername')?.hasError('required')">
+                Email or username is required
               </mat-error>
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Password</mat-label>
-              <input matInput formControlName="password" 
-                     [type]="hidePassword ? 'password' : 'text'">
+              <input matInput formControlName="password"
+                     [type]="hidePassword ? 'password' : 'text'"
+                     autocomplete="current-password">
               <mat-icon matPrefix>lock</mat-icon>
-              <button mat-icon-button matSuffix type="button" 
+              <button mat-icon-button matSuffix type="button"
                       (click)="hidePassword = !hidePassword">
                 <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
               </button>
@@ -42,11 +40,11 @@ import { AuthService } from '@core/services/auth.service';
               </mat-error>
             </mat-form-field>
 
-            <button mat-raised-button color="primary" class="full-width" 
+            <button mat-raised-button color="primary" class="full-width submit-btn"
                     type="submit" [disabled]="loginForm.invalid || isLoading">
               <mat-icon *ngIf="!isLoading">login</mat-icon>
-              <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
-              {{ isLoading ? 'Signing in...' : 'Sign In' }}
+              <span *ngIf="!isLoading">Sign In</span>
+              <span *ngIf="isLoading">Signing in...</span>
             </button>
           </form>
         </mat-card-content>
@@ -63,18 +61,25 @@ import { AuthService } from '@core/services/auth.service';
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: calc(100vh - 128px);
+      min-height: calc(100vh - 64px);
+      padding: 16px;
+      box-sizing: border-box;
     }
     .auth-card {
       width: 100%;
       max-width: 440px;
       padding: 24px;
+      box-sizing: border-box;
     }
     form {
       display: flex;
       flex-direction: column;
       gap: 8px;
       margin-top: 16px;
+    }
+    .submit-btn { height: 44px; margin-top: 8px; }
+    @media (max-width: 480px) {
+      .auth-card { padding: 16px; }
     }
   `]
 })
@@ -91,7 +96,7 @@ export class LoginComponent {
     private snackBar: MatSnackBar
   ) {
     this.loginForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
+      emailOrUsername: ['', [Validators.required]],
       password: ['', Validators.required]
     });
   }
@@ -109,7 +114,7 @@ export class LoginComponent {
       error: (err) => {
         this.isLoading = false;
         this.snackBar.open(
-          err.error?.message || 'Login failed. Please try again.',
+          err.error?.message || 'Login failed. Please check your credentials.',
           'Close',
           { duration: 5000 }
         );

@@ -223,7 +223,7 @@ public class UserService : IUserService
             .Include(u => u.Followers)
             .Include(u => u.Following)
             .Include(u => u.BlogPosts)
-            .Where(u => u.IsActive && !followingIds.Contains(u.Id))
+            .Where(u => u.IsActive && !followingIds.Contains(u.Id) && u.Role != Domain.Enums.UserRole.Admin)
             .OrderByDescending(u => u.Followers.Count)
             .Take(count)
             .ToListAsync(ct);

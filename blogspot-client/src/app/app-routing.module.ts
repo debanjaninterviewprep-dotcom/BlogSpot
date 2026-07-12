@@ -31,6 +31,11 @@ const routes: Routes = [
     canActivate: [AdminGuard]
   },
   {
+    path: 'notifications',
+    redirectTo: 'profile/notifications',
+    pathMatch: 'full'
+  },
+  {
     path: '**',
     redirectTo: 'feed'
   }

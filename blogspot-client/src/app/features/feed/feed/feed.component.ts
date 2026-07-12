@@ -27,13 +27,23 @@ import { MatSnackBar } from '@angular/material/snack-bar';
                 <h3>Your feed is empty</h3>
                 <p>Follow some users to see their posts here!</p>
               </div>
-              <app-post-card *ngFor="let post of feedPosts" 
-                             [post]="post" 
-                             (onLike)="toggleLike($event, 'feed')"
-                             (onBookmark)="toggleBookmark($event, 'feed')"
-                             (onReaction)="toggleReaction($event, 'feed')">
-              </app-post-card>
-              <app-loading-spinner *ngIf="loadingFeed && feedPosts.length > 0"></app-loading-spinner>
+              <ng-container *ngFor="let post of feedPosts; let i = index">
+                <app-post-card [post]="post"
+                               (onLike)="toggleLike($event, 'feed')"
+                               (onBookmark)="toggleBookmark($event, 'feed')"
+                               (onReaction)="toggleReaction($event, 'feed')">
+                </app-post-card>
+                <!-- Mobile inline suggestions after 3rd post -->
+                <mat-card class="mobile-suggestions" *ngIf="i === 2 && suggestedUsers.length > 0">
+                  <mat-card-header><mat-card-title>Who to Follow</mat-card-title></mat-card-header>
+                  <mat-card-content>
+                    <app-user-card *ngFor="let user of suggestedUsers.slice(0,3)" [user]="user"
+                                   (onFollow)="toggleFollowSuggested($event)">
+                    </app-user-card>
+                  </mat-card-content>
+                </mat-card>
+              </ng-container>
+              <app-loading-spinner [inline]="true" *ngIf="loadingFeed && feedPosts.length > 0"></app-loading-spinner>
             </div>
           </mat-tab>
           <mat-tab label="Trending">
@@ -55,7 +65,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
                              (onBookmark)="toggleBookmark($event, 'trending')"
                              (onReaction)="toggleReaction($event, 'trending')">
               </app-post-card>
-              <app-loading-spinner *ngIf="loadingTrending && trendingPosts.length > 0"></app-loading-spinner>
+              <app-loading-spinner [inline]="true" *ngIf="loadingTrending && trendingPosts.length > 0"></app-loading-spinner>
             </div>
           </mat-tab>
           <mat-tab label="Latest">
@@ -77,7 +87,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
                              (onBookmark)="toggleBookmark($event, 'latest')"
                              (onReaction)="toggleReaction($event, 'latest')">
               </app-post-card>
-              <app-loading-spinner *ngIf="loadingLatest && latestPosts.length > 0"></app-loading-spinner>
+              <app-loading-spinner [inline]="true" *ngIf="loadingLatest && latestPosts.length > 0"></app-loading-spinner>
             </div>
           </mat-tab>
         </mat-tab-group>
@@ -114,6 +124,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
       width: 300px;
       flex-shrink: 0;
     }
+    .mobile-suggestions { display: none; margin-bottom: 16px; }
     .tab-content {
       padding: 16px 0;
     }
@@ -144,7 +155,9 @@ import { MatSnackBar } from '@angular/material/snack-bar';
       50% { opacity: 0.4; }
     }
     @media (max-width: 768px) {
+      .feed-container { padding: 0 8px; }
       .feed-sidebar { display: none; }
+      .mobile-suggestions { display: block; }
     }
   `]
 })

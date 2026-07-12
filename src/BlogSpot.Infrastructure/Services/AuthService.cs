@@ -58,10 +58,11 @@ public class AuthService : IAuthService
 
     public async Task<AuthResponseDto> LoginAsync(LoginDto dto, CancellationToken ct = default)
     {
+        var input = dto.EmailOrUsername.Trim();
         var user = await _uow.Users.Query()
             .Include(u => u.Profile)
-            .FirstOrDefaultAsync(u => u.Email == dto.Email, ct)
-            ?? throw new UnauthorizedAccessException("Invalid email or password.");
+            .FirstOrDefaultAsync(u => u.Email == input || u.UserName == input, ct)
+            ?? throw new UnauthorizedAccessException("Invalid credentials.");
 
         if (!user.IsActive)
             throw new UnauthorizedAccessException("Account is deactivated. Contact support.");

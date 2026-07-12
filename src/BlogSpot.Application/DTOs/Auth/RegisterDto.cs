@@ -10,7 +10,9 @@ public class RegisterDto
     [Required, EmailAddress]
     public string Email { get; set; } = string.Empty;
 
-    [Required, StringLength(100, MinimumLength = 6)]
+    [Required, StringLength(100, MinimumLength = 8),
+     RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#]).{8,}$",
+     ErrorMessage = "Password must include uppercase, lowercase, number and special character (@$!%*?&#).")]
     public string Password { get; set; } = string.Empty;
 
     [Required, Compare(nameof(Password))]

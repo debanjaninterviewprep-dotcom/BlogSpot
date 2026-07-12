@@ -10,7 +10,7 @@ public class DraftBlogDto
     public string Content { get; set; } = string.Empty;
     public string? Summary { get; set; }
     public string? Category { get; set; }
-    public string? Tags { get; set; }
+    public List<string> Tags { get; set; } = new();
     public Guid? BlogPostId { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
@@ -26,6 +26,6 @@ public class SaveDraftDto
     public string Content { get; set; } = string.Empty;
     public string? Summary { get; set; }
     public string? Category { get; set; }
-    public string? Tags { get; set; }
+    public List<string> Tags { get; set; } = new();
     public Guid? BlogPostId { get; set; }
 }

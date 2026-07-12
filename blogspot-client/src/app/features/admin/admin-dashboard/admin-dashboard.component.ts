@@ -16,7 +16,9 @@ import { AdminService, AdminUser, AdminPost, AdminComment } from '@core/services
             <table mat-table [dataSource]="users" class="full-width">
               <ng-container matColumnDef="userName">
                 <th mat-header-cell *matHeaderCellDef>Username</th>
-                <td mat-cell *matCellDef="let user">{{ user.userName }}</td>
+                <td mat-cell *matCellDef="let user">
+                  <a [routerLink]="['/profile', user.userName]" class="user-link">{{ user.userName }}</a>
+                </td>
               </ng-container>
               <ng-container matColumnDef="email">
                 <th mat-header-cell *matHeaderCellDef>Email</th>
@@ -148,9 +150,11 @@ import { AdminService, AdminUser, AdminPost, AdminComment } from '@core/services
   styles: [`
     .admin-container { max-width: 1100px; margin: 0 auto; }
     h1 { display: flex; align-items: center; gap: 8px; }
-    .tab-content { padding: 16px 0; }
+    .tab-content { padding: 16px 0; overflow-x: auto; }
     table { width: 100%; }
     mat-chip { font-size: 12px; }
+    .user-link { color: inherit; text-decoration: none; font-weight: 500; }
+    .user-link:hover { text-decoration: underline; color: #3f51b5; }
   `]
 })
 export class AdminDashboardComponent implements OnInit {
