@@ -16,7 +16,7 @@ import { User } from '../../models/auth.model';
     <nav class="navbar">
       <div class="navbar-content container">
         <a routerLink="/feed" class="logo">
-          <mat-icon class="logo-icon">rss_feed</mat-icon>
+          <img src="favicon.svg" class="logo-img" alt="BlogSpot">
           <span class="logo-text">BlogSpot</span>
         </a>
 
@@ -195,7 +195,7 @@ import { User } from '../../models/auth.model';
       white-space: nowrap;
       transition: color 0.2s;
     }
-    .logo-icon { color: #1d9bf0; font-size: 28px; width: 28px; height: 28px; }
+    .logo-img { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; }
     .search-box {
       flex: 0 1 400px;
       margin: 0 16px;
