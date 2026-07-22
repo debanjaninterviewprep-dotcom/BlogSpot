@@ -67,4 +67,12 @@ export class UserService {
   getCreatorAnalytics(): Observable<CreatorAnalytics> {
     return this.http.get<CreatorAnalytics>(`${this.apiUrl}/analytics`);
   }
+
+  searchUsers(query: string, pagination: PaginationParams): Observable<PagedResult<UserProfile>> {
+    const params = new HttpParams()
+      .set('q', query)
+      .set('page', pagination.page.toString())
+      .set('pageSize', pagination.pageSize.toString());
+    return this.http.get<PagedResult<UserProfile>>(`${this.apiUrl}/search`, { params });
+  }
 }

@@ -21,6 +21,9 @@ public interface IUserService
     // Suggested users
     Task<List<UserProfileDto>> GetSuggestedUsersAsync(Guid userId, int count = 5, CancellationToken ct = default);
 
+    // Search
+    Task<PagedResult<UserProfileDto>> SearchUsersAsync(string query, PaginationParams pagination, Guid? currentUserId = null, CancellationToken ct = default);
+
     // Analytics
     Task<CreatorAnalyticsDto> GetCreatorAnalyticsAsync(Guid userId, CancellationToken ct = default);
 }

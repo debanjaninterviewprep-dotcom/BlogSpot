@@ -33,6 +33,15 @@ public class UserController : ControllerBase
         return profile == null ? NotFound() : Ok(profile);
     }
 
+    [HttpGet("search")]
+    public async Task<ActionResult<PagedResult<UserProfileDto>>> SearchUsers(
+        [FromQuery] string q, [FromQuery] PaginationParams pagination, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(q)) return Ok(new PagedResult<UserProfileDto>());
+        var result = await _userService.SearchUsersAsync(q, pagination, GetCurrentUserId(), ct);
+        return Ok(result);
+    }
+
     [HttpGet("username/{userName}")]
     public async Task<ActionResult<UserProfileDto>> GetProfileByUserName(string userName, CancellationToken ct)
     {

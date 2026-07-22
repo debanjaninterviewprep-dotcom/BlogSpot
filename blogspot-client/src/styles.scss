@@ -169,6 +169,18 @@ body.dark-theme {
   .login-link:hover { background: rgba(239,243,244,0.1) !important; }
   .register-btn { background: #eff3f4 !important; color: #0f1419 !important; }
 
+  /* ---- SEARCH DROPDOWN ---- */
+  .search-dropdown { background: #000 !important; border-color: var(--color-border) !important; box-shadow: 0 4px 20px rgba(255,255,255,0.1) !important; }
+  .search-section-header { color: #71767b !important; }
+  .search-item:hover { background: rgba(255,255,255,0.03) !important; }
+  .search-item-name { color: #e7e9ea !important; }
+  .search-item-sub { color: #71767b !important; }
+  .search-post-icon { color: #71767b !important; }
+  .search-view-all { border-top-color: var(--color-border) !important; color: var(--color-primary) !important; }
+  .search-view-all:hover { background: rgba(29,155,240,0.08) !important; }
+  .search-clear mat-icon { color: #71767b !important; }
+  .search-wrapper.focused { background: var(--search-focus-bg) !important; border-color: var(--color-primary) !important; }
+
   /* ---- FEED ---- */
   .feed-main { border-color: var(--color-border) !important; }
   .sidebar-card { background: var(--sidebar-bg) !important; }
@@ -339,8 +351,11 @@ body.dark-theme {
 
   /* Chips */
   .mat-mdc-chip:not(.mat-mdc-chip-disabled) {
-    background-color: rgba(29,155,240,0.15) !important;
-    color: var(--color-primary) !important;
+    background-color: rgba(29,155,240,0.2) !important;
+    color: #8ecdf7 !important;
+  }
+  .mat-mdc-chip .mdc-evolution-chip__text-label {
+    color: #8ecdf7 !important;
   }
 
   /* Divider */

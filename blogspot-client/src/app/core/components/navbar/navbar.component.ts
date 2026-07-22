@@ -1,10 +1,12 @@
-﻿import { Component, OnInit, OnDestroy } from '@angular/core';
+﻿import { Component, OnInit, OnDestroy, ElementRef, ViewChild, HostListener } from '@angular/core';
 import { Router } from '@angular/router';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, debounceTime, distinctUntilChanged, switchMap, of } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
 import { ThemeService } from '../../services/theme.service';
 import { SignalRService } from '../../services/signalr.service';
+import { BlogService } from '../../services/blog.service';
+import { UserService } from '../../services/user.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { User } from '../../models/auth.model';
 
@@ -18,11 +20,45 @@ import { User } from '../../models/auth.model';
           <span class="logo-text">BlogSpot</span>
         </a>
 
-        <div class="search-box" *ngIf="authService.isLoggedIn">
-          <div class="search-wrapper">
+        <div class="search-box" *ngIf="authService.isLoggedIn" #searchContainer>
+          <div class="search-wrapper" [class.focused]="searchFocused">
             <mat-icon class="search-icon">search</mat-icon>
-            <input type="text" placeholder="Search posts..." class="search-input"
+            <input type="text" placeholder="Search users & posts..." class="search-input"
+                   [(ngModel)]="searchQuery"
+                   (input)="onSearchInput($event)"
+                   (focus)="searchFocused = true"
                    (keyup.enter)="onSearch($event)">
+            <button *ngIf="searchQuery" class="search-clear" (click)="clearSearch()">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+          <!-- Autocomplete dropdown -->
+          <div class="search-dropdown" *ngIf="searchFocused && searchQuery && (searchedUsers.length > 0 || searchedPosts.length > 0)">
+            <div class="search-section" *ngIf="searchedUsers.length > 0">
+              <div class="search-section-header">People</div>
+              <a *ngFor="let user of searchedUsers" class="search-item user-item"
+                 [routerLink]="['/profile', user.userName]" (click)="clearSearch()">
+                <img [src]="user.profilePictureUrl || 'assets/default-avatar.svg'" class="search-avatar">
+                <div class="search-item-info">
+                  <span class="search-item-name">{{ user.displayName || user.userName }}</span>
+                  <span class="search-item-sub">{{'@'}}{{ user.userName }}</span>
+                </div>
+              </a>
+            </div>
+            <div class="search-section" *ngIf="searchedPosts.length > 0">
+              <div class="search-section-header">Posts</div>
+              <a *ngFor="let post of searchedPosts" class="search-item post-item"
+                 [routerLink]="['/blog', post.slug]" (click)="clearSearch()">
+                <mat-icon class="search-post-icon">article</mat-icon>
+                <div class="search-item-info">
+                  <span class="search-item-name">{{ post.title }}</span>
+                  <span class="search-item-sub">by {{ post.authorDisplayName || post.authorUserName }}</span>
+                </div>
+              </a>
+            </div>
+            <a class="search-view-all" [routerLink]="['/blog/search']" [queryParams]="{q: searchQuery}" (click)="clearSearch()">
+              View all results for "{{ searchQuery }}"
+            </a>
           </div>
         </div>
 
@@ -146,6 +182,7 @@ import { User } from '../../models/auth.model';
     .search-box {
       flex: 0 1 400px;
       margin: 0 16px;
+      position: relative;
     }
     .search-wrapper {
       display: flex;
@@ -157,11 +194,63 @@ import { User } from '../../models/auth.model';
       border: 2px solid transparent;
       transition: background 0.2s, border-color 0.2s;
     }
-    .search-wrapper:focus-within {
+    .search-wrapper.focused {
       background: #fff;
       border-color: #1d9bf0;
     }
-    .search-wrapper:focus-within .search-icon { color: #1d9bf0; }
+    .search-wrapper.focused .search-icon { color: #1d9bf0; }
+    .search-clear {
+      background: none; border: none; cursor: pointer; padding: 0;
+      display: flex; align-items: center;
+    }
+    .search-clear mat-icon { font-size: 18px; width: 18px; height: 18px; color: #536471; }
+    .search-dropdown {
+      position: absolute;
+      top: 48px;
+      left: 0; right: 0;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      border: 1px solid #eff3f4;
+      max-height: 400px;
+      overflow-y: auto;
+      z-index: 1001;
+    }
+    .search-section-header {
+      font-size: 13px;
+      font-weight: 700;
+      color: #536471;
+      padding: 10px 16px 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .search-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 16px;
+      text-decoration: none;
+      color: inherit;
+      transition: background 0.12s;
+      cursor: pointer;
+    }
+    .search-item:hover { background: rgba(0,0,0,0.03); }
+    .search-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+    .search-post-icon { color: #536471; font-size: 24px; width: 24px; height: 24px; flex-shrink: 0; margin: 0 6px; }
+    .search-item-info { display: flex; flex-direction: column; min-width: 0; }
+    .search-item-name { font-size: 14px; font-weight: 600; color: #0f1419; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .search-item-sub { font-size: 12px; color: #536471; }
+    .search-view-all {
+      display: block;
+      text-align: center;
+      padding: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #1d9bf0;
+      text-decoration: none;
+      border-top: 1px solid #eff3f4;
+    }
+    .search-view-all:hover { background: rgba(29,155,240,0.04); }
     .search-icon { color: #536471; font-size: 20px; width: 20px; height: 20px; margin-right: 8px; }
     .search-input {
       border: none;
@@ -258,13 +347,21 @@ import { User } from '../../models/auth.model';
 export class NavbarComponent implements OnInit, OnDestroy {
   unreadCount = 0;
   notifications: any[] = [];
+  searchQuery = '';
+  searchFocused = false;
+  searchedUsers: any[] = [];
+  searchedPosts: any[] = [];
   private destroy$ = new Subject<void>();
+  private searchSubject$ = new Subject<string>();
+  @ViewChild('searchContainer') searchContainer!: ElementRef;
 
   constructor(
     public authService: AuthService,
     public themeService: ThemeService,
     private notificationService: NotificationService,
     private signalRService: SignalRService,
+    private blogService: BlogService,
+    private userService: UserService,
     private router: Router,
     private snackBar: MatSnackBar
   ) {}
@@ -296,6 +393,27 @@ export class NavbarComponent implements OnInit, OnDestroy {
     this.notificationService.unreadCount$
       .pipe(takeUntil(this.destroy$))
       .subscribe(count => this.unreadCount = count);
+
+    // Search autocomplete
+    this.searchSubject$.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$),
+      switchMap(query => {
+        if (!query || query.length < 2) {
+          this.searchedUsers = [];
+          this.searchedPosts = [];
+          return of(null);
+        }
+        this.userService.searchUsers(query, { page: 1, pageSize: 4 }).subscribe({
+          next: (res: any) => this.searchedUsers = res.items || []
+        });
+        this.blogService.searchPosts(query, { page: 1, pageSize: 4 }).subscribe({
+          next: (res: any) => this.searchedPosts = res.items || []
+        });
+        return of(null);
+      })
+    ).subscribe();
   }
 
   ngOnDestroy(): void {
@@ -313,7 +431,27 @@ export class NavbarComponent implements OnInit, OnDestroy {
   onSearch(event: Event): void {
     const query = (event.target as HTMLInputElement).value;
     if (query.trim()) {
+      this.clearSearch();
       this.router.navigate(['/blog/search'], { queryParams: { q: query } });
+    }
+  }
+
+  onSearchInput(event: Event): void {
+    const val = (event.target as HTMLInputElement).value;
+    this.searchSubject$.next(val);
+  }
+
+  clearSearch(): void {
+    this.searchQuery = '';
+    this.searchFocused = false;
+    this.searchedUsers = [];
+    this.searchedPosts = [];
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (this.searchContainer && !this.searchContainer.nativeElement.contains(event.target)) {
+      this.searchFocused = false;
     }
   }
 

@@ -268,6 +268,35 @@ public class UserService : IUserService
         return suggestedUsers.Select(u => MapToProfileDto(u, userId)).ToList();
     }
 
+    public async Task<PagedResult<UserProfileDto>> SearchUsersAsync(string query, PaginationParams pagination, Guid? currentUserId = null, CancellationToken ct = default)
+    {
+        var normalizedQuery = query.ToLower().Trim();
+
+        var baseQuery = _uow.Users.Query()
+            .Include(u => u.Profile)
+            .Include(u => u.Followers)
+            .Include(u => u.Following)
+            .Include(u => u.BlogPosts)
+            .Where(u => u.IsActive &&
+                (u.UserName.ToLower().Contains(normalizedQuery) ||
+                 (u.Profile != null && u.Profile.DisplayName != null && u.Profile.DisplayName.ToLower().Contains(normalizedQuery))))
+            .OrderByDescending(u => u.Followers.Count);
+
+        var totalCount = await baseQuery.CountAsync(ct);
+        var users = await baseQuery
+            .Skip((pagination.Page - 1) * pagination.PageSize)
+            .Take(pagination.PageSize)
+            .ToListAsync(ct);
+
+        return new PagedResult<UserProfileDto>
+        {
+            Items = users.Select(u => MapToProfileDto(u, currentUserId)).ToList(),
+            TotalCount = totalCount,
+            Page = pagination.Page,
+            PageSize = pagination.PageSize
+        };
+    }
+
     public async Task<CreatorAnalyticsDto> GetCreatorAnalyticsAsync(Guid userId, CancellationToken ct = default)
     {
         var user = await _uow.Users.Query()
