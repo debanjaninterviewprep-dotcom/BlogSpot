@@ -170,9 +170,10 @@ body.dark-theme {
   .register-btn { background: #eff3f4 !important; color: #0f1419 !important; }
 
   /* ---- SEARCH DROPDOWN ---- */
-  .search-dropdown { background: #000 !important; border-color: var(--color-border) !important; box-shadow: 0 4px 20px rgba(255,255,255,0.1) !important; }
+  .search-dropdown { background: #000 !important; border-color: var(--color-border) !important; box-shadow: 0 8px 32px rgba(255,255,255,0.08) !important; }
+  .search-section + .search-section { border-top-color: var(--color-border) !important; }
   .search-section-header { color: #71767b !important; }
-  .search-item:hover { background: rgba(255,255,255,0.03) !important; }
+  .search-item:hover { background: rgba(255,255,255,0.04) !important; }
   .search-item-name { color: #e7e9ea !important; }
   .search-item-sub { color: #71767b !important; }
   .search-post-icon { color: #71767b !important; }
@@ -180,6 +181,8 @@ body.dark-theme {
   .search-view-all:hover { background: rgba(29,155,240,0.08) !important; }
   .search-clear mat-icon { color: #71767b !important; }
   .search-wrapper.focused { background: var(--search-focus-bg) !important; border-color: var(--color-primary) !important; }
+  .search-loading { color: #71767b !important; }
+  .search-empty { color: #71767b !important; }
 
   /* ---- FEED ---- */
   .feed-main { border-color: var(--color-border) !important; }

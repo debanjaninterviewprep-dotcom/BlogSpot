@@ -33,7 +33,16 @@ import { User } from '../../models/auth.model';
             </button>
           </div>
           <!-- Autocomplete dropdown -->
-          <div class="search-dropdown" *ngIf="searchFocused && searchQuery && (searchedUsers.length > 0 || searchedPosts.length > 0)">
+          <div class="search-dropdown" *ngIf="searchFocused && searchQuery.length >= 1">
+            <!-- Loading -->
+            <div class="search-loading" *ngIf="searchLoading">
+              <mat-icon>autorenew</mat-icon> Searching...
+            </div>
+            <!-- No results -->
+            <div class="search-empty" *ngIf="!searchLoading && searchQuery.length >= 2 && searchedUsers.length === 0 && searchedPosts.length === 0">
+              No results for "{{ searchQuery }}"
+            </div>
+            <!-- Users -->
             <div class="search-section" *ngIf="searchedUsers.length > 0">
               <div class="search-section-header">People</div>
               <a *ngFor="let user of searchedUsers" class="search-item user-item"
@@ -45,6 +54,7 @@ import { User } from '../../models/auth.model';
                 </div>
               </a>
             </div>
+            <!-- Posts -->
             <div class="search-section" *ngIf="searchedPosts.length > 0">
               <div class="search-section-header">Posts</div>
               <a *ngFor="let post of searchedPosts" class="search-item post-item"
@@ -56,8 +66,10 @@ import { User } from '../../models/auth.model';
                 </div>
               </a>
             </div>
-            <a class="search-view-all" [routerLink]="['/blog/search']" [queryParams]="{q: searchQuery}" (click)="clearSearch()">
-              View all results for "{{ searchQuery }}"
+            <!-- View all -->
+            <a class="search-view-all" *ngIf="searchQuery.length >= 2 && (searchedUsers.length > 0 || searchedPosts.length > 0)"
+               [routerLink]="['/blog/search']" [queryParams]="{q: searchQuery}" (click)="clearSearch()">
+              See all results for "{{ searchQuery }}"
             </a>
           </div>
         </div>
@@ -209,20 +221,40 @@ import { User } from '../../models/auth.model';
       top: 48px;
       left: 0; right: 0;
       background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08);
       border: 1px solid #eff3f4;
-      max-height: 400px;
+      max-height: 420px;
       overflow-y: auto;
       z-index: 1001;
+      animation: dropdownSlide 0.18s ease-out;
+      transform-origin: top center;
+    }
+    @keyframes dropdownSlide {
+      from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .search-dropdown::-webkit-scrollbar { width: 4px; }
+    .search-dropdown::-webkit-scrollbar-thumb { background: #cfd9de; border-radius: 2px; }
+    .search-loading {
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px; color: #536471; font-size: 13px; gap: 8px;
+    }
+    .search-loading mat-icon { animation: spin 1s linear infinite; font-size: 16px; width: 16px; height: 16px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .search-empty {
+      padding: 24px; text-align: center; color: #536471; font-size: 14px;
     }
     .search-section-header {
-      font-size: 13px;
+      font-size: 11px;
       font-weight: 700;
       color: #536471;
-      padding: 10px 16px 4px;
+      padding: 12px 16px 6px;
       text-transform: uppercase;
-      letter-spacing: 0.03em;
+      letter-spacing: 0.08em;
+    }
+    .search-section + .search-section {
+      border-top: 1px solid #eff3f4;
     }
     .search-item {
       display: flex;
@@ -231,10 +263,10 @@ import { User } from '../../models/auth.model';
       padding: 10px 16px;
       text-decoration: none;
       color: inherit;
-      transition: background 0.12s;
+      transition: background 0.1s;
       cursor: pointer;
     }
-    .search-item:hover { background: rgba(0,0,0,0.03); }
+    .search-item:hover { background: #f7f9f9; }
     .search-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
     .search-post-icon { color: #536471; font-size: 24px; width: 24px; height: 24px; flex-shrink: 0; margin: 0 6px; }
     .search-item-info { display: flex; flex-direction: column; min-width: 0; }
@@ -349,6 +381,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   notifications: any[] = [];
   searchQuery = '';
   searchFocused = false;
+  searchLoading = false;
   searchedUsers: any[] = [];
   searchedPosts: any[] = [];
   private destroy$ = new Subject<void>();
@@ -396,20 +429,24 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
     // Search autocomplete
     this.searchSubject$.pipe(
-      debounceTime(300),
+      debounceTime(250),
       distinctUntilChanged(),
       takeUntil(this.destroy$),
-      switchMap(query => {
-        if (!query || query.length < 2) {
+      switchMap((query: string) => {
+        if (!query || query.length < 1) {
           this.searchedUsers = [];
           this.searchedPosts = [];
+          this.searchLoading = false;
           return of(null);
         }
-        this.userService.searchUsers(query, { page: 1, pageSize: 4 }).subscribe({
-          next: (res: any) => this.searchedUsers = res.items || []
+        this.searchLoading = true;
+        this.userService.searchUsers(query, { page: 1, pageSize: 5 }).subscribe({
+          next: (res: any) => this.searchedUsers = res.items || [],
+          error: () => this.searchedUsers = []
         });
-        this.blogService.searchPosts(query, { page: 1, pageSize: 4 }).subscribe({
-          next: (res: any) => this.searchedPosts = res.items || []
+        this.blogService.searchPosts(query, { page: 1, pageSize: 5 }).subscribe({
+          next: (res: any) => { this.searchedPosts = res.items || []; this.searchLoading = false; },
+          error: () => { this.searchedPosts = []; this.searchLoading = false; }
         });
         return of(null);
       })
