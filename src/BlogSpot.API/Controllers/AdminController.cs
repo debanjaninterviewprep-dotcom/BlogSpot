@@ -75,6 +75,15 @@ public class AdminController : ControllerBase
         await _adminService.AdminDeleteCommentAsync(commentId, ct);
         return NoContent();
     }
+
+    // --- Seed ---
+
+    [HttpPost("seed")]
+    public async Task<ActionResult> SeedData(CancellationToken ct)
+    {
+        var result = await _adminService.SeedDummyDataAsync(ct);
+        return Ok(new { message = result });
+    }
 }
 
 public class ChangeRoleRequest

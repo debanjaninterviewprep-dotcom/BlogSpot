@@ -41,6 +41,7 @@ public static class DependencyInjection
         // Repositories
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddScoped<DbContext>(sp => sp.GetRequiredService<AppDbContext>());
 
         // Services
         services.AddScoped<IAuthService, AuthService>();
