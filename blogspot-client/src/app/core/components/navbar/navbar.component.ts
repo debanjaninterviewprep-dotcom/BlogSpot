@@ -36,7 +36,7 @@ import { User } from '../../models/auth.model';
           <a routerLink="/blog/create" class="nav-btn" matTooltip="New Post" routerLinkActive="active">
             <mat-icon>edit_square</mat-icon>
           </a>
-          <a routerLink="/blog/bookmarks" class="nav-btn hide-sm" matTooltip="Saved Posts" routerLinkActive="active">
+          <a routerLink="/blog/bookmarks" class="nav-btn" matTooltip="Saved Posts" routerLinkActive="active">
             <mat-icon>bookmark</mat-icon>
           </a>
 
@@ -244,10 +244,11 @@ import { User } from '../../models/auth.model';
     @media (max-width: 600px) {
       .navbar { height: 52px; }
       .search-box { display: none; }
-      .hide-sm { display: none; }
       .nav-btn { width: 36px; height: 36px; }
       .nav-btn mat-icon { font-size: 20px; width: 20px; height: 20px; }
       .logo-text { font-size: 17px; }
+      .login-link { font-size: 13px; padding: 6px 12px; white-space: nowrap; }
+      .register-btn { font-size: 13px; padding: 6px 12px; white-space: nowrap; }
     }
     @media (max-width: 400px) {
       .nav-actions { gap: 0; }

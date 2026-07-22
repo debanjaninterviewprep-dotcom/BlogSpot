@@ -59,12 +59,21 @@ import { MatSnackBar } from '@angular/material/snack-bar';
                 <h3>No trending posts yet</h3>
                 <p>Be the first to create a post!</p>
               </div>
-              <app-post-card *ngFor="let post of trendingPosts" 
-                             [post]="post"
-                             (onLike)="toggleLike($event, 'trending')"
-                             (onBookmark)="toggleBookmark($event, 'trending')"
-                             (onReaction)="toggleReaction($event, 'trending')">
-              </app-post-card>
+              <ng-container *ngFor="let post of trendingPosts; let i = index">
+                <app-post-card [post]="post"
+                               (onLike)="toggleLike($event, 'trending')"
+                               (onBookmark)="toggleBookmark($event, 'trending')"
+                               (onReaction)="toggleReaction($event, 'trending')">
+                </app-post-card>
+                <div class="mobile-suggestions" *ngIf="i === 2 && suggestedUsers.length > 0 && authService.isLoggedIn">
+                  <div class="mobile-suggestions-card">
+                    <h3 class="sidebar-title">Suggested for you</h3>
+                    <app-user-card *ngFor="let user of suggestedUsers.slice(0,3)" [user]="user"
+                                   (onFollow)="toggleFollowSuggested($event)">
+                    </app-user-card>
+                  </div>
+                </div>
+              </ng-container>
               <app-loading-spinner [inline]="true" *ngIf="loadingTrending && trendingPosts.length > 0"></app-loading-spinner>
             </div>
           </mat-tab>
@@ -81,12 +90,21 @@ import { MatSnackBar } from '@angular/material/snack-bar';
                 <h3>No posts yet</h3>
                 <p>Be the first to create a post!</p>
               </div>
-              <app-post-card *ngFor="let post of latestPosts" 
-                             [post]="post"
-                             (onLike)="toggleLike($event, 'latest')"
-                             (onBookmark)="toggleBookmark($event, 'latest')"
-                             (onReaction)="toggleReaction($event, 'latest')">
-              </app-post-card>
+              <ng-container *ngFor="let post of latestPosts; let i = index">
+                <app-post-card [post]="post"
+                               (onLike)="toggleLike($event, 'latest')"
+                               (onBookmark)="toggleBookmark($event, 'latest')"
+                               (onReaction)="toggleReaction($event, 'latest')">
+                </app-post-card>
+                <div class="mobile-suggestions" *ngIf="i === 2 && suggestedUsers.length > 0 && authService.isLoggedIn">
+                  <div class="mobile-suggestions-card">
+                    <h3 class="sidebar-title">Suggested for you</h3>
+                    <app-user-card *ngFor="let user of suggestedUsers.slice(0,3)" [user]="user"
+                                   (onFollow)="toggleFollowSuggested($event)">
+                    </app-user-card>
+                  </div>
+                </div>
+              </ng-container>
               <app-loading-spinner [inline]="true" *ngIf="loadingLatest && latestPosts.length > 0"></app-loading-spinner>
             </div>
           </mat-tab>
