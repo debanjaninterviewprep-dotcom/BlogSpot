@@ -21,19 +21,20 @@ import { User } from '../../models/auth.model';
         </a>
 
         <div class="search-box" *ngIf="authService.isLoggedIn" #searchContainer>
-          <div class="search-wrapper" [class.focused]="searchFocused">
+          <div class="search-wrapper" [class.focused]="searchActive">
             <mat-icon class="search-icon">search</mat-icon>
             <input type="text" placeholder="Search users & posts..." class="search-input"
                    [(ngModel)]="searchQuery"
                    (input)="onSearchInput($event)"
-                   (focus)="searchFocused = true"
+                   (focus)="searchActive = true"
+                   (blur)="onSearchBlur()"
                    (keyup.enter)="onSearch($event)">
-            <button *ngIf="searchQuery" class="search-clear" (click)="clearSearch()">
+            <button *ngIf="searchQuery" class="search-clear" (mousedown)="$event.preventDefault()" (click)="clearSearch()">
               <mat-icon>close</mat-icon>
             </button>
           </div>
           <!-- Autocomplete dropdown -->
-          <div class="search-dropdown" *ngIf="searchFocused && searchQuery.length >= 1">
+          <div class="search-dropdown" *ngIf="searchActive && searchQuery.length >= 1">
             <!-- Loading -->
             <div class="search-loading" *ngIf="searchLoading">
               <mat-icon>autorenew</mat-icon> Searching...
@@ -46,7 +47,9 @@ import { User } from '../../models/auth.model';
             <div class="search-section" *ngIf="searchedUsers.length > 0">
               <div class="search-section-header">People</div>
               <a *ngFor="let user of searchedUsers" class="search-item user-item"
-                 [routerLink]="['/profile', user.userName]" (click)="clearSearch()">
+                 [routerLink]="['/profile', user.userName]"
+                 (mousedown)="$event.preventDefault()"
+                 (click)="clearSearch()">
                 <img [src]="user.profilePictureUrl || 'assets/default-avatar.svg'" class="search-avatar">
                 <div class="search-item-info">
                   <span class="search-item-name">{{ user.displayName || user.userName }}</span>
@@ -58,7 +61,9 @@ import { User } from '../../models/auth.model';
             <div class="search-section" *ngIf="searchedPosts.length > 0">
               <div class="search-section-header">Posts</div>
               <a *ngFor="let post of searchedPosts" class="search-item post-item"
-                 [routerLink]="['/blog', post.slug]" (click)="clearSearch()">
+                 [routerLink]="['/blog', post.slug]"
+                 (mousedown)="$event.preventDefault()"
+                 (click)="clearSearch()">
                 <mat-icon class="search-post-icon">article</mat-icon>
                 <div class="search-item-info">
                   <span class="search-item-name">{{ post.title }}</span>
@@ -380,7 +385,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   unreadCount = 0;
   notifications: any[] = [];
   searchQuery = '';
-  searchFocused = false;
+  searchActive = false;
   searchLoading = false;
   searchedUsers: any[] = [];
   searchedPosts: any[] = [];
@@ -480,15 +485,20 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   clearSearch(): void {
     this.searchQuery = '';
-    this.searchFocused = false;
+    this.searchActive = false;
     this.searchedUsers = [];
     this.searchedPosts = [];
+  }
+
+  onSearchBlur(): void {
+    // Small delay so clicks on dropdown items register before blur closes it
+    setTimeout(() => { this.searchActive = false; }, 200);
   }
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
     if (this.searchContainer && !this.searchContainer.nativeElement.contains(event.target)) {
-      this.searchFocused = false;
+      this.searchActive = false;
     }
   }
 
