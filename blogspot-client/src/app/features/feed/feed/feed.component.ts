@@ -27,13 +27,22 @@ import { MatSnackBar } from '@angular/material/snack-bar';
                 <h3>Your feed is empty</h3>
                 <p>Follow some users to see their posts here!</p>
               </div>
+              <!-- Suggestions at top if fewer than 3 posts -->
+              <div class="mobile-suggestions" *ngIf="feedPosts.length < 3 && suggestedUsers.length > 0 && !loadingFeed">
+                <div class="mobile-suggestions-card">
+                  <h3 class="sidebar-title">Suggested for you</h3>
+                  <app-user-card *ngFor="let user of suggestedUsers.slice(0,3)" [user]="user"
+                                 (onFollow)="toggleFollowSuggested($event)">
+                  </app-user-card>
+                </div>
+              </div>
               <ng-container *ngFor="let post of feedPosts; let i = index">
                 <app-post-card [post]="post"
                                (onLike)="toggleLike($event, 'feed')"
                                (onBookmark)="toggleBookmark($event, 'feed')"
                                (onReaction)="toggleReaction($event, 'feed')">
                 </app-post-card>
-                <!-- Mobile inline suggestions after 3rd post -->
+                <!-- Suggestions after 3rd post -->
                 <div class="mobile-suggestions" *ngIf="i === 2 && suggestedUsers.length > 0">
                   <div class="mobile-suggestions-card">
                     <h3 class="sidebar-title">Suggested for you</h3>
@@ -58,6 +67,15 @@ import { MatSnackBar } from '@angular/material/snack-bar';
                 <mat-icon>trending_up</mat-icon>
                 <h3>No trending posts yet</h3>
                 <p>Be the first to create a post!</p>
+              </div>
+              <!-- Suggestions at top if fewer than 3 posts -->
+              <div class="mobile-suggestions" *ngIf="trendingPosts.length < 3 && suggestedUsers.length > 0 && !loadingTrending && authService.isLoggedIn">
+                <div class="mobile-suggestions-card">
+                  <h3 class="sidebar-title">Suggested for you</h3>
+                  <app-user-card *ngFor="let user of suggestedUsers.slice(0,3)" [user]="user"
+                                 (onFollow)="toggleFollowSuggested($event)">
+                  </app-user-card>
+                </div>
               </div>
               <ng-container *ngFor="let post of trendingPosts; let i = index">
                 <app-post-card [post]="post"
@@ -89,6 +107,15 @@ import { MatSnackBar } from '@angular/material/snack-bar';
                 <mat-icon>new_releases</mat-icon>
                 <h3>No posts yet</h3>
                 <p>Be the first to create a post!</p>
+              </div>
+              <!-- Suggestions at top if fewer than 3 posts -->
+              <div class="mobile-suggestions" *ngIf="latestPosts.length < 3 && suggestedUsers.length > 0 && !loadingLatest && authService.isLoggedIn">
+                <div class="mobile-suggestions-card">
+                  <h3 class="sidebar-title">Suggested for you</h3>
+                  <app-user-card *ngFor="let user of suggestedUsers.slice(0,3)" [user]="user"
+                                 (onFollow)="toggleFollowSuggested($event)">
+                  </app-user-card>
+                </div>
               </div>
               <ng-container *ngFor="let post of latestPosts; let i = index">
                 <app-post-card [post]="post"
