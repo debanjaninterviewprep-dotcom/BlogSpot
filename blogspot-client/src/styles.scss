@@ -161,10 +161,10 @@ body.dark-theme {
   .search-input::placeholder { color: #71767b !important; }
   .search-icon { color: #71767b !important; }
   .search-wrapper:focus-within .search-icon { color: var(--color-primary) !important; }
-  .nav-btn { color: #e7e9ea !important; }
+  .nav-btn { color: #d6d9db !important; }
   .nav-btn:hover { color: var(--color-primary) !important; background: rgba(29,155,240,0.1) !important; }
   .nav-btn.active { color: var(--color-primary) !important; }
-  .avatar-icon { color: #71767b !important; }
+  .avatar-icon { color: #d6d9db !important; }
   .login-link { color: #e7e9ea !important; border-color: #536471 !important; }
   .login-link:hover { background: rgba(239,243,244,0.1) !important; }
   .register-btn { background: #eff3f4 !important; color: #0f1419 !important; }
@@ -196,7 +196,7 @@ body.dark-theme {
   .user-card:hover { background: rgba(255,255,255,0.03) !important; }
   .display-name { color: #e7e9ea !important; }
   .handle { color: #71767b !important; }
-  .stats { color: #71767b !important; }
+  .stats { color: #8b98a5 !important; }
   .follow-btn {
     background: #eff3f4 !important;
     color: #0f1419 !important;
@@ -248,11 +248,21 @@ body.dark-theme {
 
   /* ---- SKELETON ---- */
   .skeleton-circle, .skeleton-line { background: #2f3336 !important; }
+  .skeleton-card { background: transparent !important; }
+  .skeleton {
+    background: linear-gradient(90deg, #2f3336 25%, #3a3d41 50%, #2f3336 75%) !important;
+    background-size: 200px 100%;
+  }
 
   /* ---- EMPTY STATE ---- */
   .empty-state { color: #71767b !important; }
   .empty-state h3 { color: #e7e9ea !important; }
   .empty-state mat-icon { color: #2f3336 !important; }
+
+  /* ---- MOBILE SUGGESTIONS ---- */
+  .mobile-suggestions-card {
+    background: var(--sidebar-bg) !important;
+  }
 
   /* ---- FORM FIELDS ---- */
   .mat-mdc-form-field {
@@ -295,6 +305,15 @@ body.dark-theme {
     color: #e7e9ea !important;
   }
   .mat-mdc-button:not([color]):not(:disabled) { color: #e7e9ea !important; }
+  .mat-mdc-raised-button:not(:disabled) {
+    background-color: #eff3f4 !important;
+    color: #0f1419 !important;
+  }
+  .mat-mdc-raised-button[color="primary"]:not(:disabled) {
+    background-color: var(--color-primary) !important;
+    color: #fff !important;
+  }
+  .mat-mdc-icon-button { color: #d6d9db !important; }
 
   /* Chips */
   .mat-mdc-chip:not(.mat-mdc-chip-disabled) {
@@ -312,6 +331,7 @@ body.dark-theme {
     box-shadow: 0 0 15px rgba(255,255,255,0.1) !important;
     .mat-mdc-menu-item { color: #e7e9ea !important; }
     .mat-mdc-menu-item:hover { background: rgba(255,255,255,0.03) !important; }
+    .mat-mdc-menu-item .mat-icon { color: #d6d9db !important; }
   }
   .notif-header { border-bottom-color: var(--color-border) !important; color: #e7e9ea !important; }
   .notif-empty { color: #71767b !important; }

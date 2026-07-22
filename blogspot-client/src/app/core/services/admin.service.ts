@@ -18,6 +18,7 @@ export interface AdminUser {
 export interface AdminPost {
   id: string;
   title: string;
+  slug: string;
   authorUserName: string;
   isPublished: boolean;
   likeCount: number;

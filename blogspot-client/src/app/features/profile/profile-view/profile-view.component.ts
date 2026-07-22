@@ -124,7 +124,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     <app-loading-spinner *ngIf="loading"></app-loading-spinner>
   `,
   styles: [`
-    .profile-container { max-width: 600px; margin: 0 auto; border-left: 1px solid #eff3f4; border-right: 1px solid #eff3f4; min-height: 100vh; }
+    .profile-container { max-width: 900px; margin: 0 auto; border-left: 1px solid #eff3f4; border-right: 1px solid #eff3f4; min-height: 100vh; }
     .cover-photo {
       height: 200px;
       background: linear-gradient(135deg, #1d9bf0, #0d8bd9);

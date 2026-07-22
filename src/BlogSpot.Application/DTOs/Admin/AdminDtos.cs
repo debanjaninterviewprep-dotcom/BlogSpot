@@ -16,6 +16,7 @@ public class AdminPostDto
 {
     public Guid Id { get; set; }
     public string Title { get; set; } = string.Empty;
+    public string Slug { get; set; } = string.Empty;
     public string AuthorUserName { get; set; } = string.Empty;
     public bool IsPublished { get; set; }
     public int LikeCount { get; set; }

@@ -71,7 +71,9 @@ import { AdminService, AdminUser, AdminPost, AdminComment } from '@core/services
             <table mat-table [dataSource]="posts" class="full-width">
               <ng-container matColumnDef="title">
                 <th mat-header-cell *matHeaderCellDef>Title</th>
-                <td mat-cell *matCellDef="let post">{{ post.title | slice:0:50 }}</td>
+                <td mat-cell *matCellDef="let post">
+                  <a [routerLink]="['/blog', post.slug]" class="post-link">{{ post.title | slice:0:50 }}</a>
+                </td>
               </ng-container>
               <ng-container matColumnDef="author">
                 <th mat-header-cell *matHeaderCellDef>Author</th>
@@ -148,13 +150,15 @@ import { AdminService, AdminUser, AdminPost, AdminComment } from '@core/services
     </div>
   `,
   styles: [`
-    .admin-container { max-width: 1100px; margin: 0 auto; }
+    .admin-container { max-width: 1100px; margin: 0 auto; padding-top: 16px; }
     h1 { display: flex; align-items: center; gap: 8px; }
     .tab-content { padding: 16px 0; overflow-x: auto; }
     table { width: 100%; }
     mat-chip { font-size: 12px; }
     .user-link { color: inherit; text-decoration: none; font-weight: 500; }
-    .user-link:hover { text-decoration: underline; color: #3f51b5; }
+    .user-link:hover { text-decoration: underline; color: #1d9bf0; }
+    .post-link { color: inherit; text-decoration: none; font-weight: 500; }
+    .post-link:hover { text-decoration: underline; color: #1d9bf0; }
   `]
 })
 export class AdminDashboardComponent implements OnInit {

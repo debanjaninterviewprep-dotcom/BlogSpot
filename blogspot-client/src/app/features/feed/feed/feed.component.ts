@@ -34,14 +34,14 @@ import { MatSnackBar } from '@angular/material/snack-bar';
                                (onReaction)="toggleReaction($event, 'feed')">
                 </app-post-card>
                 <!-- Mobile inline suggestions after 3rd post -->
-                <mat-card class="mobile-suggestions" *ngIf="i === 2 && suggestedUsers.length > 0">
-                  <mat-card-header><mat-card-title>Who to Follow</mat-card-title></mat-card-header>
-                  <mat-card-content>
+                <div class="mobile-suggestions" *ngIf="i === 2 && suggestedUsers.length > 0">
+                  <div class="mobile-suggestions-card">
+                    <h3 class="sidebar-title">Suggested for you</h3>
                     <app-user-card *ngFor="let user of suggestedUsers.slice(0,3)" [user]="user"
                                    (onFollow)="toggleFollowSuggested($event)">
                     </app-user-card>
-                  </mat-card-content>
-                </mat-card>
+                  </div>
+                </div>
               </ng-container>
               <app-loading-spinner [inline]="true" *ngIf="loadingFeed && feedPosts.length > 0"></app-loading-spinner>
             </div>
@@ -97,11 +97,12 @@ import { MatSnackBar } from '@angular/material/snack-bar';
       <div class="feed-sidebar" *ngIf="authService.isLoggedIn && suggestedUsers.length > 0">
         <div class="sidebar-card">
           <h3 class="sidebar-title">Who to Follow</h3>
-          <app-user-card *ngFor="let user of suggestedUsers" 
+          <app-user-card *ngFor="let user of (sidebarExpanded ? suggestedUsers : suggestedUsers.slice(0,3))" 
                          [user]="user"
                          (onFollow)="toggleFollowSuggested($event)">
           </app-user-card>
-          <a routerLink="/feed" class="sidebar-show-more">Show more</a>
+          <a *ngIf="!sidebarExpanded && suggestedUsers.length > 3" class="sidebar-show-more" (click)="sidebarExpanded = true">Show more</a>
+          <a *ngIf="sidebarExpanded && suggestedUsers.length > 3" class="sidebar-show-more" (click)="sidebarExpanded = false">Show less</a>
         </div>
       </div>
     </div>
@@ -148,10 +149,20 @@ import { MatSnackBar } from '@angular/material/snack-bar';
       color: #1d9bf0;
       text-decoration: none;
       font-weight: 500;
+      cursor: pointer;
       transition: background 0.15s;
+      background: none;
+      border: none;
+      font-family: inherit;
     }
     .sidebar-show-more:hover { text-decoration: underline; }
-    .mobile-suggestions { display: none; margin-bottom: 16px; }
+    .mobile-suggestions { display: none; }
+    .mobile-suggestions-card {
+      background: #f7f9f9;
+      border-radius: 16px;
+      padding: 16px 0;
+      margin: 0 12px 4px;
+    }
     .tab-content {
       padding: 0;
     }
@@ -212,6 +223,7 @@ export class FeedComponent implements OnInit {
   trendingHasMore = false;
   latestHasMore = false;
   activeTab = 0;
+  sidebarExpanded = false;
 
   constructor(
     private feedService: FeedService,

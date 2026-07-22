@@ -128,6 +128,7 @@ import { User } from '../../models/auth.model';
       width: 100%;
       gap: 8px;
       height: 100%;
+      overflow: hidden;
     }
     .logo {
       display: flex;
@@ -200,7 +201,10 @@ import { User } from '../../models/auth.model';
       background: transparent;
       cursor: pointer;
       margin-left: 4px;
+      margin-right: 4px;
       transition: opacity 0.15s;
+      overflow: hidden;
+      flex-shrink: 0;
     }
     .avatar-btn:hover { opacity: 0.8; }
     .avatar-icon { font-size: 32px; width: 32px; height: 32px; color: #536471; }
@@ -240,10 +244,10 @@ import { User } from '../../models/auth.model';
     @media (max-width: 600px) {
       .navbar { height: 52px; }
       .search-box { display: none; }
-      .logo-text { display: none; }
       .hide-sm { display: none; }
       .nav-btn { width: 36px; height: 36px; }
       .nav-btn mat-icon { font-size: 20px; width: 20px; height: 20px; }
+      .logo-text { font-size: 17px; }
     }
     @media (max-width: 400px) {
       .nav-actions { gap: 0; }

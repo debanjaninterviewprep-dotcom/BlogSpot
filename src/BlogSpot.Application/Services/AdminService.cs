@@ -93,6 +93,7 @@ public class AdminService : IAdminService
             {
                 Id = p.Id,
                 Title = p.Title,
+                Slug = p.Slug,
                 AuthorUserName = p.Author.UserName,
                 IsPublished = p.IsPublished,
                 LikeCount = p.Likes.Count,
