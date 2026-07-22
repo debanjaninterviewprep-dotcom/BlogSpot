@@ -27,30 +27,20 @@ import { MatSnackBar } from '@angular/material/snack-bar';
                 <h3>Your feed is empty</h3>
                 <p>Follow some users to see their posts here!</p>
               </div>
-              <!-- Suggestions at top if fewer than 3 posts -->
-              <div class="mobile-suggestions" *ngIf="feedPosts.length < 3 && suggestedUsers.length > 0 && !loadingFeed">
-                <div class="mobile-suggestions-card">
-                  <h3 class="sidebar-title">Suggested for you</h3>
-                  <app-user-card *ngFor="let user of suggestedUsers.slice(0,3)" [user]="user"
-                                 (onFollow)="toggleFollowSuggested($event)">
-                  </app-user-card>
-                </div>
-              </div>
+              <!-- Suggestions: after all posts if <3, after 3rd if >=3 -->
               <ng-container *ngFor="let post of feedPosts; let i = index">
                 <app-post-card [post]="post"
                                (onLike)="toggleLike($event, 'feed')"
                                (onBookmark)="toggleBookmark($event, 'feed')"
                                (onReaction)="toggleReaction($event, 'feed')">
                 </app-post-card>
-                <!-- Suggestions after 3rd post -->
-                <div class="mobile-suggestions" *ngIf="i === 2 && suggestedUsers.length > 0">
-                  <div class="mobile-suggestions-card">
-                    <h3 class="sidebar-title">Suggested for you</h3>
-                    <app-user-card *ngFor="let user of suggestedUsers.slice(0,3)" [user]="user"
-                                   (onFollow)="toggleFollowSuggested($event)">
-                    </app-user-card>
-                  </div>
-                </div>
+                <ng-container *ngIf="suggestedUsers.length > 0 && ((feedPosts.length >= 3 && i === 2) || (feedPosts.length < 3 && i === feedPosts.length - 1))">
+                  <ng-container *ngTemplateOutlet="suggestionsScroll"></ng-container>
+                </ng-container>
+              </ng-container>
+              <!-- Suggestions when feed is empty -->
+              <ng-container *ngIf="!loadingFeed && feedPosts.length === 0 && suggestedUsers.length > 0">
+                <ng-container *ngTemplateOutlet="suggestionsScroll"></ng-container>
               </ng-container>
               <app-loading-spinner [inline]="true" *ngIf="loadingFeed && feedPosts.length > 0"></app-loading-spinner>
             </div>
@@ -68,29 +58,18 @@ import { MatSnackBar } from '@angular/material/snack-bar';
                 <h3>No trending posts yet</h3>
                 <p>Be the first to create a post!</p>
               </div>
-              <!-- Suggestions at top if fewer than 3 posts -->
-              <div class="mobile-suggestions" *ngIf="trendingPosts.length < 3 && suggestedUsers.length > 0 && !loadingTrending && authService.isLoggedIn">
-                <div class="mobile-suggestions-card">
-                  <h3 class="sidebar-title">Suggested for you</h3>
-                  <app-user-card *ngFor="let user of suggestedUsers.slice(0,3)" [user]="user"
-                                 (onFollow)="toggleFollowSuggested($event)">
-                  </app-user-card>
-                </div>
-              </div>
               <ng-container *ngFor="let post of trendingPosts; let i = index">
                 <app-post-card [post]="post"
                                (onLike)="toggleLike($event, 'trending')"
                                (onBookmark)="toggleBookmark($event, 'trending')"
                                (onReaction)="toggleReaction($event, 'trending')">
                 </app-post-card>
-                <div class="mobile-suggestions" *ngIf="i === 2 && suggestedUsers.length > 0 && authService.isLoggedIn">
-                  <div class="mobile-suggestions-card">
-                    <h3 class="sidebar-title">Suggested for you</h3>
-                    <app-user-card *ngFor="let user of suggestedUsers.slice(0,3)" [user]="user"
-                                   (onFollow)="toggleFollowSuggested($event)">
-                    </app-user-card>
-                  </div>
-                </div>
+                <ng-container *ngIf="suggestedUsers.length > 0 && authService.isLoggedIn && ((trendingPosts.length >= 3 && i === 2) || (trendingPosts.length < 3 && i === trendingPosts.length - 1))">
+                  <ng-container *ngTemplateOutlet="suggestionsScroll"></ng-container>
+                </ng-container>
+              </ng-container>
+              <ng-container *ngIf="!loadingTrending && trendingPosts.length === 0 && suggestedUsers.length > 0 && authService.isLoggedIn">
+                <ng-container *ngTemplateOutlet="suggestionsScroll"></ng-container>
               </ng-container>
               <app-loading-spinner [inline]="true" *ngIf="loadingTrending && trendingPosts.length > 0"></app-loading-spinner>
             </div>
@@ -108,29 +87,18 @@ import { MatSnackBar } from '@angular/material/snack-bar';
                 <h3>No posts yet</h3>
                 <p>Be the first to create a post!</p>
               </div>
-              <!-- Suggestions at top if fewer than 3 posts -->
-              <div class="mobile-suggestions" *ngIf="latestPosts.length < 3 && suggestedUsers.length > 0 && !loadingLatest && authService.isLoggedIn">
-                <div class="mobile-suggestions-card">
-                  <h3 class="sidebar-title">Suggested for you</h3>
-                  <app-user-card *ngFor="let user of suggestedUsers.slice(0,3)" [user]="user"
-                                 (onFollow)="toggleFollowSuggested($event)">
-                  </app-user-card>
-                </div>
-              </div>
               <ng-container *ngFor="let post of latestPosts; let i = index">
                 <app-post-card [post]="post"
                                (onLike)="toggleLike($event, 'latest')"
                                (onBookmark)="toggleBookmark($event, 'latest')"
                                (onReaction)="toggleReaction($event, 'latest')">
                 </app-post-card>
-                <div class="mobile-suggestions" *ngIf="i === 2 && suggestedUsers.length > 0 && authService.isLoggedIn">
-                  <div class="mobile-suggestions-card">
-                    <h3 class="sidebar-title">Suggested for you</h3>
-                    <app-user-card *ngFor="let user of suggestedUsers.slice(0,3)" [user]="user"
-                                   (onFollow)="toggleFollowSuggested($event)">
-                    </app-user-card>
-                  </div>
-                </div>
+                <ng-container *ngIf="suggestedUsers.length > 0 && authService.isLoggedIn && ((latestPosts.length >= 3 && i === 2) || (latestPosts.length < 3 && i === latestPosts.length - 1))">
+                  <ng-container *ngTemplateOutlet="suggestionsScroll"></ng-container>
+                </ng-container>
+              </ng-container>
+              <ng-container *ngIf="!loadingLatest && latestPosts.length === 0 && suggestedUsers.length > 0 && authService.isLoggedIn">
+                <ng-container *ngTemplateOutlet="suggestionsScroll"></ng-container>
               </ng-container>
               <app-loading-spinner [inline]="true" *ngIf="loadingLatest && latestPosts.length > 0"></app-loading-spinner>
             </div>
@@ -150,6 +118,32 @@ import { MatSnackBar } from '@angular/material/snack-bar';
           <a *ngIf="sidebarExpanded && suggestedUsers.length > 3" class="sidebar-show-more" (click)="sidebarExpanded = false">Show less</a>
         </div>
       </div>
+
+      <!-- Reusable horizontal scroll suggestions (Instagram-style) -->
+      <ng-template #suggestionsScroll>
+        <div class="mobile-suggestions">
+          <div class="suggestions-scroll-card">
+            <h3 class="suggestions-scroll-title">Suggested for you</h3>
+            <div class="suggestions-scroll-track">
+              <div class="suggestion-item" *ngFor="let user of suggestedUsers">
+                <a [routerLink]="['/profile', user.userName]" class="suggestion-avatar-link">
+                  <img [src]="(user.profilePictureUrl | imageUrl) || 'assets/default-avatar.svg'"
+                       [alt]="user.userName" class="suggestion-avatar">
+                </a>
+                <a [routerLink]="['/profile', user.userName]" class="suggestion-name">
+                  {{ user.displayName || user.userName }}
+                </a>
+                <span class="suggestion-handle">{{'@'}}{{ user.userName }}</span>
+                <button class="suggestion-follow-btn"
+                        [class.following]="user.isFollowedByCurrentUser"
+                        (click)="toggleFollowSuggested(user.id)">
+                  {{ user.isFollowedByCurrentUser ? 'Following' : 'Follow' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-template>
     </div>
   `,
   styles: [`
@@ -202,11 +196,91 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     }
     .sidebar-show-more:hover { text-decoration: underline; }
     .mobile-suggestions { display: none; }
-    .mobile-suggestions-card {
+    .suggestions-scroll-card {
+      border-bottom: 1px solid #eff3f4;
+      padding: 16px 0;
+    }
+    .suggestions-scroll-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #0f1419;
+      margin: 0 0 12px;
+      padding: 0 16px;
+    }
+    .suggestions-scroll-track {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      padding: 0 16px 8px;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+    }
+    .suggestions-scroll-track::-webkit-scrollbar { display: none; }
+    .suggestion-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 140px;
+      max-width: 140px;
+      padding: 20px 12px 16px;
       background: #f7f9f9;
       border-radius: 16px;
-      padding: 16px 0;
-      margin: 0 12px 4px;
+      border: 1px solid #eff3f4;
+      scroll-snap-align: start;
+      flex-shrink: 0;
+      gap: 6px;
+    }
+    .suggestion-avatar-link { flex-shrink: 0; }
+    .suggestion-avatar {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .suggestion-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: #0f1419;
+      text-decoration: none;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 120px;
+      line-height: 1.3;
+    }
+    .suggestion-name:hover { text-decoration: underline; }
+    .suggestion-handle {
+      font-size: 12px;
+      color: #536471;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 120px;
+    }
+    .suggestion-follow-btn {
+      margin-top: 6px;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 6px 20px;
+      border-radius: 24px;
+      border: none;
+      background: #0f1419;
+      color: #fff;
+      cursor: pointer;
+      transition: opacity 0.15s, background 0.15s, color 0.15s;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+    .suggestion-follow-btn:hover { opacity: 0.85; }
+    .suggestion-follow-btn.following {
+      background: transparent;
+      color: #0f1419;
+      border: 1px solid #cfd9de;
+    }
+    .suggestion-follow-btn.following:hover {
+      border-color: #f4212e;
+      color: #f4212e;
+      background: rgba(244,33,46,0.06);
     }
     .tab-content {
       padding: 0;

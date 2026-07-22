@@ -260,6 +260,28 @@ body.dark-theme {
   .empty-state mat-icon { color: #2f3336 !important; }
 
   /* ---- MOBILE SUGGESTIONS ---- */
+  .suggestions-scroll-card { border-bottom-color: var(--color-border) !important; }
+  .suggestions-scroll-title { color: #e7e9ea !important; }
+  .suggestion-item {
+    background: var(--sidebar-bg) !important;
+    border-color: var(--color-border) !important;
+  }
+  .suggestion-name { color: #e7e9ea !important; }
+  .suggestion-handle { color: #71767b !important; }
+  .suggestion-follow-btn {
+    background: #eff3f4 !important;
+    color: #0f1419 !important;
+  }
+  .suggestion-follow-btn.following {
+    background: transparent !important;
+    color: #e7e9ea !important;
+    border-color: #536471 !important;
+  }
+  .suggestion-follow-btn.following:hover {
+    border-color: #f4212e !important;
+    color: #f4212e !important;
+    background: rgba(244,33,46,0.1) !important;
+  }
   .mobile-suggestions-card {
     background: var(--sidebar-bg) !important;
   }
