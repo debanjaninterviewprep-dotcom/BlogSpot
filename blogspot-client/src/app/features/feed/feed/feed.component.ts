@@ -95,17 +95,14 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 
       <!-- Sidebar: Suggested Users -->
       <div class="feed-sidebar" *ngIf="authService.isLoggedIn && suggestedUsers.length > 0">
-        <mat-card>
-          <mat-card-header>
-            <mat-card-title>Who to Follow</mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            <app-user-card *ngFor="let user of suggestedUsers" 
-                           [user]="user"
-                           (onFollow)="toggleFollowSuggested($event)">
-            </app-user-card>
-          </mat-card-content>
-        </mat-card>
+        <div class="sidebar-card">
+          <h3 class="sidebar-title">Who to Follow</h3>
+          <app-user-card *ngFor="let user of suggestedUsers" 
+                         [user]="user"
+                         (onFollow)="toggleFollowSuggested($event)">
+          </app-user-card>
+          <a routerLink="/feed" class="sidebar-show-more">Show more</a>
+        </div>
       </div>
     </div>
   `,
@@ -114,35 +111,73 @@ import { MatSnackBar } from '@angular/material/snack-bar';
       max-width: 1000px;
       margin: 0 auto;
       display: flex;
-      gap: 24px;
+      gap: 28px;
     }
     .feed-main {
       flex: 1;
       min-width: 0;
+      border-left: 1px solid #eff3f4;
+      border-right: 1px solid #eff3f4;
     }
     .feed-sidebar {
-      width: 300px;
+      width: 320px;
       flex-shrink: 0;
+      padding-top: 12px;
+      position: sticky;
+      top: 68px;
+      align-self: flex-start;
     }
+    .sidebar-card {
+      background: #f7f9f9;
+      border-radius: 16px;
+      padding: 16px 0;
+      overflow: hidden;
+    }
+    .sidebar-title {
+      font-size: 19px;
+      font-weight: 800;
+      color: #0f1419;
+      margin: 0 0 4px;
+      padding: 0 16px 12px;
+      letter-spacing: -0.02em;
+    }
+    .sidebar-show-more {
+      display: block;
+      padding: 12px 16px 4px;
+      font-size: 14px;
+      color: #1d9bf0;
+      text-decoration: none;
+      font-weight: 500;
+      transition: background 0.15s;
+    }
+    .sidebar-show-more:hover { text-decoration: underline; }
     .mobile-suggestions { display: none; margin-bottom: 16px; }
     .tab-content {
-      padding: 16px 0;
+      padding: 0;
     }
     .empty-state {
       text-align: center;
-      padding: 48px 16px;
-      color: #888;
+      padding: 64px 24px;
+      color: #536471;
     }
     .empty-state mat-icon {
-      font-size: 64px;
-      width: 64px;
-      height: 64px;
-      color: #ccc;
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+      color: #cfd9de;
+      margin-bottom: 12px;
     }
+    .empty-state h3 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #0f1419;
+      margin-bottom: 4px;
+    }
+    .empty-state p { font-size: 14px; }
     /* Skeleton loading */
-    .skeleton-card { padding: 24px; margin-bottom: 16px; }
+    .skeleton-card { padding: 20px; margin-bottom: 0; border-bottom: 1px solid #eff3f4; border-radius: 0 !important; box-shadow: none !important; }
     .skeleton-header { display: flex; gap: 12px; margin-bottom: 16px; }
-    .skeleton-circle { width: 40px; height: 40px; border-radius: 50%; background: #e0e0e0; animation: pulse 1.5s infinite; }
+    .skeleton-circle { width: 44px; height: 44px; border-radius: 50%; background: #e0e0e0; animation: pulse 1.5s infinite; }
     .skeleton-lines { flex: 1; }
     .skeleton-line { height: 12px; border-radius: 6px; background: #e0e0e0; margin-bottom: 8px; animation: pulse 1.5s infinite; }
     .skeleton-body { display: flex; flex-direction: column; gap: 8px; }
@@ -155,9 +190,10 @@ import { MatSnackBar } from '@angular/material/snack-bar';
       50% { opacity: 0.4; }
     }
     @media (max-width: 768px) {
-      .feed-container { padding: 0 8px; }
+      .feed-container { padding: 0; }
       .feed-sidebar { display: none; }
       .mobile-suggestions { display: block; }
+      .feed-main { border-left: none; border-right: none; }
     }
   `]
 })

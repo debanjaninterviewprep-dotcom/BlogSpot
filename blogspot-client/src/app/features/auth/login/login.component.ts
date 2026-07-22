@@ -8,52 +8,49 @@ import { AuthService } from '@core/services/auth.service';
   selector: 'app-login',
   template: `
     <div class="auth-container">
-      <mat-card class="auth-card">
-        <mat-card-header>
-          <mat-card-title>Welcome Back</mat-card-title>
-          <mat-card-subtitle>Sign in to your account</mat-card-subtitle>
-        </mat-card-header>
+      <div class="auth-card">
+        <div class="auth-brand">
+          <mat-icon class="brand-icon">rss_feed</mat-icon>
+        </div>
+        <h1 class="auth-title">Sign in to BlogSpot</h1>
 
-        <mat-card-content>
-          <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Email or Username</mat-label>
-              <input matInput formControlName="emailOrUsername" autocomplete="username">
-              <mat-icon matPrefix>person</mat-icon>
-              <mat-error *ngIf="loginForm.get('emailOrUsername')?.hasError('required')">
-                Email or username is required
-              </mat-error>
-            </mat-form-field>
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Email or Username</mat-label>
+            <input matInput formControlName="emailOrUsername" autocomplete="username">
+            <mat-icon matPrefix>person</mat-icon>
+            <mat-error *ngIf="loginForm.get('emailOrUsername')?.hasError('required')">
+              Email or username is required
+            </mat-error>
+          </mat-form-field>
 
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Password</mat-label>
-              <input matInput formControlName="password"
-                     [type]="hidePassword ? 'password' : 'text'"
-                     autocomplete="current-password">
-              <mat-icon matPrefix>lock</mat-icon>
-              <button mat-icon-button matSuffix type="button"
-                      (click)="hidePassword = !hidePassword">
-                <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
-              </button>
-              <mat-error *ngIf="loginForm.get('password')?.hasError('required')">
-                Password is required
-              </mat-error>
-            </mat-form-field>
-
-            <button mat-raised-button color="primary" class="full-width submit-btn"
-                    type="submit" [disabled]="loginForm.invalid || isLoading">
-              <mat-icon *ngIf="!isLoading">login</mat-icon>
-              <span *ngIf="!isLoading">Sign In</span>
-              <span *ngIf="isLoading">Signing in...</span>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Password</mat-label>
+            <input matInput formControlName="password"
+                   [type]="hidePassword ? 'password' : 'text'"
+                   autocomplete="current-password">
+            <mat-icon matPrefix>lock</mat-icon>
+            <button mat-icon-button matSuffix type="button"
+                    (click)="hidePassword = !hidePassword">
+              <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
             </button>
-          </form>
-        </mat-card-content>
+            <mat-error *ngIf="loginForm.get('password')?.hasError('required')">
+              Password is required
+            </mat-error>
+          </mat-form-field>
 
-        <mat-card-actions align="end">
+          <button class="submit-btn" type="submit"
+                  [disabled]="loginForm.invalid || isLoading">
+            <span *ngIf="!isLoading">Sign in</span>
+            <span *ngIf="isLoading">Signing in...</span>
+          </button>
+        </form>
+
+        <div class="auth-footer">
           <span>Don't have an account?</span>
-          <a mat-button color="primary" routerLink="/auth/register">Register</a>
-        </mat-card-actions>
-      </mat-card>
+          <a routerLink="/auth/register" class="auth-link">Create account</a>
+        </div>
+      </div>
     </div>
   `,
   styles: [`
@@ -61,25 +58,76 @@ import { AuthService } from '@core/services/auth.service';
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: calc(100vh - 64px);
-      padding: 16px;
+      min-height: calc(100vh - 56px);
+      padding: 24px 16px;
       box-sizing: border-box;
     }
     .auth-card {
       width: 100%;
       max-width: 440px;
-      padding: 24px;
+      padding: 32px;
       box-sizing: border-box;
+      background: #fff;
+      border-radius: 20px;
+      border: 1px solid #eff3f4;
+    }
+    .auth-brand {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+    .brand-icon {
+      font-size: 40px;
+      width: 40px;
+      height: 40px;
+      color: #1d9bf0;
+    }
+    .auth-title {
+      font-size: 28px;
+      font-weight: 800;
+      color: #0f1419;
+      text-align: center;
+      margin: 0 0 28px;
+      letter-spacing: -0.03em;
     }
     form {
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      margin-top: 16px;
+      gap: 4px;
     }
-    .submit-btn { height: 44px; margin-top: 8px; }
+    .submit-btn {
+      width: 100%;
+      height: 48px;
+      border: none;
+      border-radius: 24px;
+      background: #0f1419;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 12px;
+      transition: opacity 0.15s;
+      font-family: inherit;
+    }
+    .submit-btn:hover:not(:disabled) { opacity: 0.85; }
+    .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .auth-footer {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 24px;
+      font-size: 14px;
+      color: #536471;
+    }
+    .auth-link {
+      color: #1d9bf0;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .auth-link:hover { text-decoration: underline; }
     @media (max-width: 480px) {
-      .auth-card { padding: 16px; }
+      .auth-card { padding: 24px 16px; border: none; border-radius: 0; }
+      .auth-title { font-size: 24px; }
     }
   `]
 })

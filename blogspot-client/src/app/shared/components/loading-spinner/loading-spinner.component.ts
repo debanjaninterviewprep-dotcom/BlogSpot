@@ -27,8 +27,8 @@ import { Component, Input } from '@angular/core';
     }
     .ring-inline {
       width: 36px; height: 36px;
-      border: 3px solid rgba(63, 81, 181, 0.2);
-      border-top-color: #3f51b5;
+      border: 3px solid rgba(29, 155, 240, 0.2);
+      border-top-color: #1d9bf0;
       border-radius: 50%;
       animation: spin 0.75s ease-in-out infinite;
     }

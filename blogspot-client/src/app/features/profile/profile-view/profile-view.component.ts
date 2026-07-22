@@ -124,50 +124,57 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     <app-loading-spinner *ngIf="loading"></app-loading-spinner>
   `,
   styles: [`
-    .profile-container { max-width: 800px; margin: 0 auto; }
+    .profile-container { max-width: 600px; margin: 0 auto; border-left: 1px solid #eff3f4; border-right: 1px solid #eff3f4; min-height: 100vh; }
     .cover-photo {
       height: 200px;
-      background: linear-gradient(135deg, #3f51b5, #7986cb);
+      background: linear-gradient(135deg, #1d9bf0, #0d8bd9);
       background-size: cover;
       background-position: center;
-      border-radius: 8px 8px 0 0;
       position: relative;
     }
     .cover-overlay {
       position: absolute; inset: 0;
-      background: linear-gradient(transparent 50%, rgba(0,0,0,0.3));
-      border-radius: 8px 8px 0 0;
+      background: linear-gradient(transparent 50%, rgba(0,0,0,0.2));
     }
-    .profile-header { padding: 32px; margin-top: -40px; position: relative; z-index: 1; }
-    .profile-top { display: flex; gap: 24px; align-items: flex-start; }
+    .profile-header { padding: 16px 20px 20px; border: none; box-shadow: none; border-bottom: 1px solid #eff3f4; border-radius: 0 !important; }
+    .profile-top { display: flex; gap: 16px; align-items: flex-start; }
     .profile-avatar {
       width: 120px; height: 120px; border-radius: 50%; object-fit: cover;
-      border: 4px solid white; margin-top: -60px; background: white;
+      border: 4px solid white; margin-top: -60px; background: white; flex-shrink: 0;
     }
-    .profile-info { flex: 1; }
-    .profile-info h1 { margin: 0; }
-    .handle { color: #888; margin: 4px 0 12px; }
-    .bio { margin-bottom: 12px; line-height: 1.5; }
+    .profile-info { flex: 1; min-width: 0; }
+    .profile-info h1 { margin: 0; font-size: 20px; font-weight: 800; color: #0f1419; letter-spacing: -0.02em; }
+    .handle { color: #536471; margin: 2px 0 12px; font-size: 14px; }
+    .bio { margin-bottom: 12px; line-height: 1.5; font-size: 14px; color: #0f1419; }
     .skills { margin-bottom: 12px; }
     .social-links { display: flex; gap: 4px; margin-bottom: 8px; }
-    .social-links a { color: #666; }
-    .social-links a:hover { color: #3f51b5; }
-    .meta { display: flex; flex-wrap: wrap; gap: 16px; color: #666; font-size: 14px; margin-bottom: 12px; }
+    .social-links a { color: #536471; }
+    .social-links a:hover { color: #1d9bf0; }
+    .meta { display: flex; flex-wrap: wrap; gap: 12px; color: #536471; font-size: 13px; margin-bottom: 12px; }
     .meta span { display: flex; align-items: center; gap: 4px; }
-    .meta a { color: #3f51b5; text-decoration: none; }
-    .stats { display: flex; gap: 24px; }
-    .stats span { cursor: pointer; }
+    .meta a { color: #1d9bf0; text-decoration: none; }
+    .meta a:hover { text-decoration: underline; }
+    .stats { display: flex; gap: 20px; font-size: 14px; color: #536471; }
+    .stats span { cursor: pointer; transition: color 0.15s; }
+    .stats span:hover { text-decoration: underline; }
+    .stats strong { color: #0f1419; font-weight: 700; }
     .profile-actions { display: flex; flex-direction: column; gap: 8px; }
-    .tab-content { padding: 16px 0; }
-    .empty-state { text-align: center; padding: 32px; color: #888; }
+    .profile-actions button {
+      border-radius: 24px !important;
+      font-weight: 700 !important;
+      font-size: 14px !important;
+    }
+    .tab-content { padding: 0; }
+    .empty-state { text-align: center; padding: 48px 24px; color: #536471; font-size: 14px; }
     @media (max-width: 600px) {
-      .profile-header { padding: 16px; }
+      .profile-container { border: none; }
+      .profile-header { padding: 12px 16px 16px; }
       .profile-top { flex-wrap: wrap; }
       .profile-avatar { width: 80px; height: 80px; margin-top: -40px; border-width: 3px; }
-      .profile-info h1 { font-size: 1.2rem; }
+      .profile-info h1 { font-size: 18px; }
       .profile-actions { flex-direction: row; flex-wrap: wrap; width: 100%; margin-top: 8px; }
       .profile-actions button { flex: 1; min-width: 120px; }
-      .stats { gap: 16px; font-size: 14px; }
+      .stats { gap: 16px; font-size: 13px; }
       .cover-photo { height: 140px; }
     }
   `]

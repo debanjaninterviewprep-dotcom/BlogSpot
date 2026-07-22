@@ -11,38 +11,37 @@ import { User } from '../../models/auth.model';
 @Component({
   selector: 'app-navbar',
   template: `
-    <mat-toolbar color="primary" class="navbar">
+    <nav class="navbar">
       <div class="navbar-content container">
         <a routerLink="/feed" class="logo">
-          <mat-icon>rss_feed</mat-icon>
+          <mat-icon class="logo-icon">rss_feed</mat-icon>
           <span class="logo-text">BlogSpot</span>
         </a>
 
-        <div class="spacer"></div>
-
         <div class="search-box" *ngIf="authService.isLoggedIn">
-          <mat-form-field appearance="outline" class="search-field">
-            <mat-icon matPrefix>search</mat-icon>
-            <input matInput placeholder="Search posts..."
+          <div class="search-wrapper">
+            <mat-icon class="search-icon">search</mat-icon>
+            <input type="text" placeholder="Search posts..." class="search-input"
                    (keyup.enter)="onSearch($event)">
-          </mat-form-field>
+          </div>
         </div>
 
         <div class="spacer"></div>
 
         <div class="nav-actions" *ngIf="authService.isLoggedIn; else loginButtons">
-          <button mat-icon-button routerLink="/feed" matTooltip="Home">
+          <a routerLink="/feed" class="nav-btn" matTooltip="Home" routerLinkActive="active"
+             [routerLinkActiveOptions]="{exact: true}">
             <mat-icon>home</mat-icon>
-          </button>
-          <button mat-icon-button routerLink="/blog/create" matTooltip="New Post">
-            <mat-icon>add_circle</mat-icon>
-          </button>
-          <button mat-icon-button routerLink="/blog/bookmarks" matTooltip="Saved Posts" class="hide-xs">
-            <mat-icon>bookmarks</mat-icon>
-          </button>
+          </a>
+          <a routerLink="/blog/create" class="nav-btn" matTooltip="New Post" routerLinkActive="active">
+            <mat-icon>edit_square</mat-icon>
+          </a>
+          <a routerLink="/blog/bookmarks" class="nav-btn hide-sm" matTooltip="Saved Posts" routerLinkActive="active">
+            <mat-icon>bookmark</mat-icon>
+          </a>
 
           <!-- Notifications -->
-          <button mat-icon-button [matMenuTriggerFor]="notifMenu" matTooltip="Notifications">
+          <button class="nav-btn" [matMenuTriggerFor]="notifMenu" matTooltip="Notifications">
             <mat-icon [matBadge]="unreadCount > 0 ? unreadCount : null"
                       matBadgeColor="warn" matBadgeSize="small">
               notifications
@@ -68,16 +67,17 @@ import { User } from '../../models/auth.model';
           </mat-menu>
 
           <!-- Dark Mode -->
-          <button mat-icon-button (click)="toggleTheme()"
+          <button class="nav-btn" (click)="toggleTheme()"
                   [matTooltip]="themeService.isDark ? 'Light mode' : 'Dark mode'">
             <mat-icon>{{ themeService.isDark ? 'light_mode' : 'dark_mode' }}</mat-icon>
           </button>
 
-          <button mat-icon-button *ngIf="authService.isAdmin" routerLink="/admin" matTooltip="Admin" class="hide-xs">
+          <a class="nav-btn hide-sm" *ngIf="authService.isAdmin" routerLink="/admin" matTooltip="Admin" routerLinkActive="active">
             <mat-icon>admin_panel_settings</mat-icon>
-          </button>
-          <button mat-icon-button [matMenuTriggerFor]="userMenu">
-            <mat-icon>account_circle</mat-icon>
+          </a>
+
+          <button class="avatar-btn" [matMenuTriggerFor]="userMenu">
+            <mat-icon class="avatar-icon">account_circle</mat-icon>
           </button>
           <mat-menu #userMenu="matMenu">
             <button mat-menu-item routerLink="/profile/me">
@@ -100,72 +100,150 @@ import { User } from '../../models/auth.model';
         </div>
 
         <ng-template #loginButtons>
-          <button mat-icon-button (click)="toggleTheme()"
+          <button class="nav-btn" (click)="toggleTheme()"
                   [matTooltip]="themeService.isDark ? 'Light mode' : 'Dark mode'">
             <mat-icon>{{ themeService.isDark ? 'light_mode' : 'dark_mode' }}</mat-icon>
           </button>
-          <button mat-button routerLink="/auth/login">Login</button>
-          <button mat-raised-button color="accent" routerLink="/auth/register">Register</button>
+          <a routerLink="/auth/login" class="login-link">Sign in</a>
+          <a routerLink="/auth/register" class="register-btn">Create account</a>
         </ng-template>
       </div>
-    </mat-toolbar>
+    </nav>
   `,
   styles: [`
     .navbar {
       position: fixed;
       top: 0; left: 0; right: 0;
       z-index: 1000;
+      height: 56px;
+      background: #fff;
+      border-bottom: 1px solid #eff3f4;
+      display: flex;
+      align-items: center;
+      transition: background 0.2s, border-color 0.2s;
     }
     .navbar-content {
       display: flex;
       align-items: center;
       width: 100%;
       gap: 8px;
+      height: 100%;
     }
     .logo {
       display: flex;
       align-items: center;
-      gap: 6px;
-      color: white;
+      gap: 8px;
       text-decoration: none;
-      font-size: 18px;
-      font-weight: 500;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: #0f1419;
       white-space: nowrap;
+      transition: color 0.2s;
     }
+    .logo-icon { color: #1d9bf0; font-size: 28px; width: 28px; height: 28px; }
     .search-box {
-      flex: 0 1 360px;
+      flex: 0 1 400px;
+      margin: 0 16px;
+    }
+    .search-wrapper {
       display: flex;
       align-items: center;
+      background: #eff3f4;
+      border-radius: 24px;
+      padding: 0 16px;
+      height: 40px;
+      border: 2px solid transparent;
+      transition: background 0.2s, border-color 0.2s;
     }
-    .search-field { width: 100%; margin: 0; }
-    .search-field ::ng-deep .mat-mdc-form-field-subscript-wrapper { display: none; }
-    .search-field ::ng-deep .mat-mdc-text-field-wrapper {
-      background-color: rgba(255,255,255,0.15);
-      border-radius: 8px;
-      padding: 0 12px !important;
-      height: 36px; margin: 0;
+    .search-wrapper:focus-within {
+      background: #fff;
+      border-color: #1d9bf0;
     }
-    .search-field ::ng-deep .mat-mdc-form-field-flex { height: 36px; align-items: center; }
-    .search-field ::ng-deep .mdc-notched-outline__leading,
-    .search-field ::ng-deep .mdc-notched-outline__notch,
-    .search-field ::ng-deep .mdc-notched-outline__trailing { border-color: rgba(255,255,255,0.3) !important; }
-    .search-field ::ng-deep .mat-mdc-form-field-infix { padding: 0 !important; min-height: unset; border-top: 0; }
-    .search-field ::ng-deep input.mat-mdc-input-element { color: white; }
-    .search-field ::ng-deep input::placeholder { color: rgba(255,255,255,0.7); }
-    .search-field ::ng-deep .mat-icon { color: rgba(255,255,255,0.7); }
+    .search-wrapper:focus-within .search-icon { color: #1d9bf0; }
+    .search-icon { color: #536471; font-size: 20px; width: 20px; height: 20px; margin-right: 8px; }
+    .search-input {
+      border: none;
+      outline: none;
+      background: transparent;
+      font-size: 14px;
+      width: 100%;
+      color: #0f1419;
+      font-family: inherit;
+    }
+    .search-input::placeholder { color: #536471; }
     .spacer { flex: 1; }
     .nav-actions { display: flex; align-items: center; gap: 2px; }
+    .nav-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      border: none;
+      background: transparent;
+      color: #536471;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      text-decoration: none;
+    }
+    .nav-btn:hover { background: rgba(29,155,240,0.1); color: #1d9bf0; }
+    .nav-btn.active { color: #1d9bf0; }
+    .nav-btn mat-icon { font-size: 22px; width: 22px; height: 22px; }
+    .avatar-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      margin-left: 4px;
+      transition: opacity 0.15s;
+    }
+    .avatar-btn:hover { opacity: 0.8; }
+    .avatar-icon { font-size: 32px; width: 32px; height: 32px; color: #536471; }
+    .login-link {
+      font-size: 14px;
+      font-weight: 600;
+      color: #0f1419;
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 24px;
+      border: 1px solid #cfd9de;
+      transition: background 0.15s;
+    }
+    .login-link:hover { background: rgba(15,20,25,0.05); }
+    .register-btn {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      text-decoration: none;
+      padding: 8px 20px;
+      border-radius: 24px;
+      background: #0f1419;
+      transition: opacity 0.15s;
+    }
+    .register-btn:hover { opacity: 0.85; }
     .notif-header {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 8px 16px; font-weight: 500; border-bottom: 1px solid #eee;
+      padding: 12px 16px; font-weight: 600; border-bottom: 1px solid #eff3f4;
+      font-size: 15px;
     }
-    .notif-empty { padding: 24px 16px; text-align: center; color: #888; }
-    .unread { background-color: rgba(63,81,181,0.06); }
-    .view-all { text-align: center; width: 100%; color: #3f51b5; font-weight: 500; }
+    .notif-empty { padding: 32px 16px; text-align: center; color: #536471; font-size: 14px; }
+    .unread { background-color: rgba(29,155,240,0.06); }
+    .view-all { text-align: center; width: 100%; color: #1d9bf0; font-weight: 600; font-size: 14px; }
+    @media (max-width: 768px) {
+      .search-box { flex: 0 1 240px; margin: 0 8px; }
+    }
     @media (max-width: 600px) {
+      .navbar { height: 52px; }
       .search-box { display: none; }
       .logo-text { display: none; }
-      .hide-xs { display: none; }
+      .hide-sm { display: none; }
+      .nav-btn { width: 36px; height: 36px; }
+      .nav-btn mat-icon { font-size: 20px; width: 20px; height: 20px; }
     }
     @media (max-width: 400px) {
       .nav-actions { gap: 0; }
