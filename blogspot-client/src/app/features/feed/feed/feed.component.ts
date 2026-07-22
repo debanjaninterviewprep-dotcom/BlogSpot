@@ -436,7 +436,7 @@ export class FeedComponent implements OnInit {
   }
 
   loadSuggestedUsers(): void {
-    this.userService.getSuggestedUsers(5).subscribe({
+    this.userService.getSuggestedUsers(20).subscribe({
       next: users => this.suggestedUsers = users
     });
   }

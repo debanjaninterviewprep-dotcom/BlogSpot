@@ -28,7 +28,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
             <!-- Skills -->
             <div class="skills" *ngIf="profile.skills?.length">
               <mat-chip-set>
-                <mat-chip *ngFor="let skill of profile.skills" highlighted>
+                <mat-chip *ngFor="let skill of profile.skills">
                   {{ skill }}
                 </mat-chip>
               </mat-chip-set>

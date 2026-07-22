@@ -46,7 +46,7 @@ export class AdminService {
     const params = this.buildParams(pagination);
     return this.http.get<PagedResult<AdminUser>>(`${this.apiUrl}/users`, { params });
   }
-
+x
   toggleUserStatus(userId: string): Observable<void> {
     return this.http.put<void>(`${this.apiUrl}/users/${userId}/toggle-status`, {});
   }

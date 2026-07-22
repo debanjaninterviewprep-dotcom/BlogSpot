@@ -181,6 +181,15 @@ public class UserService : IUserService
             .Include(u => u.Followers)
             .ThenInclude(f => f.Follower)
             .ThenInclude(u => u.Profile)
+            .Include(u => u.Followers)
+            .ThenInclude(f => f.Follower)
+            .ThenInclude(u => u.Followers)
+            .Include(u => u.Followers)
+            .ThenInclude(f => f.Follower)
+            .ThenInclude(u => u.Following)
+            .Include(u => u.Followers)
+            .ThenInclude(f => f.Follower)
+            .ThenInclude(u => u.BlogPosts)
             .FirstOrDefaultAsync(u => u.Id == userId, ct)
             ?? throw new KeyNotFoundException("User not found.");
 
@@ -206,6 +215,15 @@ public class UserService : IUserService
             .Include(u => u.Following)
             .ThenInclude(f => f.Following)
             .ThenInclude(u => u.Profile)
+            .Include(u => u.Following)
+            .ThenInclude(f => f.Following)
+            .ThenInclude(u => u.Followers)
+            .Include(u => u.Following)
+            .ThenInclude(f => f.Following)
+            .ThenInclude(u => u.Following)
+            .Include(u => u.Following)
+            .ThenInclude(f => f.Following)
+            .ThenInclude(u => u.BlogPosts)
             .FirstOrDefaultAsync(u => u.Id == userId, ct)
             ?? throw new KeyNotFoundException("User not found.");
 
