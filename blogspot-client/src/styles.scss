@@ -186,6 +186,10 @@ body.dark-theme {
 
   /* ---- FEED ---- */
   .feed-main { border-color: var(--color-border) !important; }
+  .filter-bar { background: #000 !important; border-bottom-color: var(--color-border) !important; }
+  .filter-chip { color: #71767b !important; border-color: #333638 !important; }
+  .filter-chip:hover { background: rgba(29,155,240,0.1) !important; color: var(--color-primary) !important; border-color: var(--color-primary) !important; }
+  .filter-chip.active { background: #eff3f4 !important; color: #0f1419 !important; border-color: #eff3f4 !important; }
   .sidebar-card { background: var(--sidebar-bg) !important; }
   .sidebar-title { color: #e7e9ea !important; }
   .sidebar-show-more { color: var(--color-primary) !important; }

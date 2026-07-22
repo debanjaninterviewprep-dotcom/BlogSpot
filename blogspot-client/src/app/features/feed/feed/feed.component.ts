@@ -12,105 +12,73 @@ import { MatSnackBar } from '@angular/material/snack-bar';
   template: `
     <div class="feed-container">
       <div class="feed-main">
-        <mat-tab-group (selectedTabChange)="onTabChange($event)" animationDuration="200ms">
-          <mat-tab label="My Feed" *ngIf="authService.isLoggedIn">
-            <div class="tab-content">
-              <!-- Skeleton loading -->
-              <div *ngIf="loadingFeed && feedPosts.length === 0" class="skeleton-list">
-                <mat-card *ngFor="let s of [1,2,3]" class="skeleton-card">
-                  <div class="skeleton-header"><div class="skeleton-circle"></div><div class="skeleton-lines"><div class="skeleton-line w60"></div><div class="skeleton-line w40"></div></div></div>
-                  <div class="skeleton-body"><div class="skeleton-line w100"></div><div class="skeleton-line w80"></div><div class="skeleton-line w60"></div></div>
-                </mat-card>
+
+        <!-- Filter chips -->
+        <div class="filter-bar">
+          <button class="filter-chip" [class.active]="activeFilter === 'feed'" (click)="setFilter('feed')">
+            <mat-icon>home</mat-icon> For You
+          </button>
+          <button class="filter-chip" [class.active]="activeFilter === 'latest'" (click)="setFilter('latest')">
+            <mat-icon>schedule</mat-icon> Latest
+          </button>
+          <button class="filter-chip" [class.active]="activeFilter === 'trending'" (click)="setFilter('trending')">
+            <mat-icon>trending_up</mat-icon> Trending
+          </button>
+        </div>
+
+        <!-- Skeleton loading -->
+        <div *ngIf="loading && posts.length === 0" class="skeleton-list">
+          <mat-card *ngFor="let s of [1,2,3]" class="skeleton-card">
+            <div class="skeleton-header">
+              <div class="skeleton-circle"></div>
+              <div class="skeleton-lines">
+                <div class="skeleton-line w60"></div>
+                <div class="skeleton-line w40"></div>
               </div>
-              <div *ngIf="!loadingFeed && feedPosts.length === 0" class="empty-state">
-                <mat-icon>article</mat-icon>
-                <h3>Your feed is empty</h3>
-                <p>Follow some users to see their posts here!</p>
-              </div>
-              <!-- Suggestions: after all posts if <3, after 3rd if >=3 -->
-              <ng-container *ngFor="let post of feedPosts; let i = index">
-                <app-post-card [post]="post"
-                               (onLike)="toggleLike($event, 'feed')"
-                               (onBookmark)="toggleBookmark($event, 'feed')"
-                               (onReaction)="toggleReaction($event, 'feed')">
-                </app-post-card>
-                <ng-container *ngIf="suggestedUsers.length > 0 && ((feedPosts.length >= 3 && i === 2) || (feedPosts.length < 3 && i === feedPosts.length - 1))">
-                  <ng-container *ngTemplateOutlet="suggestionsScroll"></ng-container>
-                </ng-container>
-              </ng-container>
-              <!-- Suggestions when feed is empty -->
-              <ng-container *ngIf="!loadingFeed && feedPosts.length === 0 && suggestedUsers.length > 0">
-                <ng-container *ngTemplateOutlet="suggestionsScroll"></ng-container>
-              </ng-container>
-              <app-loading-spinner [inline]="true" *ngIf="loadingFeed && feedPosts.length > 0"></app-loading-spinner>
             </div>
-          </mat-tab>
-          <mat-tab label="Trending">
-            <div class="tab-content">
-              <div *ngIf="loadingTrending && trendingPosts.length === 0" class="skeleton-list">
-                <mat-card *ngFor="let s of [1,2,3]" class="skeleton-card">
-                  <div class="skeleton-header"><div class="skeleton-circle"></div><div class="skeleton-lines"><div class="skeleton-line w60"></div><div class="skeleton-line w40"></div></div></div>
-                  <div class="skeleton-body"><div class="skeleton-line w100"></div><div class="skeleton-line w80"></div><div class="skeleton-line w60"></div></div>
-                </mat-card>
-              </div>
-              <div *ngIf="!loadingTrending && trendingPosts.length === 0" class="empty-state">
-                <mat-icon>trending_up</mat-icon>
-                <h3>No trending posts yet</h3>
-                <p>Be the first to create a post!</p>
-              </div>
-              <ng-container *ngFor="let post of trendingPosts; let i = index">
-                <app-post-card [post]="post"
-                               (onLike)="toggleLike($event, 'trending')"
-                               (onBookmark)="toggleBookmark($event, 'trending')"
-                               (onReaction)="toggleReaction($event, 'trending')">
-                </app-post-card>
-                <ng-container *ngIf="suggestedUsers.length > 0 && authService.isLoggedIn && ((trendingPosts.length >= 3 && i === 2) || (trendingPosts.length < 3 && i === trendingPosts.length - 1))">
-                  <ng-container *ngTemplateOutlet="suggestionsScroll"></ng-container>
-                </ng-container>
-              </ng-container>
-              <ng-container *ngIf="!loadingTrending && trendingPosts.length === 0 && suggestedUsers.length > 0 && authService.isLoggedIn">
-                <ng-container *ngTemplateOutlet="suggestionsScroll"></ng-container>
-              </ng-container>
-              <app-loading-spinner [inline]="true" *ngIf="loadingTrending && trendingPosts.length > 0"></app-loading-spinner>
+            <div class="skeleton-body">
+              <div class="skeleton-line w100"></div>
+              <div class="skeleton-line w80"></div>
+              <div class="skeleton-line w60"></div>
             </div>
-          </mat-tab>
-          <mat-tab label="Latest">
-            <div class="tab-content">
-              <div *ngIf="loadingLatest && latestPosts.length === 0" class="skeleton-list">
-                <mat-card *ngFor="let s of [1,2,3]" class="skeleton-card">
-                  <div class="skeleton-header"><div class="skeleton-circle"></div><div class="skeleton-lines"><div class="skeleton-line w60"></div><div class="skeleton-line w40"></div></div></div>
-                  <div class="skeleton-body"><div class="skeleton-line w100"></div><div class="skeleton-line w80"></div><div class="skeleton-line w60"></div></div>
-                </mat-card>
-              </div>
-              <div *ngIf="!loadingLatest && latestPosts.length === 0" class="empty-state">
-                <mat-icon>new_releases</mat-icon>
-                <h3>No posts yet</h3>
-                <p>Be the first to create a post!</p>
-              </div>
-              <ng-container *ngFor="let post of latestPosts; let i = index">
-                <app-post-card [post]="post"
-                               (onLike)="toggleLike($event, 'latest')"
-                               (onBookmark)="toggleBookmark($event, 'latest')"
-                               (onReaction)="toggleReaction($event, 'latest')">
-                </app-post-card>
-                <ng-container *ngIf="suggestedUsers.length > 0 && authService.isLoggedIn && ((latestPosts.length >= 3 && i === 2) || (latestPosts.length < 3 && i === latestPosts.length - 1))">
-                  <ng-container *ngTemplateOutlet="suggestionsScroll"></ng-container>
-                </ng-container>
-              </ng-container>
-              <ng-container *ngIf="!loadingLatest && latestPosts.length === 0 && suggestedUsers.length > 0 && authService.isLoggedIn">
-                <ng-container *ngTemplateOutlet="suggestionsScroll"></ng-container>
-              </ng-container>
-              <app-loading-spinner [inline]="true" *ngIf="loadingLatest && latestPosts.length > 0"></app-loading-spinner>
-            </div>
-          </mat-tab>
-        </mat-tab-group>
+          </mat-card>
+        </div>
+
+        <!-- Empty state -->
+        <div *ngIf="!loading && posts.length === 0" class="empty-state">
+          <mat-icon>article</mat-icon>
+          <h3>No posts yet</h3>
+          <p *ngIf="activeFilter === 'feed'">Follow some users or check Trending!</p>
+          <p *ngIf="activeFilter !== 'feed'">Be the first to create a post!</p>
+        </div>
+
+        <!-- Posts -->
+        <ng-container *ngFor="let post of posts; let i = index">
+          <app-post-card [post]="post"
+                         (onLike)="toggleLike($event)"
+                         (onBookmark)="toggleBookmark($event)"
+                         (onReaction)="toggleReaction($event)">
+          </app-post-card>
+          <!-- Inline suggestions after 3rd post (or after last if < 3) -->
+          <ng-container *ngIf="suggestedUsers.length > 0 && authService.isLoggedIn &&
+                               ((posts.length >= 3 && i === 2) || (posts.length < 3 && i === posts.length - 1))">
+            <ng-container *ngTemplateOutlet="suggestionsScroll"></ng-container>
+          </ng-container>
+        </ng-container>
+
+        <!-- Empty feed suggestions -->
+        <ng-container *ngIf="!loading && posts.length === 0 && suggestedUsers.length > 0 && authService.isLoggedIn">
+          <ng-container *ngTemplateOutlet="suggestionsScroll"></ng-container>
+        </ng-container>
+
+        <app-loading-spinner [inline]="true" *ngIf="loading && posts.length > 0"></app-loading-spinner>
       </div>
 
       <!-- Sidebar: Suggested Users -->
       <div class="feed-sidebar" *ngIf="authService.isLoggedIn && suggestedUsers.length > 0">
         <div class="sidebar-card">
           <h3 class="sidebar-title">Who to Follow</h3>
-          <app-user-card *ngFor="let user of (sidebarExpanded ? suggestedUsers : suggestedUsers.slice(0,3))" 
+          <app-user-card *ngFor="let user of (sidebarExpanded ? suggestedUsers : suggestedUsers.slice(0,3))"
                          [user]="user"
                          (onFollow)="toggleFollowSuggested($event)">
           </app-user-card>
@@ -119,7 +87,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
         </div>
       </div>
 
-      <!-- Reusable horizontal scroll suggestions (Instagram-style) -->
+      <!-- Reusable horizontal scroll suggestions -->
       <ng-template #suggestionsScroll>
         <div class="mobile-suggestions">
           <div class="suggestions-scroll-card">
@@ -159,6 +127,41 @@ import { MatSnackBar } from '@angular/material/snack-bar';
       border-left: 1px solid #eff3f4;
       border-right: 1px solid #eff3f4;
     }
+    /* ---- Filter bar ---- */
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      border-bottom: 1px solid #eff3f4;
+      overflow-x: auto;
+    }
+    .filter-bar::-webkit-scrollbar { display: none; }
+    .filter-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 16px;
+      border-radius: 24px;
+      border: 1px solid #cfd9de;
+      background: transparent;
+      color: #536471;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+      font-family: inherit;
+    }
+    .filter-chip mat-icon { font-size: 16px; width: 16px; height: 16px; }
+    .filter-chip:hover { background: rgba(29,155,240,0.06); color: #1d9bf0; border-color: #1d9bf0; }
+    .filter-chip.active {
+      background: #0f1419;
+      color: #fff;
+      border-color: #0f1419;
+      font-weight: 700;
+    }
+    /* ---- Sidebar ---- */
     .feed-sidebar {
       width: 320px;
       flex-shrink: 0;
@@ -177,7 +180,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
       font-size: 19px;
       font-weight: 800;
       color: #0f1419;
-      margin: 0 0 4px;
+      margin: 0;
       padding: 0 16px 12px;
       letter-spacing: -0.02em;
     }
@@ -186,162 +189,70 @@ import { MatSnackBar } from '@angular/material/snack-bar';
       padding: 12px 16px 4px;
       font-size: 14px;
       color: #1d9bf0;
-      text-decoration: none;
       font-weight: 500;
       cursor: pointer;
-      transition: background 0.15s;
       background: none;
       border: none;
       font-family: inherit;
     }
     .sidebar-show-more:hover { text-decoration: underline; }
+    /* ---- Mobile suggestions ---- */
     .mobile-suggestions { display: none; }
-    .suggestions-scroll-card {
-      border-bottom: 1px solid #eff3f4;
-      padding: 16px 0;
-    }
-    .suggestions-scroll-title {
-      font-size: 16px;
-      font-weight: 700;
-      color: #0f1419;
-      margin: 0 0 12px;
-      padding: 0 16px;
-    }
+    .suggestions-scroll-card { border-bottom: 1px solid #eff3f4; padding: 16px 0; }
+    .suggestions-scroll-title { font-size: 16px; font-weight: 700; color: #0f1419; margin: 0 0 12px; padding: 0 16px; }
     .suggestions-scroll-track {
-      display: flex;
-      gap: 12px;
-      overflow-x: auto;
-      padding: 0 16px 8px;
-      scroll-snap-type: x mandatory;
-      -webkit-overflow-scrolling: touch;
+      display: flex; gap: 12px; overflow-x: auto; padding: 0 16px 8px;
+      scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
     }
     .suggestions-scroll-track::-webkit-scrollbar { display: none; }
     .suggestion-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-width: 140px;
-      max-width: 140px;
-      padding: 20px 12px 16px;
-      background: #f7f9f9;
-      border-radius: 16px;
-      border: 1px solid #eff3f4;
-      scroll-snap-align: start;
-      flex-shrink: 0;
-      gap: 6px;
+      display: flex; flex-direction: column; align-items: center;
+      min-width: 140px; max-width: 140px; padding: 20px 12px 16px;
+      background: #f7f9f9; border-radius: 16px; border: 1px solid #eff3f4;
+      scroll-snap-align: start; flex-shrink: 0; gap: 6px;
     }
     .suggestion-avatar-link { flex-shrink: 0; }
-    .suggestion-avatar {
-      width: 56px; height: 56px;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-    .suggestion-name {
-      font-size: 14px;
-      font-weight: 700;
-      color: #0f1419;
-      text-decoration: none;
-      text-align: center;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 120px;
-      line-height: 1.3;
-    }
+    .suggestion-avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; }
+    .suggestion-name { font-size: 14px; font-weight: 700; color: #0f1419; text-decoration: none; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
     .suggestion-name:hover { text-decoration: underline; }
-    .suggestion-handle {
-      font-size: 12px;
-      color: #536471;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 120px;
-    }
+    .suggestion-handle { font-size: 12px; color: #536471; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
     .suggestion-follow-btn {
-      margin-top: 6px;
-      font-size: 13px;
-      font-weight: 700;
-      padding: 6px 20px;
-      border-radius: 24px;
-      border: none;
-      background: #0f1419;
-      color: #fff;
-      cursor: pointer;
-      transition: opacity 0.15s, background 0.15s, color 0.15s;
-      font-family: inherit;
-      white-space: nowrap;
+      margin-top: 6px; font-size: 13px; font-weight: 700; padding: 6px 20px;
+      border-radius: 24px; border: none; background: #0f1419; color: #fff;
+      cursor: pointer; transition: opacity 0.15s, background 0.15s, color 0.15s; font-family: inherit; white-space: nowrap;
     }
     .suggestion-follow-btn:hover { opacity: 0.85; }
-    .suggestion-follow-btn.following {
-      background: transparent;
-      color: #0f1419;
-      border: 1px solid #cfd9de;
-    }
-    .suggestion-follow-btn.following:hover {
-      border-color: #f4212e;
-      color: #f4212e;
-      background: rgba(244,33,46,0.06);
-    }
-    .tab-content {
-      padding: 0;
-    }
-    .empty-state {
-      text-align: center;
-      padding: 64px 24px;
-      color: #536471;
-    }
-    .empty-state mat-icon {
-      font-size: 48px;
-      width: 48px;
-      height: 48px;
-      color: #cfd9de;
-      margin-bottom: 12px;
-    }
-    .empty-state h3 {
-      font-size: 18px;
-      font-weight: 700;
-      color: #0f1419;
-      margin-bottom: 4px;
-    }
+    .suggestion-follow-btn.following { background: transparent; color: #0f1419; border: 1px solid #cfd9de; }
+    .suggestion-follow-btn.following:hover { border-color: #f4212e; color: #f4212e; background: rgba(244,33,46,0.06); }
+    /* ---- Misc ---- */
+    .empty-state { text-align: center; padding: 64px 24px; color: #536471; }
+    .empty-state mat-icon { font-size: 48px; width: 48px; height: 48px; color: #cfd9de; margin-bottom: 12px; }
+    .empty-state h3 { font-size: 18px; font-weight: 700; color: #0f1419; margin-bottom: 4px; }
     .empty-state p { font-size: 14px; }
-    /* Skeleton loading */
     .skeleton-card { padding: 20px; margin-bottom: 0; border-bottom: 1px solid #eff3f4; border-radius: 0 !important; box-shadow: none !important; }
     .skeleton-header { display: flex; gap: 12px; margin-bottom: 16px; }
     .skeleton-circle { width: 44px; height: 44px; border-radius: 50%; background: #e0e0e0; animation: pulse 1.5s infinite; }
     .skeleton-lines { flex: 1; }
     .skeleton-line { height: 12px; border-radius: 6px; background: #e0e0e0; margin-bottom: 8px; animation: pulse 1.5s infinite; }
     .skeleton-body { display: flex; flex-direction: column; gap: 8px; }
-    .w40 { width: 40%; }
-    .w60 { width: 60%; }
-    .w80 { width: 80%; }
-    .w100 { width: 100%; }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
-    }
+    .w40 { width: 40%; } .w60 { width: 60%; } .w80 { width: 80%; } .w100 { width: 100%; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
     @media (max-width: 768px) {
       .feed-container { padding: 0; }
       .feed-sidebar { display: none; }
       .mobile-suggestions { display: block; }
       .feed-main { border-left: none; border-right: none; }
+      .filter-bar { top: 52px; }
     }
   `]
 })
 export class FeedComponent implements OnInit {
-  feedPosts: BlogPost[] = [];
-  trendingPosts: BlogPost[] = [];
-  latestPosts: BlogPost[] = [];
+  posts: BlogPost[] = [];
   suggestedUsers: UserProfile[] = [];
-  loadingFeed = false;
-  loadingTrending = false;
-  loadingLatest = false;
-  feedPage = 1;
-  trendingPage = 1;
-  latestPage = 1;
-  feedHasMore = false;
-  trendingHasMore = false;
-  latestHasMore = false;
-  activeTab = 0;
+  loading = false;
+  page = 1;
+  hasMore = false;
+  activeFilter: 'feed' | 'latest' | 'trending' = 'feed';
   sidebarExpanded = false;
 
   constructor(
@@ -354,149 +265,88 @@ export class FeedComponent implements OnInit {
 
   ngOnInit(): void {
     if (this.authService.isLoggedIn) {
-      this.loadFeed();
       this.loadSuggestedUsers();
     }
-    this.loadTrending();
+    this.loadPosts(true);
   }
 
-  // Infinite scroll
-  @HostListener('window:scroll')
-  onScroll(): void {
-    const threshold = 300;
-    const position = window.innerHeight + window.scrollY;
-    const height = document.documentElement.scrollHeight;
+  setFilter(filter: 'feed' | 'latest' | 'trending'): void {
+    if (this.activeFilter === filter) return;
+    this.activeFilter = filter;
+    this.loadPosts(true);
+  }
 
-    if (position >= height - threshold) {
-      if (this.activeTab === 0 && this.feedHasMore && !this.loadingFeed) {
-        this.loadMoreFeed();
-      } else if (this.activeTab === 1 && this.trendingHasMore && !this.loadingTrending) {
-        this.loadMoreTrending();
-      } else if (this.activeTab === 2 && this.latestHasMore && !this.loadingLatest) {
-        this.loadMoreLatest();
-      }
+  loadPosts(reset = false): void {
+    if (reset) { this.posts = []; this.page = 1; this.hasMore = false; }
+    this.loading = true;
+    const pagination = { page: this.page, pageSize: 10 };
+
+    if (this.activeFilter === 'feed' && this.authService.isLoggedIn) {
+      this.feedService.getHomeFeed(pagination).subscribe({
+        next: (result: any) => { this.posts = [...this.posts, ...result.items]; this.hasMore = result.hasNextPage; this.loading = false; },
+        error: () => { this.loading = false; this.snackBar.open('Failed to load feed', 'Close', { duration: 3000 }); }
+      });
+    } else if (this.activeFilter === 'trending' || (this.activeFilter === 'feed' && !this.authService.isLoggedIn)) {
+      this.feedService.getTrending(pagination).subscribe({
+        next: (result: any) => { this.posts = [...this.posts, ...result.items]; this.hasMore = result.hasNextPage; this.loading = false; },
+        error: () => { this.loading = false; }
+      });
+    } else {
+      this.feedService.getLatest(pagination).subscribe({
+        next: (result: any) => { this.posts = [...this.posts, ...result.items]; this.hasMore = result.hasNextPage; this.loading = false; },
+        error: () => { this.loading = false; }
+      });
     }
-  }
-
-  onTabChange(event: any): void {
-    this.activeTab = event.index;
-    // Adjust index if user is not logged in (no "My Feed" tab)
-    if (!this.authService.isLoggedIn) {
-      this.activeTab = event.index + 1;
-    }
-
-    if (this.activeTab === 2 && this.latestPosts.length === 0) {
-      this.loadLatest();
-    }
-  }
-
-  loadFeed(): void {
-    this.loadingFeed = true;
-    this.feedService.getHomeFeed({ page: this.feedPage, pageSize: 10 }).subscribe({
-      next: (result) => {
-        this.feedPosts = [...this.feedPosts, ...result.items];
-        this.feedHasMore = result.hasNextPage;
-        this.loadingFeed = false;
-      },
-      error: () => {
-        this.loadingFeed = false;
-        this.snackBar.open('Failed to load feed', 'Close', { duration: 3000 });
-      }
-    });
-  }
-
-  loadTrending(): void {
-    this.loadingTrending = true;
-    this.feedService.getTrending({ page: this.trendingPage, pageSize: 10 }).subscribe({
-      next: (result) => {
-        this.trendingPosts = [...this.trendingPosts, ...result.items];
-        this.trendingHasMore = result.hasNextPage;
-        this.loadingTrending = false;
-      },
-      error: () => {
-        this.loadingTrending = false;
-        this.snackBar.open('Failed to load trending', 'Close', { duration: 3000 });
-      }
-    });
-  }
-
-  loadLatest(): void {
-    this.loadingLatest = true;
-    this.feedService.getLatest({ page: this.latestPage, pageSize: 10 }).subscribe({
-      next: (result) => {
-        this.latestPosts = [...this.latestPosts, ...result.items];
-        this.latestHasMore = result.hasNextPage;
-        this.loadingLatest = false;
-      },
-      error: () => {
-        this.loadingLatest = false;
-        this.snackBar.open('Failed to load latest', 'Close', { duration: 3000 });
-      }
-    });
   }
 
   loadSuggestedUsers(): void {
-    this.userService.getSuggestedUsers(20).subscribe({
-      next: users => this.suggestedUsers = users
-    });
+    this.userService.getSuggestedUsers(15).subscribe({ next: (users: any) => this.suggestedUsers = users });
   }
 
-  loadMoreFeed(): void { this.feedPage++; this.loadFeed(); }
-  loadMoreTrending(): void { this.trendingPage++; this.loadTrending(); }
-  loadMoreLatest(): void { this.latestPage++; this.loadLatest(); }
+  @HostListener('window:scroll')
+  onScroll(): void {
+    const pos = window.innerHeight + window.scrollY;
+    const height = document.documentElement.scrollHeight;
+    if (pos >= height - 300 && this.hasMore && !this.loading) { this.page++; this.loadPosts(); }
+  }
 
-  toggleLike(postId: string, list: string): void {
-    if (!this.authService.isLoggedIn) {
-      this.snackBar.open('Please login to like posts', 'Login', { duration: 3000 });
-      return;
-    }
+  toggleLike(postId: string): void {
+    if (!this.authService.isLoggedIn) { this.snackBar.open('Please login to like posts', 'Login', { duration: 3000 }); return; }
     this.blogService.toggleLike(postId).subscribe({
-      next: (result) => {
-        this.updatePostInLists(postId, post => {
-          post.isLikedByCurrentUser = result.liked;
-          post.likeCount += result.liked ? 1 : -1;
-        });
+      next: (result: any) => {
+        const post = this.posts.find(p => p.id === postId);
+        if (post) { post.isLikedByCurrentUser = result.liked; post.likeCount += result.liked ? 1 : -1; }
       }
     });
   }
 
-  toggleBookmark(postId: string, list: string): void {
+  toggleBookmark(postId: string): void {
     if (!this.authService.isLoggedIn) return;
     this.blogService.toggleBookmark(postId).subscribe({
-      next: (result) => {
-        this.updatePostInLists(postId, post => {
-          post.isBookmarkedByCurrentUser = result.bookmarked;
-        });
+      next: (result: any) => {
+        const post = this.posts.find(p => p.id === postId);
+        if (post) post.isBookmarkedByCurrentUser = result.bookmarked;
         this.snackBar.open(result.bookmarked ? 'Post saved' : 'Bookmark removed', 'Close', { duration: 2000 });
       }
     });
   }
 
-  toggleReaction(event: { postId: string; type: ReactionType }, list: string): void {
+  toggleReaction(event: { postId: string; type: ReactionType }): void {
     if (!this.authService.isLoggedIn) return;
     this.blogService.toggleReaction(event.postId, { type: event.type }).subscribe({
-      next: (result) => {
-        this.updatePostInLists(event.postId, post => {
-          post.reactionCounts = result.counts;
-          post.currentUserReaction = result.currentUserReaction;
-        });
+      next: (result: any) => {
+        const post = this.posts.find(p => p.id === event.postId);
+        if (post) { post.reactionCounts = result.counts; post.currentUserReaction = result.currentUserReaction; }
       }
     });
   }
 
   toggleFollowSuggested(userId: string): void {
     this.userService.toggleFollow(userId).subscribe({
-      next: (result) => {
+      next: (result: any) => {
         const user = this.suggestedUsers.find(u => u.id === userId);
         if (user) user.isFollowedByCurrentUser = result.isFollowing;
       }
-    });
-  }
-
-  private updatePostInLists(postId: string, updater: (post: BlogPost) => void): void {
-    [this.feedPosts, this.trendingPosts, this.latestPosts].forEach(list => {
-      const post = list.find(p => p.id === postId);
-      if (post) updater(post);
     });
   }
 }

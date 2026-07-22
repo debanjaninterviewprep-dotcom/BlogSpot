@@ -31,9 +31,72 @@ public class FeedService : IFeedService
             .Select(f => f.FollowingId)
             .ToListAsync(ct);
 
-        var query = GetFullPostQuery()
-            .Where(p => p.IsPublished && followingIds.Contains(p.AuthorId))
-            .OrderByDescending(p => p.CreatedAt);
+        // If user follows nobody or is on page > 1 with few followed posts, mix in popular posts
+        IQueryable<BlogPost> query;
+
+        if (followingIds.Count == 0)
+        {
+            // No follows — show trending/popular posts
+            query = GetFullPostQuery()
+                .Where(p => p.IsPublished)
+                .OrderByDescending(p => p.ViewCount + (p.Reactions.Count * 3) + (p.Comments.Count * 5))
+                .ThenByDescending(p => p.CreatedAt);
+        }
+        else
+        {
+            // Followed posts first, then fill with popular posts not from followed users
+            var followedQuery = GetFullPostQuery()
+                .Where(p => p.IsPublished && followingIds.Contains(p.AuthorId))
+                .OrderByDescending(p => p.CreatedAt);
+
+            var followedCount = await followedQuery.CountAsync(ct);
+            var skip = (pagination.Page - 1) * pagination.PageSize;
+
+            if (skip < followedCount)
+            {
+                // Still have followed posts on this page — return followed posts, fill remainder with others
+                var followedPosts = await followedQuery.Skip(skip).Take(pagination.PageSize).ToListAsync(ct);
+
+                if (followedPosts.Count < pagination.PageSize)
+                {
+                    var needed = pagination.PageSize - followedPosts.Count;
+                    var followedPostIds = followedPosts.Select(p => p.Id).ToList();
+                    var otherPosts = await GetFullPostQuery()
+                        .Where(p => p.IsPublished && !followingIds.Contains(p.AuthorId) && !followedPostIds.Contains(p.Id))
+                        .OrderByDescending(p => p.ViewCount + (p.Reactions.Count * 3))
+                        .Take(needed)
+                        .ToListAsync(ct);
+
+                    var combined = followedPosts.Concat(otherPosts).ToList();
+                    return new PagedResult<BlogPostDto>
+                    {
+                        Items = combined.Select(p => MapToDto(p, userId)).ToList(),
+                        TotalCount = followedCount + await GetFullPostQuery().Where(p => p.IsPublished && !followingIds.Contains(p.AuthorId)).CountAsync(ct),
+                        Page = pagination.Page,
+                        PageSize = pagination.PageSize
+                    };
+                }
+
+                return new PagedResult<BlogPostDto>
+                {
+                    Items = followedPosts.Select(p => MapToDto(p, userId)).ToList(),
+                    TotalCount = followedCount,
+                    Page = pagination.Page,
+                    PageSize = pagination.PageSize
+                };
+            }
+            else
+            {
+                // Past followed posts — show popular posts from non-followed users
+                var adjustedSkip = skip - followedCount;
+                var otherQuery = GetFullPostQuery()
+                    .Where(p => p.IsPublished && !followingIds.Contains(p.AuthorId))
+                    .OrderByDescending(p => p.ViewCount + (p.Reactions.Count * 3) + (p.Comments.Count * 5))
+                    .ThenByDescending(p => p.CreatedAt);
+
+                return await PaginateAsync(otherQuery, new PaginationParams { Page = 1, PageSize = pagination.PageSize }, userId, ct);
+            }
+        }
 
         return await PaginateAsync(query, pagination, userId, ct);
     }
