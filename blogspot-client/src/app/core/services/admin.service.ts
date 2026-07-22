@@ -73,6 +73,10 @@ export class AdminService {
     return this.http.delete<void>(`${this.apiUrl}/comments/${commentId}`);
   }
 
+  seedData(): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/seed`, {});
+  }
+
   private buildParams(pagination: PaginationParams): HttpParams {
     return new HttpParams()
       .set('page', pagination.page.toString())

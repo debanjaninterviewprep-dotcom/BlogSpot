@@ -7,7 +7,13 @@ import { AdminService, AdminUser, AdminPost, AdminComment } from '@core/services
   selector: 'app-admin-dashboard',
   template: `
     <div class="admin-container">
-      <h1><mat-icon>admin_panel_settings</mat-icon> Admin Dashboard</h1>
+      <div class="admin-header">
+        <h1><mat-icon>admin_panel_settings</mat-icon> Admin Dashboard</h1>
+        <button mat-raised-button color="accent" (click)="seedData()" [disabled]="isSeeding">
+          <mat-icon>{{ isSeeding ? 'hourglass_empty' : 'data_array' }}</mat-icon>
+          {{ isSeeding ? 'Seeding...' : 'Seed Dummy Data' }}
+        </button>
+      </div>
 
       <mat-tab-group>
         <!-- Users Tab -->
@@ -151,7 +157,8 @@ import { AdminService, AdminUser, AdminPost, AdminComment } from '@core/services
   `,
   styles: [`
     .admin-container { max-width: 1100px; margin: 0 auto; padding-top: 16px; }
-    h1 { display: flex; align-items: center; gap: 8px; }
+    .admin-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 8px; }
+    h1 { display: flex; align-items: center; gap: 8px; margin: 0; }
     .tab-content { padding: 16px 0; overflow-x: auto; }
     table { width: 100%; }
     mat-chip { font-size: 12px; }
@@ -176,6 +183,8 @@ export class AdminDashboardComponent implements OnInit {
   comments: AdminComment[] = [];
   commentsTotalCount = 0;
   commentColumns = ['content', 'user', 'post', 'date', 'actions'];
+
+  isSeeding = false;
 
   constructor(
     private adminService: AdminService,
@@ -264,6 +273,24 @@ export class AdminDashboardComponent implements OnInit {
         this.comments = this.comments.filter(c => c.id !== comment.id);
         this.commentsTotalCount--;
         this.snackBar.open('Comment deleted', 'Close', { duration: 3000 });
+      }
+    });
+  }
+
+  seedData(): void {
+    if (!confirm('This will seed 30 users, 40 posts, and thousands of interactions. Proceed?')) return;
+    this.isSeeding = true;
+    this.adminService.seedData().subscribe({
+      next: (res: { message: string }) => {
+        this.isSeeding = false;
+        this.snackBar.open(res.message, 'Close', { duration: 8000 });
+        this.loadUsers(1);
+        this.loadPosts(1);
+        this.loadComments(1);
+      },
+      error: (err: any) => {
+        this.isSeeding = false;
+        this.snackBar.open(err.error?.message || 'Seeding failed', 'Close', { duration: 5000 });
       }
     });
   }
