@@ -186,20 +186,20 @@ import { BlogPost, Comment, ReactionType, ReactionSummaryDto } from '@core/model
     <app-loading-spinner *ngIf="loading"></app-loading-spinner>
   `,
   styles: [`
-    .detail-container { max-width: 800px; margin: 0 auto; }
-    .post-detail { padding: 32px; }
+    .detail-container { max-width: 800px; margin: 0 auto; overflow: hidden; }
+    .post-detail { padding: 32px; overflow: hidden; }
     .post-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
     .author-info { display: flex; align-items: center; gap: 12px; }
     .author-avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
     .author-name { text-decoration: none; font-weight: 500; color: #333; }
     .author-name:hover { text-decoration: underline; }
     .post-date { font-size: 13px; color: #888; margin: 0; }
-    .post-title { font-size: 32px; font-weight: 700; margin: 0 0 16px 0; line-height: 1.3; }
+    .post-title { font-size: 32px; font-weight: 700; margin: 0 0 16px 0; line-height: 1.3; word-break: break-word; }
     .post-tags { margin-bottom: 12px; }
     .post-category { margin-bottom: 16px; }
     .post-images { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
     .post-image { max-width: 100%; max-height: 400px; border-radius: 8px; object-fit: cover; }
-    .post-content { line-height: 1.8; font-size: 16px; margin-bottom: 24px; }
+    .post-content { line-height: 1.8; font-size: 16px; margin-bottom: 24px; word-break: break-word; overflow-wrap: break-word; }
     .post-engagement { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; }
     .reaction-bar { display: flex; align-items: center; gap: 12px; }
     .emoji-reactions { display: flex; gap: 4px; }
