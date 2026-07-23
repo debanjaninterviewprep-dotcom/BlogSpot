@@ -1,5 +1,8 @@
 using System.Net;
-using System.Net.Mail;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
 using BlogSpot.Application.DTOs.Common;
 using BlogSpot.Application.Interfaces;
 using BlogSpot.Domain.Entities;
@@ -16,12 +19,14 @@ public class EmailQueueService : IEmailQueueService
     private readonly IUnitOfWork _uow;
     private readonly IConfiguration _config;
     private readonly ILogger<EmailQueueService> _logger;
+    private readonly IHttpClientFactory _httpClientFactory;
 
-    public EmailQueueService(IUnitOfWork uow, IConfiguration config, ILogger<EmailQueueService> logger)
+    public EmailQueueService(IUnitOfWork uow, IConfiguration config, ILogger<EmailQueueService> logger, IHttpClientFactory httpClientFactory)
     {
         _uow = uow;
         _config = config;
         _logger = logger;
+        _httpClientFactory = httpClientFactory;
     }
 
     public async Task EnqueueAsync(string toEmail, string subject, string body, CancellationToken ct = default)
@@ -172,34 +177,36 @@ public class EmailQueueService : IEmailQueueService
 
     private async Task SendEmailAsync(string to, string subject, string body)
     {
-        var smtpHost = _config["Email:SmtpHost"] ?? "smtp.gmail.com";
-        var smtpPort = int.Parse(_config["Email:SmtpPort"] ?? "587");
-        var smtpUser = _config["Email:SmtpUser"] ?? "";
-        var smtpPass = _config["Email:SmtpPass"] ?? "";
-        var fromEmail = _config["Email:FromEmail"] ?? smtpUser;
+        var apiKey = _config["Email:ResendApiKey"] ?? "";
+        var fromEmail = _config["Email:FromEmail"] ?? "noreply@resend.dev";
         var fromName = _config["Email:FromName"] ?? "BlogSpot";
 
-        if (string.IsNullOrEmpty(smtpUser) || string.IsNullOrEmpty(smtpPass))
+        if (string.IsNullOrEmpty(apiKey))
         {
-            _logger.LogWarning("SMTP credentials not configured. Email to {To} skipped.", to);
+            _logger.LogWarning("Resend API key not configured. Email to {To} skipped.", to);
             return;
         }
 
-        using var client = new SmtpClient(smtpHost, smtpPort)
+        var client = _httpClientFactory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+
+        var payload = new
         {
-            Credentials = new NetworkCredential(smtpUser, smtpPass),
-            EnableSsl = true
+            from = $"{fromName} <{fromEmail}>",
+            to = new[] { to },
+            subject = subject,
+            html = body
         };
 
-        var message = new MailMessage
-        {
-            From = new MailAddress(fromEmail, fromName),
-            Subject = subject,
-            Body = body,
-            IsBodyHtml = true
-        };
-        message.To.Add(to);
+        var json = JsonSerializer.Serialize(payload);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-        await client.SendMailAsync(message);
+        var response = await client.PostAsync("https://api.resend.com/emails", content);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorBody = await response.Content.ReadAsStringAsync();
+            throw new Exception($"Resend API error ({response.StatusCode}): {errorBody}");
+        }
     }
 }

@@ -29,6 +29,9 @@ builder.Services.AddMemoryCache();
 // Controllers
 builder.Services.AddControllers();
 
+// HttpClient for external API calls (Resend email)
+builder.Services.AddHttpClient();
+
 // SignalR
 builder.Services.AddSignalR();
 
