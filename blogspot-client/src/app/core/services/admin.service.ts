@@ -77,9 +77,30 @@ export class AdminService {
     return this.http.post<{ message: string }>(`${this.apiUrl}/seed`, {});
   }
 
+  // --- Email Queue ---
+
+  getEmails(pagination: PaginationParams): Observable<PagedResult<EmailQueueItem>> {
+    const params = this.buildParams(pagination);
+    return this.http.get<PagedResult<EmailQueueItem>>(`${this.apiUrl}/emails`, { params });
+  }
+
+  sendReportEmail(toEmail: string, reportType: string, reportHtml: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/send-report-email`, { toEmail, reportType, reportHtml });
+  }
+
   private buildParams(pagination: PaginationParams): HttpParams {
     return new HttpParams()
       .set('page', pagination.page.toString())
       .set('pageSize', pagination.pageSize.toString());
   }
+}
+
+export interface EmailQueueItem {
+  id: string;
+  toEmail: string;
+  subject: string;
+  status: string;
+  createdAt: string;
+  sentAt?: string;
+  error?: string;
 }

@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { PageEvent } from '@angular/material/paginator';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { trigger, state, style, transition, animate } from '@angular/animations';
-import { AdminService, AdminUser, AdminPost, AdminComment } from '@core/services/admin.service';
+import { AdminService, AdminUser, AdminPost, AdminComment, EmailQueueItem } from '@core/services/admin.service';
 import { ExportService } from '@core/services/export.service';
 
 @Component({
@@ -30,7 +30,7 @@ import { ExportService } from '@core/services/export.service';
                 <button mat-menu-item (click)="exportUsers()">
                   <mat-icon>table_chart</mat-icon> Download Excel
                 </button>
-                <button mat-menu-item (click)="exportViaEmail('users')" disabled>
+                <button mat-menu-item (click)="exportViaEmail('users')">
                   <mat-icon>email</mat-icon> Send via Email
                 </button>
               </mat-menu>
@@ -129,7 +129,7 @@ import { ExportService } from '@core/services/export.service';
                 <button mat-menu-item (click)="exportPosts()">
                   <mat-icon>table_chart</mat-icon> Download Excel
                 </button>
-                <button mat-menu-item (click)="exportViaEmail('posts')" disabled>
+                <button mat-menu-item (click)="exportViaEmail('posts')">
                   <mat-icon>email</mat-icon> Send via Email
                 </button>
               </mat-menu>
@@ -187,7 +187,7 @@ import { ExportService } from '@core/services/export.service';
                 <button mat-menu-item (click)="exportComments()">
                   <mat-icon>table_chart</mat-icon> Download Excel
                 </button>
-                <button mat-menu-item (click)="exportViaEmail('comments')" disabled>
+                <button mat-menu-item (click)="exportViaEmail('comments')">
                   <mat-icon>email</mat-icon> Send via Email
                 </button>
               </mat-menu>
@@ -223,6 +223,53 @@ import { ExportService } from '@core/services/export.service';
             </table>
             <mat-paginator [length]="commentsTotalCount" [pageSize]="10"
                            (page)="onCommentsPageChange($event)">
+            </mat-paginator>
+          </div>
+        </mat-tab>
+
+        <!-- Emails Tab -->
+        <mat-tab label="Emails">
+          <div class="tab-content">
+            <div class="tab-toolbar">
+              <span class="tab-count">{{ emailsTotalCount }} emails</span>
+            </div>
+            <table mat-table [dataSource]="emails" class="full-width">
+              <ng-container matColumnDef="toEmail">
+                <th mat-header-cell *matHeaderCellDef>To</th>
+                <td mat-cell *matCellDef="let e">{{ e.toEmail }}</td>
+              </ng-container>
+              <ng-container matColumnDef="subject">
+                <th mat-header-cell *matHeaderCellDef>Subject</th>
+                <td mat-cell *matCellDef="let e">{{ e.subject | slice:0:50 }}</td>
+              </ng-container>
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Status</th>
+                <td mat-cell *matCellDef="let e">
+                  <mat-chip [class.sent-chip]="e.status === 'Sent'"
+                            [class.queued-chip]="e.status === 'Queued'"
+                            [class.failed-chip]="e.status === 'Failed'">
+                    {{ e.status }}
+                  </mat-chip>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="createdAt">
+                <th mat-header-cell *matHeaderCellDef>Queued</th>
+                <td mat-cell *matCellDef="let e">{{ e.createdAt | date:'short' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="sentAt">
+                <th mat-header-cell *matHeaderCellDef>Sent</th>
+                <td mat-cell *matCellDef="let e">{{ e.sentAt ? (e.sentAt | date:'short') : '—' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="error">
+                <th mat-header-cell *matHeaderCellDef>Error</th>
+                <td mat-cell *matCellDef="let e" class="error-cell">{{ e.error || '—' }}</td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="emailColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: emailColumns;"></tr>
+            </table>
+            <mat-paginator [length]="emailsTotalCount" [pageSize]="15"
+                           (page)="onEmailsPageChange($event)">
             </mat-paginator>
           </div>
         </mat-tab>
@@ -262,6 +309,10 @@ import { ExportService } from '@core/services/export.service';
     .admin-chip { background-color: rgba(29,155,240,0.12) !important; color: #1d9bf0 !important; }
     .active-chip { background-color: rgba(0,186,124,0.12) !important; color: #00ba7c !important; }
     .inactive-chip { background-color: rgba(244,33,46,0.1) !important; color: #f4212e !important; }
+    .sent-chip { background-color: rgba(0,186,124,0.12) !important; color: #00ba7c !important; }
+    .queued-chip { background-color: rgba(29,155,240,0.12) !important; color: #1d9bf0 !important; }
+    .failed-chip { background-color: rgba(244,33,46,0.1) !important; color: #f4212e !important; }
+    .error-cell { font-size: 12px; color: #f4212e; max-width: 200px; overflow: hidden; text-overflow: ellipsis; }
     .user-link { color: inherit; text-decoration: none; font-weight: 500; }
     .user-link:hover { text-decoration: underline; color: #1d9bf0; }
     .post-link { color: inherit; text-decoration: none; font-weight: 500; }
@@ -363,6 +414,11 @@ export class AdminDashboardComponent implements OnInit {
   commentsTotalCount = 0;
   commentColumns = ['content', 'user', 'post', 'date', 'actions'];
 
+  // Emails
+  emails: EmailQueueItem[] = [];
+  emailsTotalCount = 0;
+  emailColumns = ['toEmail', 'subject', 'status', 'createdAt', 'sentAt', 'error'];
+
   isSeeding = false;
 
   constructor(
@@ -375,6 +431,7 @@ export class AdminDashboardComponent implements OnInit {
     this.loadUsers(1);
     this.loadPosts(1);
     this.loadComments(1);
+    this.loadEmails(1);
   }
 
   loadUsers(page: number): void {
@@ -414,6 +471,19 @@ export class AdminDashboardComponent implements OnInit {
 
   onCommentsPageChange(event: PageEvent): void {
     this.loadComments(event.pageIndex + 1);
+  }
+
+  loadEmails(page: number): void {
+    this.adminService.getEmails({ page, pageSize: 15 }).subscribe({
+      next: (result) => {
+        this.emails = result.items;
+        this.emailsTotalCount = result.totalCount;
+      }
+    });
+  }
+
+  onEmailsPageChange(event: PageEvent): void {
+    this.loadEmails(event.pageIndex + 1);
   }
 
   toggleEdit(user: AdminUser): void {
@@ -538,7 +608,21 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   exportViaEmail(type: string): void {
-    // TODO: Implement email export
-    this.snackBar.open('Email export coming soon', 'Close', { duration: 2000 });
+    const email = prompt('Enter email address to send the report:');
+    if (!email?.trim()) return;
+
+    let data: any[] = [];
+    if (type === 'users') data = this.users.map(u => ({ Username: u.userName, Email: u.email, Role: u.role, Status: u.isActive ? 'Active' : 'Inactive', Posts: u.postsCount }));
+    else if (type === 'posts') data = this.posts.map(p => ({ Title: p.title, Author: p.authorUserName, Likes: p.likeCount, Comments: p.commentCount }));
+    else if (type === 'comments') data = this.comments.map(c => ({ Comment: c.content, User: c.userName, Post: c.postTitle }));
+
+    const rows = data.map(row => '<tr>' + Object.values(row).map(v => `<td style="padding:6px 12px;border:1px solid #ddd">${v}</td>`).join('') + '</tr>').join('');
+    const headers = data.length ? '<tr>' + Object.keys(data[0]).map(k => `<th style="padding:6px 12px;border:1px solid #ddd;background:#f7f9f9">${k}</th>`).join('') + '</tr>' : '';
+    const html = `<div style="font-family:sans-serif"><h2 style="color:#1d9bf0">BlogSpot ${type.charAt(0).toUpperCase() + type.slice(1)} Report</h2><table style="border-collapse:collapse;width:100%">${headers}${rows}</table></div>`;
+
+    this.adminService.sendReportEmail(email, type, html).subscribe({
+      next: () => this.snackBar.open('Report email queued!', 'Close', { duration: 3000 }),
+      error: () => this.snackBar.open('Failed to queue email', 'Close', { duration: 3000 })
+    });
   }
 }

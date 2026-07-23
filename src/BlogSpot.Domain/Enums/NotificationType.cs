@@ -8,5 +8,6 @@ public enum NotificationType
     Follow = 0,
     Reaction = 1,
     Comment = 2,
-    PostPublished = 3
+    PostPublished = 3,
+    CommentLike = 4
 }

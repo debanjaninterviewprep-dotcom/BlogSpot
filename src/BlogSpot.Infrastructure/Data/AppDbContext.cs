@@ -21,6 +21,8 @@ public class AppDbContext : DbContext
     public DbSet<Tag> Tags => Set<Tag>();
     public DbSet<BlogPostTag> BlogPostTags => Set<BlogPostTag>();
     public DbSet<CommentLike> CommentLikes => Set<CommentLike>();
+    public DbSet<EmailQueue> EmailQueues => Set<EmailQueue>();
+    public DbSet<OtpVerification> OtpVerifications => Set<OtpVerification>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

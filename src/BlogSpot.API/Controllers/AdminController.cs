@@ -12,10 +12,12 @@ namespace BlogSpot.API.Controllers;
 public class AdminController : ControllerBase
 {
     private readonly IAdminService _adminService;
+    private readonly IEmailQueueService _emailQueueService;
 
-    public AdminController(IAdminService adminService)
+    public AdminController(IAdminService adminService, IEmailQueueService emailQueueService)
     {
         _adminService = adminService;
+        _emailQueueService = emailQueueService;
     }
 
     // --- Users ---
@@ -84,9 +86,41 @@ public class AdminController : ControllerBase
         var result = await _adminService.SeedDummyDataAsync(ct);
         return Ok(new { message = result });
     }
+
+    // --- Email Queue ---
+
+    [HttpGet("emails")]
+    public async Task<ActionResult<PagedResult<EmailQueueDto>>> GetEmails(
+        [FromQuery] PaginationParams pagination, CancellationToken ct)
+    {
+        var result = await _emailQueueService.GetEmailQueueAsync(pagination, ct);
+        return Ok(result);
+    }
+
+    [HttpPost("send-report-email")]
+    public async Task<ActionResult> SendReportEmail([FromBody] SendReportEmailRequest request, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(request.ToEmail) || string.IsNullOrWhiteSpace(request.ReportHtml))
+            return BadRequest(new { message = "Email and report content required." });
+
+        await _emailQueueService.EnqueueAsync(
+            request.ToEmail,
+            $"BlogSpot Admin Report - {request.ReportType}",
+            request.ReportHtml,
+            ct);
+
+        return Ok(new { message = "Report email queued successfully." });
+    }
 }
 
 public class ChangeRoleRequest
 {
     public string Role { get; set; } = string.Empty;
+}
+
+public class SendReportEmailRequest
+{
+    public string ToEmail { get; set; } = string.Empty;
+    public string ReportType { get; set; } = string.Empty;
+    public string ReportHtml { get; set; } = string.Empty;
 }

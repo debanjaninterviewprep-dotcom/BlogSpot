@@ -13,16 +13,38 @@ namespace BlogSpot.API.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
+    private readonly IEmailQueueService _emailQueueService;
     private readonly ILogger<AuthController> _logger;
     private readonly AppDbContext _db;
     private readonly IConfiguration _config;
 
-    public AuthController(IAuthService authService, ILogger<AuthController> logger, AppDbContext db, IConfiguration config)
+    public AuthController(IAuthService authService, IEmailQueueService emailQueueService, ILogger<AuthController> logger, AppDbContext db, IConfiguration config)
     {
         _authService = authService;
+        _emailQueueService = emailQueueService;
         _logger = logger;
         _db = db;
         _config = config;
+    }
+
+    [HttpPost("send-otp")]
+    public async Task<ActionResult> SendOtp([FromBody] SendOtpRequest request, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(request.Email))
+            return BadRequest(new { message = "Email is required." });
+
+        await _emailQueueService.SendOtpAsync(request.Email, ct);
+        return Ok(new { message = "OTP sent to your email." });
+    }
+
+    [HttpPost("verify-otp")]
+    public async Task<ActionResult> VerifyOtp([FromBody] VerifyOtpRequest request, CancellationToken ct)
+    {
+        var isValid = await _emailQueueService.VerifyOtpAsync(request.Email, request.OtpCode, ct);
+        if (!isValid)
+            return BadRequest(new { message = "Invalid or expired OTP." });
+
+        return Ok(new { verified = true });
     }
 
     [HttpPost("register")]
@@ -91,4 +113,15 @@ public class PromoteAdminRequest
 {
     public string UserName { get; set; } = string.Empty;
     public string SecretKey { get; set; } = string.Empty;
+}
+
+public class SendOtpRequest
+{
+    public string Email { get; set; } = string.Empty;
+}
+
+public class VerifyOtpRequest
+{
+    public string Email { get; set; } = string.Empty;
+    public string OtpCode { get; set; } = string.Empty;
 }

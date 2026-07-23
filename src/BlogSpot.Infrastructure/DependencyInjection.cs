@@ -46,6 +46,10 @@ public static class DependencyInjection
         // Services
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IFileStorageService, FileStorageService>();
+        services.AddScoped<IEmailQueueService, EmailQueueService>();
+
+        // Background jobs
+        services.AddHostedService<EmailProcessorJob>();
 
         // JWT Authentication
         var jwtKey = configuration["Jwt:Key"]

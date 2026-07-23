@@ -16,11 +16,13 @@ public class BlogService : IBlogService
 {
     private readonly IUnitOfWork _uow;
     private readonly INotificationService _notificationService;
+    private readonly IEmailQueueService _emailQueueService;
 
-    public BlogService(IUnitOfWork uow, INotificationService notificationService)
+    public BlogService(IUnitOfWork uow, INotificationService notificationService, IEmailQueueService emailQueueService)
     {
         _uow = uow;
         _notificationService = notificationService;
+        _emailQueueService = emailQueueService;
     }
 
     // --- CRUD ---
@@ -51,6 +53,30 @@ public class BlogService : IBlogService
         // Handle tags
         if (dto.Tags.Any())
             await SyncTagsAsync(post.Id, dto.Tags, ct);
+
+        // If admin posts, email all users
+        var author = await _uow.Users.GetByIdAsync(userId, ct);
+        if (author?.Role == Domain.Enums.UserRole.Admin && post.IsPublished)
+        {
+            var allEmails = await _uow.Users.Query()
+                .Where(u => u.IsActive && u.Id != userId)
+                .Select(u => u.Email)
+                .ToListAsync(ct);
+
+            if (allEmails.Any())
+            {
+                await _emailQueueService.EnqueueBulkAsync(
+                    allEmails,
+                    $"New Post on BlogSpot: {post.Title}",
+                    $@"<div style='font-family:sans-serif;max-width:600px;margin:0 auto;padding:32px'>
+                        <h2 style='color:#1d9bf0'>New Post on BlogSpot</h2>
+                        <h3>{post.Title}</h3>
+                        <p style='color:#536471'>{post.Summary ?? post.Content[..Math.Min(200, post.Content.Length)]}...</p>
+                        <p style='color:#536471;font-size:13px'>Posted by {author.UserName}</p>
+                    </div>",
+                    ct);
+            }
+        }
 
         return await GetPostByIdAsync(post.Id, userId, ct)
             ?? throw new InvalidOperationException("Failed to retrieve created post.");
@@ -419,6 +445,18 @@ public class BlogService : IBlogService
             CommentId = commentId
         }, ct);
         await _uow.SaveChangesAsync(ct);
+
+        // Notify comment author
+        var comment = await _uow.Comments.GetByIdAsync(commentId, ct);
+        if (comment != null && comment.UserId != userId)
+        {
+            var user = await _uow.Users.GetByIdAsync(userId, ct);
+            await _notificationService.CreateNotificationAsync(
+                comment.UserId, userId, "CommentLike",
+                $"{user?.UserName} liked your comment",
+                comment.BlogPostId, ct);
+        }
+
         return true; // liked
     }
 

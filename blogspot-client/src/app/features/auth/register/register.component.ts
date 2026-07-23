@@ -98,11 +98,42 @@ function passwordStrengthValidator(control: AbstractControl): ValidationErrors |
             <mat-icon>error_outline</mat-icon> Passwords do not match
           </div>
 
-          <button class="submit-btn" type="submit"
-                  [disabled]="registerForm.invalid || isLoading">
-            <span *ngIf="!isLoading">Create account</span>
-            <span *ngIf="isLoading">Creating account...</span>
-          </button>
+          <!-- OTP Verification -->
+          <div class="otp-section" *ngIf="!otpSent">
+            <button class="submit-btn otp-btn" type="button"
+                    (click)="sendOtp()"
+                    [disabled]="registerForm.invalid || isSendingOtp">
+              <span *ngIf="!isSendingOtp">Send Verification Code</span>
+              <span *ngIf="isSendingOtp">Sending OTP...</span>
+            </button>
+          </div>
+
+          <div class="otp-section" *ngIf="otpSent">
+            <p class="otp-info"><mat-icon>mark_email_read</mat-icon> Verification code sent to {{ registerForm.get('email')?.value }}</p>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Enter 6-digit code</mat-label>
+              <input matInput [(ngModel)]="otpCode" [ngModelOptions]="{standalone: true}"
+                     maxlength="6" placeholder="000000">
+              <mat-icon matPrefix>pin</mat-icon>
+            </mat-form-field>
+            <div class="otp-actions">
+              <button mat-button type="button" (click)="sendOtp()" [disabled]="isSendingOtp" class="resend-btn">
+                Resend Code
+              </button>
+              <button class="submit-btn" type="submit"
+                      [disabled]="registerForm.invalid || isLoading || !otpVerified">
+                <span *ngIf="!isLoading">Create account</span>
+                <span *ngIf="isLoading">Creating account...</span>
+              </button>
+            </div>
+            <button class="verify-btn" type="button" (click)="verifyOtp()"
+                    [disabled]="otpCode.length !== 6 || isVerifying || otpVerified"
+                    *ngIf="!otpVerified">
+              <span *ngIf="!isVerifying">Verify Code</span>
+              <span *ngIf="isVerifying">Verifying...</span>
+            </button>
+            <p class="otp-verified" *ngIf="otpVerified"><mat-icon>check_circle</mat-icon> Email verified!</p>
+          </div>
         </form>
 
         <div class="auth-footer">
@@ -217,6 +248,39 @@ function passwordStrengthValidator(control: AbstractControl): ValidationErrors |
       font-weight: 600;
     }
     .auth-link:hover { text-decoration: underline; }
+    /* OTP Section */
+    .otp-section { margin-top: 8px; }
+    .otp-btn { background: #1d9bf0 !important; }
+    .otp-info {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 13px; color: #00ba7c; margin: 0 0 8px;
+    }
+    .otp-info mat-icon { font-size: 18px; width: 18px; height: 18px; }
+    .otp-actions {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    }
+    .resend-btn { color: #1d9bf0 !important; font-size: 13px !important; }
+    .verify-btn {
+      width: 100%;
+      height: 40px;
+      border: 2px solid #1d9bf0;
+      border-radius: 24px;
+      background: transparent;
+      color: #1d9bf0;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 8px;
+      font-family: inherit;
+      transition: background 0.15s, color 0.15s;
+    }
+    .verify-btn:hover:not(:disabled) { background: rgba(29,155,240,0.08); }
+    .verify-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .otp-verified {
+      display: flex; align-items: center; gap: 6px;
+      color: #00ba7c; font-size: 14px; font-weight: 600; margin: 8px 0 0;
+    }
+    .otp-verified mat-icon { font-size: 18px; width: 18px; height: 18px; }
     @media (max-width: 480px) {
       .auth-card { padding: 24px 16px; border: none; border-radius: 0; }
       .auth-title { font-size: 24px; }
@@ -228,6 +292,11 @@ export class RegisterComponent {
   registerForm: FormGroup;
   hidePassword = true;
   isLoading = false;
+  otpSent = false;
+  otpCode = '';
+  otpVerified = false;
+  isSendingOtp = false;
+  isVerifying = false;
 
   constructor(
     private fb: FormBuilder,
@@ -250,8 +319,46 @@ export class RegisterComponent {
     return pw && cpw && pw !== cpw ? { passwordMismatch: true } : null;
   }
 
+  sendOtp(): void {
+    const email = this.registerForm.get('email')?.value;
+    if (!email) return;
+    this.isSendingOtp = true;
+    this.authService.sendOtp(email).subscribe({
+      next: () => {
+        this.otpSent = true;
+        this.otpVerified = false;
+        this.otpCode = '';
+        this.isSendingOtp = false;
+        this.snackBar.open('Verification code sent!', 'Close', { duration: 3000 });
+      },
+      error: (err) => {
+        this.isSendingOtp = false;
+        this.snackBar.open(err.error?.message || 'Failed to send OTP', 'Close', { duration: 3000 });
+      }
+    });
+  }
+
+  verifyOtp(): void {
+    const email = this.registerForm.get('email')?.value;
+    if (!email || this.otpCode.length !== 6) return;
+    this.isVerifying = true;
+    this.authService.verifyOtp(email, this.otpCode).subscribe({
+      next: (result) => {
+        this.isVerifying = false;
+        if (result.verified) {
+          this.otpVerified = true;
+          this.snackBar.open('Email verified!', 'Close', { duration: 2000 });
+        }
+      },
+      error: (err) => {
+        this.isVerifying = false;
+        this.snackBar.open(err.error?.message || 'Invalid or expired OTP', 'Close', { duration: 3000 });
+      }
+    });
+  }
+
   onSubmit(): void {
-    if (this.registerForm.invalid) return;
+    if (this.registerForm.invalid || !this.otpVerified) return;
 
     this.isLoading = true;
     this.authService.register(this.registerForm.value).subscribe({

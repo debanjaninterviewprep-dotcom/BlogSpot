@@ -21,6 +21,8 @@ public class UnitOfWork : IUnitOfWork
     private IRepository<DraftBlog>? _drafts;
     private IRepository<Tag>? _tags;
     private IRepository<CommentLike>? _commentLikes;
+    private IRepository<EmailQueue>? _emailQueues;
+    private IRepository<OtpVerification>? _otpVerifications;
 
     public UnitOfWork(AppDbContext context)
     {
@@ -62,6 +64,12 @@ public class UnitOfWork : IUnitOfWork
 
     public IRepository<CommentLike> CommentLikes
         => _commentLikes ??= new Repository<CommentLike>(_context);
+
+    public IRepository<EmailQueue> EmailQueues
+        => _emailQueues ??= new Repository<EmailQueue>(_context);
+
+    public IRepository<OtpVerification> OtpVerifications
+        => _otpVerifications ??= new Repository<OtpVerification>(_context);
 
     public async Task<int> SaveChangesAsync(CancellationToken ct = default)
         => await _context.SaveChangesAsync(ct);
