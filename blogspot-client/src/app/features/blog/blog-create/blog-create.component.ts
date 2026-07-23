@@ -145,9 +145,13 @@ export class BlogCreateComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.editPostId = this.route.snapshot.paramMap.get('id');
+    const draftIdParam = this.route.snapshot.queryParamMap.get('draftId');
+
     if (this.editPostId) {
       this.isEditing = true;
       this.loadPost(this.editPostId);
+    } else if (draftIdParam) {
+      this.loadDraft(draftIdParam);
     } else {
       // Auto-save draft every 30 seconds
       this.postForm.valueChanges
@@ -175,6 +179,29 @@ export class BlogCreateComponent implements OnInit, OnDestroy {
       error: () => {
         this.snackBar.open('Failed to load post', 'Close', { duration: 3000 });
         this.router.navigate(['/feed']);
+      }
+    });
+  }
+
+  loadDraft(id: string): void {
+    this.blogService.getDraftById(id).subscribe({
+      next: (draft) => {
+        this.draftId = draft.id;
+        this.postForm.patchValue({
+          title: draft.title,
+          summary: draft.summary || '',
+          content: draft.content,
+          category: draft.category || ''
+        });
+        this.tags = draft.tags || [];
+        // Enable auto-save for the loaded draft
+        this.postForm.valueChanges
+          .pipe(debounceTime(30000), takeUntil(this.destroy$))
+          .subscribe(() => this.autoSaveDraft());
+      },
+      error: () => {
+        this.snackBar.open('Failed to load draft', 'Close', { duration: 3000 });
+        this.router.navigate(['/blog/drafts']);
       }
     });
   }

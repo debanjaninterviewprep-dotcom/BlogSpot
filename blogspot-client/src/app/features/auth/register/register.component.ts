@@ -6,13 +6,12 @@ import { AuthService } from '@core/services/auth.service';
 
 function passwordStrengthValidator(control: AbstractControl): ValidationErrors | null {
   const val = control.value as string;
-  if (!val) return null;
   const errors: ValidationErrors = {};
-  if (val.length < 8) errors['minlength'] = true;
-  if (!/[A-Z]/.test(val)) errors['noUppercase'] = true;
-  if (!/[a-z]/.test(val)) errors['noLowercase'] = true;
-  if (!/\d/.test(val)) errors['noNumber'] = true;
-  if (!/[@$!%*?&#]/.test(val)) errors['noSpecial'] = true;
+  if (!val || val.length < 8) errors['minlength'] = true;
+  if (!val || !/[A-Z]/.test(val)) errors['noUppercase'] = true;
+  if (!val || !/[a-z]/.test(val)) errors['noLowercase'] = true;
+  if (!val || !/\d/.test(val)) errors['noNumber'] = true;
+  if (!val || !/[@$!%*?&#]/.test(val)) errors['noSpecial'] = true;
   return Object.keys(errors).length ? errors : null;
 }
 
@@ -94,8 +93,10 @@ function passwordStrengthValidator(control: AbstractControl): ValidationErrors |
                    autocomplete="new-password">
             <mat-icon matPrefix>lock_outline</mat-icon>
             <mat-error *ngIf="registerForm.get('confirmPassword')?.hasError('required')">Please confirm your password</mat-error>
-            <mat-error *ngIf="registerForm.hasError('passwordMismatch') && registerForm.get('confirmPassword')?.touched">Passwords do not match</mat-error>
           </mat-form-field>
+          <div class="password-mismatch" *ngIf="registerForm.hasError('passwordMismatch') && registerForm.get('confirmPassword')?.dirty">
+            <mat-icon>error_outline</mat-icon> Passwords do not match
+          </div>
 
           <button class="submit-btn" type="submit"
                   [disabled]="registerForm.invalid || isLoading">
@@ -189,6 +190,19 @@ function passwordStrengthValidator(control: AbstractControl): ValidationErrors |
       height: 15px;
     }
     .password-hints span.met { color: #00ba7c; }
+    .password-mismatch {
+      color: #f4212e;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin: -8px 0 8px;
+    }
+    .password-mismatch mat-icon {
+      font-size: 15px;
+      width: 15px;
+      height: 15px;
+    }
     .auth-footer {
       display: flex;
       justify-content: center;
