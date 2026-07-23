@@ -3,6 +3,7 @@ import { PageEvent } from '@angular/material/paginator';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 import { AdminService, AdminUser, AdminPost, AdminComment } from '@core/services/admin.service';
+import { ExportService } from '@core/services/export.service';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -20,6 +21,20 @@ import { AdminService, AdminUser, AdminPost, AdminComment } from '@core/services
         <!-- Users Tab -->
         <mat-tab label="Users">
           <div class="tab-content">
+            <div class="tab-toolbar">
+              <span class="tab-count">{{ usersTotalCount }} users</span>
+              <button mat-stroked-button [matMenuTriggerFor]="usersExportMenu" class="export-btn">
+                <mat-icon>download</mat-icon> Export Report
+              </button>
+              <mat-menu #usersExportMenu="matMenu">
+                <button mat-menu-item (click)="exportUsers()">
+                  <mat-icon>table_chart</mat-icon> Download Excel
+                </button>
+                <button mat-menu-item (click)="exportViaEmail('users')" disabled>
+                  <mat-icon>email</mat-icon> Send via Email
+                </button>
+              </mat-menu>
+            </div>
             <table mat-table [dataSource]="users" class="full-width" multiTemplateDataRows>
               <ng-container matColumnDef="userName">
                 <th mat-header-cell *matHeaderCellDef>Username</th>
@@ -105,6 +120,20 @@ import { AdminService, AdminUser, AdminPost, AdminComment } from '@core/services
         <!-- Posts Tab -->
         <mat-tab label="Posts">
           <div class="tab-content">
+            <div class="tab-toolbar">
+              <span class="tab-count">{{ postsTotalCount }} posts</span>
+              <button mat-stroked-button [matMenuTriggerFor]="postsExportMenu" class="export-btn">
+                <mat-icon>download</mat-icon> Export Report
+              </button>
+              <mat-menu #postsExportMenu="matMenu">
+                <button mat-menu-item (click)="exportPosts()">
+                  <mat-icon>table_chart</mat-icon> Download Excel
+                </button>
+                <button mat-menu-item (click)="exportViaEmail('posts')" disabled>
+                  <mat-icon>email</mat-icon> Send via Email
+                </button>
+              </mat-menu>
+            </div>
             <table mat-table [dataSource]="posts" class="full-width">
               <ng-container matColumnDef="title">
                 <th mat-header-cell *matHeaderCellDef>Title</th>
@@ -149,6 +178,20 @@ import { AdminService, AdminUser, AdminPost, AdminComment } from '@core/services
         <!-- Comments Tab -->
         <mat-tab label="Comments">
           <div class="tab-content">
+            <div class="tab-toolbar">
+              <span class="tab-count">{{ commentsTotalCount }} comments</span>
+              <button mat-stroked-button [matMenuTriggerFor]="commentsExportMenu" class="export-btn">
+                <mat-icon>download</mat-icon> Export Report
+              </button>
+              <mat-menu #commentsExportMenu="matMenu">
+                <button mat-menu-item (click)="exportComments()">
+                  <mat-icon>table_chart</mat-icon> Download Excel
+                </button>
+                <button mat-menu-item (click)="exportViaEmail('comments')" disabled>
+                  <mat-icon>email</mat-icon> Send via Email
+                </button>
+              </mat-menu>
+            </div>
             <table mat-table [dataSource]="comments" class="full-width">
               <ng-container matColumnDef="content">
                 <th mat-header-cell *matHeaderCellDef>Comment</th>
@@ -191,6 +234,29 @@ import { AdminService, AdminUser, AdminPost, AdminComment } from '@core/services
     .admin-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 8px; }
     h1 { display: flex; align-items: center; gap: 8px; margin: 0; }
     .tab-content { padding: 16px 0; overflow-x: auto; }
+    .tab-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .tab-count {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-text-secondary, #536471);
+    }
+    .export-btn {
+      font-size: 13px !important;
+      border-radius: 20px !important;
+      padding: 0 14px !important;
+      height: 34px !important;
+    }
+    .export-btn mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      margin-right: 4px;
+    }
     table { width: 100%; }
     mat-chip { font-size: 12px; }
     .admin-chip { background-color: rgba(29,155,240,0.12) !important; color: #1d9bf0 !important; }
@@ -301,6 +367,7 @@ export class AdminDashboardComponent implements OnInit {
 
   constructor(
     private adminService: AdminService,
+    private exportService: ExportService,
     private snackBar: MatSnackBar
   ) {}
 
@@ -415,5 +482,63 @@ export class AdminDashboardComponent implements OnInit {
         this.snackBar.open(err.error?.message || 'Seeding failed', 'Close', { duration: 5000 });
       }
     });
+  }
+
+  // --- Export ---
+
+  exportUsers(): void {
+    // Fetch all users for export
+    this.adminService.getUsers({ page: 1, pageSize: 1000 }).subscribe({
+      next: (result) => {
+        const data = result.items.map(u => ({
+          Username: u.userName,
+          Email: u.email,
+          Role: u.role,
+          Status: u.isActive ? 'Active' : 'Inactive',
+          Posts: u.postsCount,
+          Comments: u.commentsCount,
+          'Joined Date': new Date(u.createdAt).toLocaleDateString()
+        }));
+        this.exportService.exportToExcel(data, 'BlogSpot_Users', 'Users');
+        this.snackBar.open('Users report downloaded', 'Close', { duration: 2000 });
+      }
+    });
+  }
+
+  exportPosts(): void {
+    this.adminService.getPosts({ page: 1, pageSize: 1000 }).subscribe({
+      next: (result) => {
+        const data = result.items.map(p => ({
+          Title: p.title,
+          Author: p.authorUserName,
+          Likes: p.likeCount,
+          Comments: p.commentCount,
+          Published: p.isPublished ? 'Yes' : 'No',
+          'Created Date': new Date(p.createdAt).toLocaleDateString()
+        }));
+        this.exportService.exportToExcel(data, 'BlogSpot_Posts', 'Posts');
+        this.snackBar.open('Posts report downloaded', 'Close', { duration: 2000 });
+      }
+    });
+  }
+
+  exportComments(): void {
+    this.adminService.getComments({ page: 1, pageSize: 1000 }).subscribe({
+      next: (result) => {
+        const data = result.items.map(c => ({
+          Comment: c.content,
+          User: c.userName,
+          'Post Title': c.postTitle,
+          'Created Date': new Date(c.createdAt).toLocaleDateString()
+        }));
+        this.exportService.exportToExcel(data, 'BlogSpot_Comments', 'Comments');
+        this.snackBar.open('Comments report downloaded', 'Close', { duration: 2000 });
+      }
+    });
+  }
+
+  exportViaEmail(type: string): void {
+    // TODO: Implement email export
+    this.snackBar.open('Email export coming soon', 'Close', { duration: 2000 });
   }
 }
