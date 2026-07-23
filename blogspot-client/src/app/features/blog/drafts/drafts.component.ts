@@ -41,11 +41,76 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     </div>
   `,
   styles: [`
-    .drafts-container { max-width: 720px; margin: 0 auto; }
-    .draft-card { margin-bottom: 16px; }
-    .draft-preview { color: #666; line-height: 1.5; }
-    .empty-state { text-align: center; padding: 48px; color: #888; }
-    .empty-state mat-icon { font-size: 64px; width: 64px; height: 64px; color: #ccc; }
+    .drafts-container { max-width: 720px; margin: 0 auto; padding: 16px; }
+    .drafts-container h2 {
+      font-size: 22px;
+      font-weight: 800;
+      margin: 0 0 20px;
+      color: var(--color-text-primary, #0f1419);
+    }
+    .draft-card {
+      margin-bottom: 16px;
+      border-radius: 16px !important;
+      border: 1px solid var(--color-border, #eff3f4) !important;
+      background: var(--card-bg, #fff) !important;
+      overflow: hidden;
+      transition: box-shadow 0.15s;
+    }
+    .draft-card:hover {
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+    .draft-card mat-card-header {
+      padding: 16px 16px 0;
+    }
+    .draft-card mat-card-title {
+      font-size: 17px !important;
+      font-weight: 700 !important;
+      color: var(--color-text-primary, #0f1419) !important;
+      word-break: break-word;
+    }
+    .draft-card mat-card-subtitle {
+      font-size: 13px !important;
+      color: var(--color-text-secondary, #536471) !important;
+      margin-top: 4px !important;
+    }
+    .draft-card mat-card-content {
+      padding: 0 16px;
+    }
+    .draft-preview {
+      color: var(--color-text-secondary, #536471);
+      line-height: 1.6;
+      font-size: 14px;
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
+    .draft-card mat-card-actions {
+      padding: 8px 16px 12px !important;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 64px 24px;
+      color: var(--color-text-secondary, #536471);
+    }
+    .empty-state mat-icon {
+      font-size: 56px;
+      width: 56px;
+      height: 56px;
+      color: var(--color-border, #cfd9de);
+      margin-bottom: 12px;
+    }
+    .empty-state h3 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--color-text-primary, #0f1419);
+      margin: 0 0 8px;
+    }
+    .empty-state p {
+      margin: 0;
+      font-size: 14px;
+    }
   `]
 })
 export class DraftsComponent implements OnInit {
