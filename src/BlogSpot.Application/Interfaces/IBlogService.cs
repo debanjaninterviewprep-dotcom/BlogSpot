@@ -8,7 +8,7 @@ public interface IBlogService
     // CRUD
     Task<BlogPostDto> CreatePostAsync(Guid userId, CreateBlogPostDto dto, CancellationToken ct = default);
     Task<BlogPostDto> UpdatePostAsync(Guid userId, Guid postId, UpdateBlogPostDto dto, CancellationToken ct = default);
-    Task DeletePostAsync(Guid userId, Guid postId, CancellationToken ct = default);
+    Task DeletePostAsync(Guid userId, Guid postId, bool isAdmin = false, CancellationToken ct = default);
     Task<BlogPostDto?> GetPostByIdAsync(Guid postId, Guid? currentUserId = null, CancellationToken ct = default);
     Task<BlogPostDto?> GetPostBySlugAsync(string slug, Guid? currentUserId = null, CancellationToken ct = default);
     Task<PagedResult<BlogPostDto>> GetPostsByUserAsync(Guid userId, PaginationParams pagination, Guid? currentUserId = null, CancellationToken ct = default);
@@ -27,7 +27,7 @@ public interface IBlogService
 
     // Comments
     Task<CommentDto> AddCommentAsync(Guid userId, Guid postId, CreateCommentDto dto, CancellationToken ct = default);
-    Task DeleteCommentAsync(Guid userId, Guid commentId, CancellationToken ct = default);
+    Task DeleteCommentAsync(Guid userId, Guid commentId, bool isAdmin = false, CancellationToken ct = default);
     Task<PagedResult<CommentDto>> GetCommentsAsync(Guid postId, PaginationParams pagination, CancellationToken ct = default);
 
     // Images

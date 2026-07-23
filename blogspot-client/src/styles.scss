@@ -268,31 +268,12 @@ body.dark-theme {
   /* ---- DRAFTS ---- */
   .draft-card:hover { box-shadow: 0 2px 12px rgba(255,255,255,0.06) !important; }
 
-  /* ---- ADMIN DASHBOARD ---- */
-  .user-card {
-    background: var(--card-bg) !important;
-    border-color: var(--color-border) !important;
-  }
-  .user-card:hover { box-shadow: 0 4px 16px rgba(255,255,255,0.04) !important; }
-  .user-card.editing { border-color: var(--color-primary) !important; box-shadow: 0 0 0 1px var(--color-primary) !important; }
-  .uc-name { color: #e7e9ea !important; }
-  .uc-email { color: #71767b !important; }
-  .uc-status { background: rgba(244,33,46,0.15) !important; color: #f4212e !important; }
-  .uc-status.active { background: rgba(0,186,124,0.15) !important; color: #00ba7c !important; }
-  .uc-stats { border-color: var(--color-border) !important; }
-  .uc-stat + .uc-stat { border-left-color: var(--color-border) !important; }
-  .uc-stat-val { color: #e7e9ea !important; }
-  .uc-stat-label { color: #71767b !important; }
-  .uc-role { background: #2f3336 !important; color: #71767b !important; }
-  .uc-role.admin { background: rgba(29,155,240,0.2) !important; color: #8ecdf7 !important; }
-  .uc-edit-btn { color: #71767b !important; }
-  .uc-edit-btn:hover { background: rgba(255,255,255,0.03) !important; color: var(--color-primary) !important; }
-  .uc-edit-panel {
-    background: var(--color-bg-secondary) !important;
-    border-top-color: var(--color-border) !important;
-  }
-  .uc-edit-field label { color: #71767b !important; }
-  .uc-edit-field select {
+  /* ---- ADMIN CONTROLS (profile) ---- */
+  .admin-controls { border-color: var(--color-border) !important; }
+  .admin-controls-header { background: var(--color-bg-secondary) !important; color: #71767b !important; }
+  .admin-controls-body { background: var(--card-bg) !important; }
+  .admin-field label { color: #71767b !important; }
+  .admin-field select {
     background: #000 !important;
     color: #e7e9ea !important;
     border-color: #333638 !important;
@@ -300,7 +281,28 @@ body.dark-theme {
     background-repeat: no-repeat !important;
     background-position: right 8px center !important;
   }
-  .uc-edit-field select:focus { border-color: #1d9bf0 !important; }
+
+  /* ---- ADMIN DASHBOARD ---- */
+  .user-link { color: #e7e9ea !important; }
+  .admin-chip { background-color: rgba(29,155,240,0.2) !important; color: #8ecdf7 !important; }
+  .active-chip { background-color: rgba(0,186,124,0.15) !important; color: #00ba7c !important; }
+  .inactive-chip { background-color: rgba(244,33,46,0.15) !important; color: #f4212e !important; }
+  .expanded-row { border-bottom: none !important; }
+  .edit-row td { border-bottom-color: var(--color-border) !important; }
+  .edit-panel {
+    background: var(--color-bg-secondary) !important;
+    border-top-color: var(--color-border) !important;
+  }
+  .edit-field label { color: #71767b !important; }
+  .edit-field select {
+    background: #000 !important;
+    color: #e7e9ea !important;
+    border-color: #333638 !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%2371767b' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 8px center !important;
+  }
+  .edit-field select:focus { border-color: #1d9bf0 !important; }
   .status-toggle { color: #71767b !important; }
   .toggle-track { background: #333638 !important; }
   .status-toggle.active .toggle-track { background: #00ba7c !important; }

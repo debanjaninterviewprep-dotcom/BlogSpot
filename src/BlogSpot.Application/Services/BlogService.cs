@@ -83,12 +83,12 @@ public class BlogService : IBlogService
             ?? throw new InvalidOperationException("Failed to retrieve updated post.");
     }
 
-    public async Task DeletePostAsync(Guid userId, Guid postId, CancellationToken ct = default)
+    public async Task DeletePostAsync(Guid userId, Guid postId, bool isAdmin = false, CancellationToken ct = default)
     {
         var post = await _uow.BlogPosts.GetByIdAsync(postId, ct)
             ?? throw new KeyNotFoundException("Post not found.");
 
-        if (post.AuthorId != userId)
+        if (!isAdmin && post.AuthorId != userId)
             throw new UnauthorizedAccessException("You can only delete your own posts.");
 
         _uow.BlogPosts.Remove(post);
@@ -359,13 +359,18 @@ public class BlogService : IBlogService
         return MapCommentToDto(savedComment);
     }
 
-    public async Task DeleteCommentAsync(Guid userId, Guid commentId, CancellationToken ct = default)
+    public async Task DeleteCommentAsync(Guid userId, Guid commentId, bool isAdmin = false, CancellationToken ct = default)
     {
         var comment = await _uow.Comments.GetByIdAsync(commentId, ct)
             ?? throw new KeyNotFoundException("Comment not found.");
 
-        if (comment.UserId != userId)
-            throw new UnauthorizedAccessException("You can only delete your own comments.");
+        if (!isAdmin && comment.UserId != userId)
+        {
+            // Also allow blog post owner to delete comments on their posts
+            var post = await _uow.BlogPosts.GetByIdAsync(comment.BlogPostId, ct);
+            if (post == null || post.AuthorId != userId)
+                throw new UnauthorizedAccessException("You do not have permission to delete this comment.");
+        }
 
         _uow.Comments.Remove(comment);
         await _uow.SaveChangesAsync(ct);

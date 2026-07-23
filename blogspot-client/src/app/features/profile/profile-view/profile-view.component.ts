@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { UserService } from '@core/services/user.service';
 import { BlogService } from '@core/services/blog.service';
 import { AuthService } from '@core/services/auth.service';
+import { AdminService } from '@core/services/admin.service';
 import { UserProfile } from '@core/models/user.model';
 import { BlogPost, ReactionType } from '@core/models/blog.model';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -86,6 +87,31 @@ import { MatSnackBar } from '@angular/material/snack-bar';
             </button>
           </div>
         </div>
+
+        <!-- Admin Controls -->
+        <div class="admin-controls" *ngIf="authService.isAdmin && !isOwnProfile">
+          <div class="admin-controls-header">
+            <mat-icon>admin_panel_settings</mat-icon>
+            <span>Admin Controls</span>
+          </div>
+          <div class="admin-controls-body">
+            <div class="admin-field">
+              <label>Role</label>
+              <select [value]="adminRole" (change)="onAdminRoleChange($event)">
+                <option value="User">User</option>
+                <option value="Admin">Admin</option>
+              </select>
+            </div>
+            <div class="admin-field">
+              <label>Status</label>
+              <button class="status-toggle" [class.active]="adminIsActive"
+                      (click)="onAdminToggleStatus()">
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                {{ adminIsActive ? 'Active' : 'Inactive' }}
+              </button>
+            </div>
+          </div>
+        </div>
       </mat-card>
 
       <mat-tab-group class="mt-2">
@@ -163,8 +189,77 @@ import { MatSnackBar } from '@angular/material/snack-bar';
       border-radius: 24px !important;
       font-weight: 700 !important;
       font-size: 14px !important;
+    }    /* Admin Controls */
+    .admin-controls {
+      margin-top: 16px;
+      border: 1px solid var(--color-border, #eff3f4);
+      border-radius: 12px;
+      overflow: hidden;
     }
-    .tab-content { padding: 0; }
+    .admin-controls-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: var(--color-bg-secondary, #f7f9f9);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--color-text-secondary, #536471);
+    }
+    .admin-controls-header mat-icon { font-size: 18px; width: 18px; height: 18px; }
+    .admin-controls-body {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      padding: 14px 16px;
+    }
+    .admin-field {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .admin-field label {
+      font-size: 13px; font-weight: 600;
+      color: var(--color-text-secondary, #536471);
+    }
+    .admin-field select {
+      padding: 6px 28px 6px 10px;
+      border: 1px solid var(--color-border, #eff3f4);
+      border-radius: 8px;
+      background: var(--color-bg, #fff);
+      color: var(--color-text-primary, #0f1419);
+      font-size: 13px;
+      font-family: inherit;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%23536471' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+      outline: none;
+    }
+    .admin-field select:focus { border-color: #1d9bf0; }
+    .status-toggle {
+      display: flex; align-items: center; gap: 8px;
+      background: none; border: none;
+      font-family: inherit; font-size: 13px; font-weight: 500;
+      color: var(--color-text-secondary, #536471);
+      cursor: pointer; padding: 0;
+    }
+    .toggle-track {
+      width: 36px; height: 20px;
+      background: #cfd9de;
+      border-radius: 10px;
+      position: relative;
+      transition: background 0.2s;
+    }
+    .status-toggle.active .toggle-track { background: #00ba7c; }
+    .toggle-thumb {
+      width: 16px; height: 16px;
+      background: #fff;
+      border-radius: 50%;
+      position: absolute;
+      top: 2px; left: 2px;
+      transition: transform 0.2s;
+    }
+    .status-toggle.active .toggle-thumb { transform: translateX(16px); }    .tab-content { padding: 0; }
     .empty-state { text-align: center; padding: 48px 24px; color: #536471; font-size: 14px; }
     @media (max-width: 600px) {
       .profile-container { border: none; }
@@ -186,6 +281,9 @@ export class ProfileViewComponent implements OnInit {
   following: UserProfile[] = [];
   loading = true;
   loadingPosts = false;
+  adminRole = '';
+  adminIsActive = true;
+  private adminUserId = '';
 
   constructor(
     private route: ActivatedRoute,
@@ -193,6 +291,7 @@ export class ProfileViewComponent implements OnInit {
     private userService: UserService,
     private blogService: BlogService,
     public authService: AuthService,
+    private adminService: AdminService,
     private snackBar: MatSnackBar
   ) {}
 
@@ -220,11 +319,52 @@ export class ProfileViewComponent implements OnInit {
         this.loadUserPosts();
         this.loadFollowers();
         this.loadFollowing();
+        this.loadAdminData();
       },
       error: () => {
         this.loading = false;
         this.snackBar.open('Profile not found', 'Close', { duration: 3000 });
         this.router.navigate(['/feed']);
+      }
+    });
+  }
+
+  private loadAdminData(): void {
+    if (!this.authService.isAdmin || this.isOwnProfile || !this.profile) return;
+    // Load admin user data to get role and active status
+    this.adminService.getUsers({ page: 1, pageSize: 100 }).subscribe({
+      next: (result) => {
+        const adminUser = result.items.find(u => u.userName === this.profile?.userName);
+        if (adminUser) {
+          this.adminUserId = adminUser.id;
+          this.adminRole = adminUser.role;
+          this.adminIsActive = adminUser.isActive;
+        }
+      }
+    });
+  }
+
+  onAdminRoleChange(event: Event): void {
+    const newRole = (event.target as HTMLSelectElement).value;
+    if (newRole === this.adminRole || !this.adminUserId) return;
+    this.adminService.changeUserRole(this.adminUserId, newRole).subscribe({
+      next: () => {
+        this.adminRole = newRole;
+        this.snackBar.open(`Role changed to ${newRole}`, 'Close', { duration: 3000 });
+      },
+      error: () => {
+        (event.target as HTMLSelectElement).value = this.adminRole;
+        this.snackBar.open('Failed to change role', 'Close', { duration: 3000 });
+      }
+    });
+  }
+
+  onAdminToggleStatus(): void {
+    if (!this.adminUserId) return;
+    this.adminService.toggleUserStatus(this.adminUserId).subscribe({
+      next: () => {
+        this.adminIsActive = !this.adminIsActive;
+        this.snackBar.open(`User ${this.adminIsActive ? 'activated' : 'deactivated'}`, 'Close', { duration: 3000 });
       }
     });
   }

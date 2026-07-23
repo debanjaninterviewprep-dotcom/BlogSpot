@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { PageEvent } from '@angular/material/paginator';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { trigger, state, style, transition, animate } from '@angular/animations';
 import { AdminService, AdminUser, AdminPost, AdminComment } from '@core/services/admin.service';
 
 @Component({
@@ -19,58 +20,65 @@ import { AdminService, AdminUser, AdminPost, AdminComment } from '@core/services
         <!-- Users Tab -->
         <mat-tab label="Users">
           <div class="tab-content">
-            <div class="user-grid">
-              <div class="user-card" *ngFor="let user of users"
-                   [class.editing]="editingUserId === user.id">
-                <!-- Card Header -->
-                <div class="uc-header">
-                  <div class="uc-avatar">{{ user.userName.charAt(0).toUpperCase() }}</div>
-                  <div class="uc-identity">
-                    <a [routerLink]="['/profile', user.userName]" class="uc-name">{{ user.userName }}</a>
-                    <span class="uc-email">{{ user.email }}</span>
-                  </div>
-                  <span class="uc-status" [class.active]="user.isActive">
+            <table mat-table [dataSource]="users" class="full-width" multiTemplateDataRows>
+              <ng-container matColumnDef="userName">
+                <th mat-header-cell *matHeaderCellDef>Username</th>
+                <td mat-cell *matCellDef="let user">
+                  <a [routerLink]="['/profile', user.userName]" class="user-link">{{ user.userName }}</a>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="email">
+                <th mat-header-cell *matHeaderCellDef>Email</th>
+                <td mat-cell *matCellDef="let user">{{ user.email }}</td>
+              </ng-container>
+              <ng-container matColumnDef="role">
+                <th mat-header-cell *matHeaderCellDef>Role</th>
+                <td mat-cell *matCellDef="let user">
+                  <mat-chip [class.admin-chip]="user.role === 'Admin'">{{ user.role }}</mat-chip>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Status</th>
+                <td mat-cell *matCellDef="let user">
+                  <mat-chip [class.active-chip]="user.isActive" [class.inactive-chip]="!user.isActive">
                     {{ user.isActive ? 'Active' : 'Inactive' }}
-                  </span>
-                </div>
+                  </mat-chip>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="posts">
+                <th mat-header-cell *matHeaderCellDef>Posts</th>
+                <td mat-cell *matCellDef="let user">{{ user.postsCount }}</td>
+              </ng-container>
+              <ng-container matColumnDef="comments">
+                <th mat-header-cell *matHeaderCellDef>Comments</th>
+                <td mat-cell *matCellDef="let user">{{ user.commentsCount }}</td>
+              </ng-container>
+              <ng-container matColumnDef="joined">
+                <th mat-header-cell *matHeaderCellDef>Joined</th>
+                <td mat-cell *matCellDef="let user">{{ user.createdAt | date:'mediumDate' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef>Actions</th>
+                <td mat-cell *matCellDef="let user">
+                  <button mat-icon-button (click)="toggleEdit(user)"
+                          [matTooltip]="editingUserId === user.id ? 'Close' : 'Manage'">
+                    <mat-icon>{{ editingUserId === user.id ? 'close' : 'tune' }}</mat-icon>
+                  </button>
+                </td>
+              </ng-container>
 
-                <!-- Stats Row -->
-                <div class="uc-stats">
-                  <div class="uc-stat">
-                    <span class="uc-stat-val">{{ user.postsCount }}</span>
-                    <span class="uc-stat-label">Posts</span>
-                  </div>
-                  <div class="uc-stat">
-                    <span class="uc-stat-val">{{ user.commentsCount }}</span>
-                    <span class="uc-stat-label">Comments</span>
-                  </div>
-                  <div class="uc-stat">
-                    <span class="uc-stat-val uc-role" [class.admin]="user.role === 'Admin'">{{ user.role }}</span>
-                    <span class="uc-stat-label">Role</span>
-                  </div>
-                  <div class="uc-stat">
-                    <span class="uc-stat-val">{{ user.createdAt | date:'MMM d, y' }}</span>
-                    <span class="uc-stat-label">Joined</span>
-                  </div>
-                </div>
-
-                <!-- Edit Button -->
-                <button class="uc-edit-btn" (click)="toggleEdit(user)">
-                  <mat-icon>{{ editingUserId === user.id ? 'close' : 'tune' }}</mat-icon>
-                  {{ editingUserId === user.id ? 'Close' : 'Manage' }}
-                </button>
-
-                <!-- Inline Edit Panel -->
-                <div class="uc-edit-panel" *ngIf="editingUserId === user.id">
-                  <div class="uc-edit-row">
-                    <div class="uc-edit-field">
+              <!-- Expandable edit row -->
+              <ng-container matColumnDef="editPanel">
+                <td mat-cell *matCellDef="let user" [attr.colspan]="userColumns.length">
+                  <div class="edit-panel" *ngIf="editingUserId === user.id" @slideDown>
+                    <div class="edit-field">
                       <label>Role</label>
                       <select [value]="user.role" (change)="onRoleChange(user, $event)">
                         <option value="User">User</option>
                         <option value="Admin">Admin</option>
                       </select>
                     </div>
-                    <div class="uc-edit-field">
+                    <div class="edit-field">
                       <label>Status</label>
                       <button class="status-toggle" [class.active]="user.isActive"
                               (click)="toggleUserStatus(user)">
@@ -79,10 +87,16 @@ import { AdminService, AdminUser, AdminPost, AdminComment } from '@core/services
                       </button>
                     </div>
                   </div>
-                </div>
-              </div>
-            </div>
-            <mat-paginator [length]="usersTotalCount" [pageSize]="10"
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="userColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: userColumns;"
+                  [class.expanded-row]="editingUserId === row.id"></tr>
+              <tr mat-row *matRowDef="let row; columns: ['editPanel']"
+                  class="edit-row"></tr>
+            </table>
+            <mat-paginator [length]="usersTotalCount" [pageSize]="12"
                            (page)="onUsersPageChange($event)">
             </mat-paginator>
           </div>
@@ -178,172 +192,34 @@ import { AdminService, AdminUser, AdminPost, AdminComment } from '@core/services
     h1 { display: flex; align-items: center; gap: 8px; margin: 0; }
     .tab-content { padding: 16px 0; overflow-x: auto; }
     table { width: 100%; }
+    mat-chip { font-size: 12px; }
+    .admin-chip { background-color: rgba(29,155,240,0.12) !important; color: #1d9bf0 !important; }
+    .active-chip { background-color: rgba(0,186,124,0.12) !important; color: #00ba7c !important; }
+    .inactive-chip { background-color: rgba(244,33,46,0.1) !important; color: #f4212e !important; }
+    .user-link { color: inherit; text-decoration: none; font-weight: 500; }
+    .user-link:hover { text-decoration: underline; color: #1d9bf0; }
     .post-link { color: inherit; text-decoration: none; font-weight: 500; }
     .post-link:hover { text-decoration: underline; color: #1d9bf0; }
+    .expanded-row { border-bottom: none !important; }
+    .edit-row td { padding: 0 !important; border-bottom-color: var(--color-border, #eff3f4) !important; }
 
-    /* ---- User Card Grid ---- */
-    .user-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-      gap: 16px;
-    }
-    .user-card {
-      border: 1px solid var(--color-border, #eff3f4);
-      border-radius: 16px;
-      background: var(--card-bg, #fff);
-      overflow: hidden;
-      transition: box-shadow 0.2s, border-color 0.2s;
-    }
-    .user-card:hover {
-      box-shadow: 0 4px 16px rgba(0,0,0,0.06);
-    }
-    .user-card.editing {
-      border-color: var(--color-primary, #1d9bf0);
-      box-shadow: 0 0 0 1px var(--color-primary, #1d9bf0);
-    }
-
-    /* Card Header */
-    .uc-header {
+    /* Edit Panel */
+    .edit-panel {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 16px 16px 12px;
-    }
-    .uc-avatar {
-      width: 44px; height: 44px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #1d9bf0, #1a6dd4);
-      color: #fff;
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 700; font-size: 18px;
-      flex-shrink: 0;
-    }
-    .uc-identity {
-      flex: 1;
-      min-width: 0;
-    }
-    .uc-name {
-      display: block;
-      font-weight: 700;
-      font-size: 15px;
-      color: var(--color-text-primary, #0f1419);
-      text-decoration: none;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .uc-name:hover { color: #1d9bf0; text-decoration: underline; }
-    .uc-email {
-      display: block;
-      font-size: 13px;
-      color: var(--color-text-secondary, #536471);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      margin-top: 1px;
-    }
-    .uc-status {
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      padding: 3px 10px;
-      border-radius: 20px;
-      background: rgba(244,33,46,0.1);
-      color: #f4212e;
-      flex-shrink: 0;
-    }
-    .uc-status.active {
-      background: rgba(0,186,124,0.1);
-      color: #00ba7c;
-    }
-
-    /* Stats Row */
-    .uc-stats {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      border-top: 1px solid var(--color-border, #eff3f4);
-      border-bottom: 1px solid var(--color-border, #eff3f4);
-    }
-    .uc-stat {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 10px 4px;
-    }
-    .uc-stat + .uc-stat {
-      border-left: 1px solid var(--color-border, #eff3f4);
-    }
-    .uc-stat-val {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--color-text-primary, #0f1419);
-    }
-    .uc-stat-label {
-      font-size: 11px;
-      color: var(--color-text-secondary, #536471);
-      margin-top: 2px;
-    }
-    .uc-role {
-      font-size: 12px;
-      padding: 1px 8px;
-      border-radius: 10px;
-      background: #eff3f4;
-      color: #536471;
-    }
-    .uc-role.admin {
-      background: rgba(29,155,240,0.12);
-      color: #1d9bf0;
-    }
-
-    /* Edit Button */
-    .uc-edit-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      width: 100%;
-      padding: 10px;
-      border: none;
-      background: none;
-      color: var(--color-text-secondary, #536471);
-      font-size: 13px;
-      font-weight: 600;
-      font-family: inherit;
-      cursor: pointer;
-      transition: background 0.15s, color 0.15s;
-    }
-    .uc-edit-btn mat-icon { font-size: 18px; width: 18px; height: 18px; }
-    .uc-edit-btn:hover {
-      background: var(--color-bg-hover, rgba(0,0,0,0.03));
-      color: var(--color-primary, #1d9bf0);
-    }
-
-    /* Inline Edit Panel */
-    .uc-edit-panel {
-      padding: 14px 16px;
+      gap: 32px;
+      padding: 12px 16px 16px 16px;
       background: var(--color-bg-secondary, #f7f9f9);
-      border-top: 1px solid var(--color-border, #eff3f4);
-      animation: slideDown 0.15s ease;
+      border-top: 1px dashed var(--color-border, #eff3f4);
     }
-    @keyframes slideDown {
-      from { opacity: 0; transform: translateY(-6px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .uc-edit-row {
-      display: flex;
-      align-items: center;
-      gap: 24px;
-      flex-wrap: wrap;
-    }
-    .uc-edit-field {
+    .edit-field {
       display: flex; align-items: center; gap: 10px;
     }
-    .uc-edit-field label {
+    .edit-field label {
       font-size: 13px; font-weight: 600;
       color: var(--color-text-secondary, #536471);
     }
-    .uc-edit-field select {
+    .edit-field select {
       padding: 6px 28px 6px 10px;
       border: 1px solid var(--color-border, #eff3f4);
       border-radius: 8px;
@@ -360,7 +236,7 @@ import { AdminService, AdminUser, AdminPost, AdminComment } from '@core/services
       outline: none;
       transition: border-color 0.15s;
     }
-    .uc-edit-field select:focus { border-color: #1d9bf0; }
+    .edit-field select:focus { border-color: #1d9bf0; }
 
     /* Toggle Switch */
     .status-toggle {
@@ -389,18 +265,27 @@ import { AdminService, AdminUser, AdminPost, AdminComment } from '@core/services
     .status-toggle.active .toggle-thumb { transform: translateX(16px); }
 
     @media (max-width: 599px) {
-      .user-grid { grid-template-columns: 1fr; gap: 12px; }
-      .uc-stats { grid-template-columns: repeat(2, 1fr); }
-      .uc-stat:nth-child(3) { border-left: none; }
-      .uc-edit-row { flex-direction: column; align-items: flex-start; gap: 14px; }
+      .edit-panel { flex-direction: column; align-items: flex-start; gap: 14px; }
     }
-  `]
+  `],
+  animations: [
+    trigger('slideDown', [
+      transition(':enter', [
+        style({ height: '0', opacity: 0, overflow: 'hidden' }),
+        animate('150ms ease', style({ height: '*', opacity: 1 }))
+      ]),
+      transition(':leave', [
+        animate('150ms ease', style({ height: '0', opacity: 0, overflow: 'hidden' }))
+      ])
+    ])
+  ]
 })
 export class AdminDashboardComponent implements OnInit {
   // Users
   users: AdminUser[] = [];
   usersTotalCount = 0;
   editingUserId: string | null = null;
+  userColumns = ['userName', 'email', 'role', 'status', 'posts', 'comments', 'joined', 'actions'];
 
   // Posts
   posts: AdminPost[] = [];
@@ -426,7 +311,7 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   loadUsers(page: number): void {
-    this.adminService.getUsers({ page, pageSize: 10 }).subscribe({
+    this.adminService.getUsers({ page, pageSize: 12 }).subscribe({
       next: (result) => {
         this.users = result.items;
         this.usersTotalCount = result.totalCount;

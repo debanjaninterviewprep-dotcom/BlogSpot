@@ -26,6 +26,11 @@ public class BlogController : ControllerBase
         return claim != null ? Guid.Parse(claim.Value) : null;
     }
 
+    private bool IsCurrentUserAdmin()
+    {
+        return User.IsInRole("Admin");
+    }
+
     [Authorize]
     [HttpPost]
     public async Task<ActionResult<BlogPostDto>> CreatePost([FromBody] CreateBlogPostDto dto, CancellationToken ct)
@@ -49,7 +54,7 @@ public class BlogController : ControllerBase
     public async Task<ActionResult> DeletePost(Guid id, CancellationToken ct)
     {
         var userId = GetCurrentUserId()!.Value;
-        await _blogService.DeletePostAsync(userId, id, ct);
+        await _blogService.DeletePostAsync(userId, id, IsCurrentUserAdmin(), ct);
         return NoContent();
     }
 
@@ -209,7 +214,7 @@ public class BlogController : ControllerBase
     public async Task<ActionResult> DeleteComment(Guid commentId, CancellationToken ct)
     {
         var userId = GetCurrentUserId()!.Value;
-        await _blogService.DeleteCommentAsync(userId, commentId, ct);
+        await _blogService.DeleteCommentAsync(userId, commentId, IsCurrentUserAdmin(), ct);
         return NoContent();
     }
 

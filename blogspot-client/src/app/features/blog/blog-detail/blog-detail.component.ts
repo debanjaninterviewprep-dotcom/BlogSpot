@@ -25,8 +25,9 @@ import { BlogPost, Comment, ReactionType, ReactionSummaryDto } from '@core/model
               </p>
             </div>
           </div>
-          <div class="post-actions" *ngIf="isAuthor">
-            <button mat-icon-button [routerLink]="['/blog/edit', post.id]" matTooltip="Edit">
+          <div class="post-actions" *ngIf="isAuthor || authService.isAdmin">
+            <button mat-icon-button [routerLink]="['/blog/edit', post.id]" matTooltip="Edit"
+                    *ngIf="isAuthor">
               <mat-icon>edit</mat-icon>
             </button>
             <button mat-icon-button color="warn" (click)="deletePost()" matTooltip="Delete">
@@ -119,8 +120,8 @@ import { BlogPost, Comment, ReactionType, ReactionSummaryDto } from '@core/model
                 </a>
                 <span class="comment-date">{{ comment.createdAt | date:'medium' }}</span>
               </div>
-              <button mat-icon-button *ngIf="comment.userId === authService.currentUser?.id"
-                      (click)="deleteComment(comment.id)">
+              <button mat-icon-button *ngIf="canDeleteComment(comment)"
+                      (click)="deleteComment(comment.id)" matTooltip="Delete comment">
                 <mat-icon>delete_outline</mat-icon>
               </button>
             </div>
@@ -150,6 +151,10 @@ import { BlogPost, Comment, ReactionType, ReactionSummaryDto } from '@core/model
                   {{ reply.userDisplayName || reply.userName }}
                 </a>
                 <span class="comment-date">{{ reply.createdAt | date:'medium' }}</span>
+                <button mat-icon-button *ngIf="canDeleteComment(reply)"
+                        (click)="deleteReply(comment, reply.id)" matTooltip="Delete reply">
+                  <mat-icon>delete_outline</mat-icon>
+                </button>
               </div>
               <p class="comment-content">{{ reply.content }}</p>
             </div>
@@ -234,6 +239,18 @@ export class BlogDetailComponent implements OnInit {
 
   get isAuthor(): boolean {
     return this.post?.authorId === this.authService.currentUser?.id;
+  }
+
+  canDeleteComment(comment: Comment): boolean {
+    const currentUserId = this.authService.currentUser?.id;
+    if (!currentUserId) return false;
+    // Admin can delete any comment
+    if (this.authService.isAdmin) return true;
+    // Comment author can delete their own comment
+    if (comment.userId === currentUserId) return true;
+    // Post owner can delete comments on their post
+    if (this.post?.authorId === currentUserId) return true;
+    return false;
   }
 
   ngOnInit(): void {
@@ -352,6 +369,15 @@ export class BlogDetailComponent implements OnInit {
     this.blogService.deleteComment(commentId).subscribe({
       next: () => {
         this.comments = this.comments.filter(c => c.id !== commentId);
+        if (this.post) this.post.commentCount--;
+      }
+    });
+  }
+
+  deleteReply(parentComment: Comment, replyId: string): void {
+    this.blogService.deleteComment(replyId).subscribe({
+      next: () => {
+        parentComment.replies = parentComment.replies.filter(r => r.id !== replyId);
         if (this.post) this.post.commentCount--;
       }
     });
