@@ -28,7 +28,8 @@ public interface IBlogService
     // Comments
     Task<CommentDto> AddCommentAsync(Guid userId, Guid postId, CreateCommentDto dto, CancellationToken ct = default);
     Task DeleteCommentAsync(Guid userId, Guid commentId, bool isAdmin = false, CancellationToken ct = default);
-    Task<PagedResult<CommentDto>> GetCommentsAsync(Guid postId, PaginationParams pagination, CancellationToken ct = default);
+    Task<PagedResult<CommentDto>> GetCommentsAsync(Guid postId, PaginationParams pagination, Guid? currentUserId = null, CancellationToken ct = default);
+    Task<bool> ToggleCommentLikeAsync(Guid userId, Guid commentId, CancellationToken ct = default);
 
     // Images
     Task<PostImageDto> AddImageToPostAsync(Guid userId, Guid postId, string imageUrl, string? altText, CancellationToken ct = default);

@@ -23,5 +23,7 @@ public class CommentDto
     public string? UserProfilePictureUrl { get; set; }
 
     public Guid? ParentCommentId { get; set; }
+    public int LikeCount { get; set; }
+    public bool IsLikedByCurrentUser { get; set; }
     public List<CommentDto> Replies { get; set; } = new();
 }

@@ -61,6 +61,8 @@ export interface Comment {
   userDisplayName?: string;
   userProfilePictureUrl?: string;
   parentCommentId?: string;
+  likeCount: number;
+  isLikedByCurrentUser: boolean;
   replies: Comment[];
 }
 

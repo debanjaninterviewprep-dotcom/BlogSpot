@@ -376,11 +376,13 @@ public class BlogService : IBlogService
         await _uow.SaveChangesAsync(ct);
     }
 
-    public async Task<PagedResult<CommentDto>> GetCommentsAsync(Guid postId, PaginationParams pagination, CancellationToken ct = default)
+    public async Task<PagedResult<CommentDto>> GetCommentsAsync(Guid postId, PaginationParams pagination, Guid? currentUserId = null, CancellationToken ct = default)
     {
         var query = _uow.Comments.Query()
             .Include(c => c.User).ThenInclude(u => u.Profile)
+            .Include(c => c.CommentLikes)
             .Include(c => c.Replies).ThenInclude(r => r.User).ThenInclude(u => u.Profile)
+            .Include(c => c.Replies).ThenInclude(r => r.CommentLikes)
             .Where(c => c.BlogPostId == postId && c.ParentCommentId == null)
             .OrderByDescending(c => c.CreatedAt);
 
@@ -392,11 +394,32 @@ public class BlogService : IBlogService
 
         return new PagedResult<CommentDto>
         {
-            Items = comments.Select(MapCommentToDto).ToList(),
+            Items = comments.Select(c => MapCommentToDto(c, currentUserId)).ToList(),
             TotalCount = totalCount,
             Page = pagination.Page,
             PageSize = pagination.PageSize
         };
+    }
+
+    public async Task<bool> ToggleCommentLikeAsync(Guid userId, Guid commentId, CancellationToken ct = default)
+    {
+        var existing = await _uow.CommentLikes.Query()
+            .FirstOrDefaultAsync(cl => cl.UserId == userId && cl.CommentId == commentId, ct);
+
+        if (existing != null)
+        {
+            _uow.CommentLikes.Remove(existing);
+            await _uow.SaveChangesAsync(ct);
+            return false; // unliked
+        }
+
+        await _uow.CommentLikes.AddAsync(new Domain.Entities.CommentLike
+        {
+            UserId = userId,
+            CommentId = commentId
+        }, ct);
+        await _uow.SaveChangesAsync(ct);
+        return true; // liked
     }
 
     // --- Images ---
@@ -656,7 +679,7 @@ public class BlogService : IBlogService
         };
     }
 
-    private static CommentDto MapCommentToDto(Comment comment)
+    private static CommentDto MapCommentToDto(Comment comment, Guid? currentUserId = null)
     {
         return new CommentDto
         {
@@ -669,7 +692,9 @@ public class BlogService : IBlogService
             UserDisplayName = comment.User.Profile?.DisplayName,
             UserProfilePictureUrl = comment.User.Profile?.ProfilePictureUrl,
             ParentCommentId = comment.ParentCommentId,
-            Replies = comment.Replies?.Select(MapCommentToDto).ToList() ?? new()
+            LikeCount = comment.CommentLikes?.Count ?? 0,
+            IsLikedByCurrentUser = currentUserId.HasValue && (comment.CommentLikes?.Any(cl => cl.UserId == currentUserId.Value) ?? false),
+            Replies = comment.Replies?.Select(r => MapCommentToDto(r, currentUserId)).ToList() ?? new()
         };
     }
 

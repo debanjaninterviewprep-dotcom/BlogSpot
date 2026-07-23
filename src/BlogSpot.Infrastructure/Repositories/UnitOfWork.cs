@@ -20,6 +20,7 @@ public class UnitOfWork : IUnitOfWork
     private IRepository<Notification>? _notifications;
     private IRepository<DraftBlog>? _drafts;
     private IRepository<Tag>? _tags;
+    private IRepository<CommentLike>? _commentLikes;
 
     public UnitOfWork(AppDbContext context)
     {
@@ -58,6 +59,9 @@ public class UnitOfWork : IUnitOfWork
 
     public IRepository<Tag> Tags
         => _tags ??= new Repository<Tag>(_context);
+
+    public IRepository<CommentLike> CommentLikes
+        => _commentLikes ??= new Repository<CommentLike>(_context);
 
     public async Task<int> SaveChangesAsync(CancellationToken ct = default)
         => await _context.SaveChangesAsync(ct);

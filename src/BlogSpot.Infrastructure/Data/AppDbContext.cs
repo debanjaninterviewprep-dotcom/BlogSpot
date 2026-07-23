@@ -20,6 +20,7 @@ public class AppDbContext : DbContext
     public DbSet<DraftBlog> DraftBlogs => Set<DraftBlog>();
     public DbSet<Tag> Tags => Set<Tag>();
     public DbSet<BlogPostTag> BlogPostTags => Set<BlogPostTag>();
+    public DbSet<CommentLike> CommentLikes => Set<CommentLike>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -205,8 +205,17 @@ public class BlogController : ControllerBase
     public async Task<ActionResult<PagedResult<CommentDto>>> GetComments(
         Guid id, [FromQuery] PaginationParams pagination, CancellationToken ct)
     {
-        var result = await _blogService.GetCommentsAsync(id, pagination, ct);
+        var result = await _blogService.GetCommentsAsync(id, pagination, GetCurrentUserId(), ct);
         return Ok(result);
+    }
+
+    [Authorize]
+    [HttpPost("comments/{commentId:guid}/like")]
+    public async Task<ActionResult<object>> ToggleCommentLike(Guid commentId, CancellationToken ct)
+    {
+        var userId = GetCurrentUserId()!.Value;
+        var liked = await _blogService.ToggleCommentLikeAsync(userId, commentId, ct);
+        return Ok(new { liked });
     }
 
     [Authorize]

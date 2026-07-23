@@ -15,5 +15,6 @@ public interface IUnitOfWork : IDisposable
     IRepository<Notification> Notifications { get; }
     IRepository<DraftBlog> Drafts { get; }
     IRepository<Tag> Tags { get; }
+    IRepository<CommentLike> CommentLikes { get; }
     Task<int> SaveChangesAsync(CancellationToken ct = default);
 }

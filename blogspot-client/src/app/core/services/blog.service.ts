@@ -113,6 +113,10 @@ export class BlogService {
     return this.http.delete<void>(`${this.apiUrl}/comments/${commentId}`);
   }
 
+  toggleCommentLike(commentId: string): Observable<{ liked: boolean }> {
+    return this.http.post<{ liked: boolean }>(`${this.apiUrl}/comments/${commentId}/like`, {});
+  }
+
   // --- Images ---
 
   uploadImage(postId: string, file: File, altText?: string): Observable<PostImage> {

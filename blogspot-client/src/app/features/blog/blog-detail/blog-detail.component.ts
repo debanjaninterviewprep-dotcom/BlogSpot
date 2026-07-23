@@ -127,11 +127,19 @@ import { BlogPost, Comment, ReactionType, ReactionSummaryDto } from '@core/model
             </div>
             <p class="comment-content">{{ comment.content }}</p>
 
-            <!-- Reply action -->
-            <button mat-button class="reply-btn" *ngIf="authService.isLoggedIn"
-                    (click)="replyingTo = replyingTo === comment.id ? null : comment.id">
-              <mat-icon>reply</mat-icon> Reply
-            </button>
+            <div class="comment-actions">
+              <!-- Like -->
+              <button class="comment-like-btn" [class.liked]="comment.isLikedByCurrentUser"
+                      (click)="toggleCommentLike(comment)">
+                <mat-icon>{{ comment.isLikedByCurrentUser ? 'favorite' : 'favorite_border' }}</mat-icon>
+                <span *ngIf="comment.likeCount">{{ comment.likeCount }}</span>
+              </button>
+              <!-- Reply action -->
+              <button mat-button class="reply-btn" *ngIf="authService.isLoggedIn"
+                      (click)="replyingTo = replyingTo === comment.id ? null : comment.id">
+                <mat-icon>reply</mat-icon> Reply
+              </button>
+            </div>
 
             <!-- Reply form -->
             <div *ngIf="replyingTo === comment.id" class="reply-form">
@@ -157,6 +165,13 @@ import { BlogPost, Comment, ReactionType, ReactionSummaryDto } from '@core/model
                 </button>
               </div>
               <p class="comment-content">{{ reply.content }}</p>
+              <div class="comment-actions">
+                <button class="comment-like-btn" [class.liked]="reply.isLikedByCurrentUser"
+                        (click)="toggleCommentLike(reply)">
+                  <mat-icon>{{ reply.isLikedByCurrentUser ? 'favorite' : 'favorite_border' }}</mat-icon>
+                  <span *ngIf="reply.likeCount">{{ reply.likeCount }}</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -201,8 +216,39 @@ import { BlogPost, Comment, ReactionType, ReactionSummaryDto } from '@core/model
     .comment-author { text-decoration: none; font-weight: 500; color: #333; font-size: 14px; }
     .comment-date { font-size: 12px; color: #999; }
     .comment-content { margin: 0; line-height: 1.5; }
+    .comment-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 6px;
+    }
+    .comment-like-btn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 16px;
+      font-size: 12px;
+      color: var(--color-text-secondary, #536471);
+      transition: color 0.15s, background 0.15s;
+    }
+    .comment-like-btn:hover {
+      color: #f91880;
+      background: rgba(249,24,128,0.08);
+    }
+    .comment-like-btn.liked {
+      color: #f91880;
+    }
+    .comment-like-btn mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+    }
     .reply { margin-left: 40px; padding: 8px 0; }
-    .reply-btn { font-size: 12px; margin-top: 4px; }
+    .reply-btn { font-size: 12px; }
     .reply-form { margin-left: 40px; display: flex; gap: 8px; align-items: center; margin-top: 8px; }
   `]
 })
@@ -379,6 +425,16 @@ export class BlogDetailComponent implements OnInit {
       next: () => {
         parentComment.replies = parentComment.replies.filter(r => r.id !== replyId);
         if (this.post) this.post.commentCount--;
+      }
+    });
+  }
+
+  toggleCommentLike(comment: Comment): void {
+    if (!this.authService.isLoggedIn) return;
+    this.blogService.toggleCommentLike(comment.id).subscribe({
+      next: (result) => {
+        comment.isLikedByCurrentUser = result.liked;
+        comment.likeCount += result.liked ? 1 : -1;
       }
     });
   }

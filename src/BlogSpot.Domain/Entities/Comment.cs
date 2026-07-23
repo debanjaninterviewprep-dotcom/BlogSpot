@@ -18,4 +18,7 @@ public class Comment : BaseEntity
     public Guid? ParentCommentId { get; set; }
     public Comment? ParentComment { get; set; }
     public ICollection<Comment> Replies { get; set; } = new List<Comment>();
+
+    // Likes
+    public ICollection<CommentLike> CommentLikes { get; set; } = new List<CommentLike>();
 }
