@@ -12,11 +12,13 @@ public class AdminService : IAdminService
 {
     private readonly IUnitOfWork _uow;
     private readonly DbContext _dbContext;
+    private readonly IEmailQueueService _emailQueueService;
 
-    public AdminService(IUnitOfWork uow, DbContext dbContext)
+    public AdminService(IUnitOfWork uow, DbContext dbContext, IEmailQueueService emailQueueService)
     {
         _uow = uow;
         _dbContext = dbContext;
+        _emailQueueService = emailQueueService;
     }
 
     public async Task<PagedResult<AdminUserDto>> GetAllUsersAsync(PaginationParams pagination, CancellationToken ct = default)
@@ -60,6 +62,18 @@ public class AdminService : IAdminService
         user.UpdatedAt = DateTime.UtcNow;
         _uow.Users.Update(user);
         await _uow.SaveChangesAsync(ct);
+
+        // Email notification
+        var status = user.IsActive ? "activated" : "deactivated";
+        await _emailQueueService.EnqueueAsync(user.Email,
+            $"BlogSpot - Your account has been {status}",
+            $@"<div style='font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px'>
+                <h2 style='color:#1d9bf0'>Account Update</h2>
+                <p>Hi <strong>{user.UserName}</strong>,</p>
+                <p>Your BlogSpot account has been <strong>{status}</strong> by an administrator.</p>
+                {(user.IsActive ? "<p>You can now log in and use all features.</p>" : "<p>If you believe this is a mistake, please contact support.</p>")}
+                <p style='color:#536471;font-size:13px;margin-top:24px'>— The BlogSpot Team</p>
+            </div>", ct);
     }
 
     public async Task ChangeUserRoleAsync(Guid userId, string role, CancellationToken ct = default)
@@ -74,6 +88,17 @@ public class AdminService : IAdminService
         user.UpdatedAt = DateTime.UtcNow;
         _uow.Users.Update(user);
         await _uow.SaveChangesAsync(ct);
+
+        // Email notification
+        await _emailQueueService.EnqueueAsync(user.Email,
+            "BlogSpot - Your role has been updated",
+            $@"<div style='font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px'>
+                <h2 style='color:#1d9bf0'>Role Update</h2>
+                <p>Hi <strong>{user.UserName}</strong>,</p>
+                <p>Your role on BlogSpot has been changed to <strong>{role}</strong>.</p>
+                {(role == "Admin" ? "<p>You now have access to the Admin Dashboard and management features.</p>" : "<p>Your permissions have been updated accordingly.</p>")}
+                <p style='color:#536471;font-size:13px;margin-top:24px'>— The BlogSpot Team</p>
+            </div>", ct);
     }
 
     public async Task<PagedResult<AdminPostDto>> GetAllPostsAsync(PaginationParams pagination, CancellationToken ct = default)
@@ -111,11 +136,28 @@ public class AdminService : IAdminService
 
     public async Task AdminDeletePostAsync(Guid postId, CancellationToken ct = default)
     {
-        var post = await _uow.BlogPosts.GetByIdAsync(postId, ct)
+        var post = await _uow.BlogPosts.Query()
+            .Include(p => p.Author)
+            .FirstOrDefaultAsync(p => p.Id == postId, ct)
             ?? throw new KeyNotFoundException("Post not found.");
+
+        var authorEmail = post.Author.Email;
+        var authorName = post.Author.UserName;
+        var postTitle = post.Title;
 
         _uow.BlogPosts.Remove(post);
         await _uow.SaveChangesAsync(ct);
+
+        // Email notification to author
+        await _emailQueueService.EnqueueAsync(authorEmail,
+            "BlogSpot - Your post has been removed",
+            $@"<div style='font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px'>
+                <h2 style='color:#f4212e'>Post Removed</h2>
+                <p>Hi <strong>{authorName}</strong>,</p>
+                <p>Your post <strong>"{postTitle}"</strong> has been removed by an administrator for violating our community guidelines.</p>
+                <p>If you believe this is a mistake, please contact support.</p>
+                <p style='color:#536471;font-size:13px;margin-top:24px'>— The BlogSpot Team</p>
+            </div>", ct);
     }
 
     public async Task<PagedResult<AdminCommentDto>> GetAllCommentsAsync(PaginationParams pagination, CancellationToken ct = default)
@@ -149,11 +191,28 @@ public class AdminService : IAdminService
 
     public async Task AdminDeleteCommentAsync(Guid commentId, CancellationToken ct = default)
     {
-        var comment = await _uow.Comments.GetByIdAsync(commentId, ct)
+        var comment = await _uow.Comments.Query()
+            .Include(c => c.User)
+            .FirstOrDefaultAsync(c => c.Id == commentId, ct)
             ?? throw new KeyNotFoundException("Comment not found.");
+
+        var userEmail = comment.User.Email;
+        var userName = comment.User.UserName;
+        var commentSnippet = comment.Content.Length > 50 ? comment.Content[..50] + "..." : comment.Content;
 
         _uow.Comments.Remove(comment);
         await _uow.SaveChangesAsync(ct);
+
+        // Email notification to comment author
+        await _emailQueueService.EnqueueAsync(userEmail,
+            "BlogSpot - Your comment has been removed",
+            $@"<div style='font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px'>
+                <h2 style='color:#f4212e'>Comment Removed</h2>
+                <p>Hi <strong>{userName}</strong>,</p>
+                <p>Your comment <em>"{commentSnippet}"</em> has been removed by an administrator for violating our community guidelines.</p>
+                <p>Please ensure your comments follow our community standards.</p>
+                <p style='color:#536471;font-size:13px;margin-top:24px'>— The BlogSpot Team</p>
+            </div>", ct);
     }
 
     public async Task<string> SeedDummyDataAsync(CancellationToken ct = default)
