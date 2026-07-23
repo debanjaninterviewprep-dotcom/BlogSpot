@@ -177,36 +177,36 @@ public class EmailQueueService : IEmailQueueService
 
     private async Task SendEmailAsync(string to, string subject, string body)
     {
-        var apiKey = _config["Email:ResendApiKey"] ?? "";
-        var fromEmail = _config["Email:FromEmail"] ?? "noreply@resend.dev";
+        var apiKey = _config["Email:BrevoApiKey"] ?? "";
+        var fromEmail = _config["Email:FromEmail"] ?? "";
         var fromName = _config["Email:FromName"] ?? "BlogSpot";
 
         if (string.IsNullOrEmpty(apiKey))
         {
-            _logger.LogWarning("Resend API key not configured. Email to {To} skipped.", to);
+            _logger.LogWarning("Brevo API key not configured. Email to {To} skipped.", to);
             return;
         }
 
         var client = _httpClientFactory.CreateClient();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+        client.DefaultRequestHeaders.Add("api-key", apiKey);
 
         var payload = new
         {
-            from = $"{fromName} <{fromEmail}>",
-            to = new[] { to },
+            sender = new { name = fromName, email = fromEmail },
+            to = new[] { new { email = to } },
             subject = subject,
-            html = body
+            htmlContent = body
         };
 
         var json = JsonSerializer.Serialize(payload);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-        var response = await client.PostAsync("https://api.resend.com/emails", content);
+        var response = await client.PostAsync("https://api.brevo.com/v3/smtp/email", content);
 
         if (!response.IsSuccessStatusCode)
         {
             var errorBody = await response.Content.ReadAsStringAsync();
-            throw new Exception($"Resend API error ({response.StatusCode}): {errorBody}");
+            throw new Exception($"Brevo API error ({response.StatusCode}): {errorBody}");
         }
     }
 }
