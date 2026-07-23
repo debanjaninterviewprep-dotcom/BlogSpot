@@ -3,6 +3,7 @@ import { PageEvent } from '@angular/material/paginator';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 import { AdminService, AdminUser, AdminPost, AdminComment, EmailQueueItem } from '@core/services/admin.service';
+import { AuthService } from '@core/services/auth.service';
 import { ExportService } from '@core/services/export.service';
 
 @Component({
@@ -423,6 +424,7 @@ export class AdminDashboardComponent implements OnInit {
 
   constructor(
     private adminService: AdminService,
+    private authService: AuthService,
     private exportService: ExportService,
     private snackBar: MatSnackBar
   ) {}
@@ -608,21 +610,49 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   exportViaEmail(type: string): void {
-    const email = prompt('Enter email address to send the report:');
-    if (!email?.trim()) return;
+    const adminEmail = this.authService.currentUser?.email;
+    if (!adminEmail) {
+      this.snackBar.open('Admin email not found', 'Close', { duration: 3000 });
+      return;
+    }
 
-    let data: any[] = [];
-    if (type === 'users') data = this.users.map(u => ({ Username: u.userName, Email: u.email, Role: u.role, Status: u.isActive ? 'Active' : 'Inactive', Posts: u.postsCount }));
-    else if (type === 'posts') data = this.posts.map(p => ({ Title: p.title, Author: p.authorUserName, Likes: p.likeCount, Comments: p.commentCount }));
-    else if (type === 'comments') data = this.comments.map(c => ({ Comment: c.content, User: c.userName, Post: c.postTitle }));
+    const buildHtml = (data: any[]) => {
+      if (!data.length) return '<p>No data available.</p>';
+      const headers = '<tr>' + Object.keys(data[0]).map(k => `<th style="padding:8px 12px;border:1px solid #ddd;background:#f7f9f9;text-align:left">${k}</th>`).join('') + '</tr>';
+      const rows = data.map(row => '<tr>' + Object.values(row).map(v => `<td style="padding:6px 12px;border:1px solid #ddd">${v}</td>`).join('') + '</tr>').join('');
+      return `<div style="font-family:sans-serif"><h2 style="color:#1d9bf0">BlogSpot ${type.charAt(0).toUpperCase() + type.slice(1)} Report</h2><table style="border-collapse:collapse;width:100%">${headers}${rows}</table></div>`;
+    };
 
-    const rows = data.map(row => '<tr>' + Object.values(row).map(v => `<td style="padding:6px 12px;border:1px solid #ddd">${v}</td>`).join('') + '</tr>').join('');
-    const headers = data.length ? '<tr>' + Object.keys(data[0]).map(k => `<th style="padding:6px 12px;border:1px solid #ddd;background:#f7f9f9">${k}</th>`).join('') + '</tr>' : '';
-    const html = `<div style="font-family:sans-serif"><h2 style="color:#1d9bf0">BlogSpot ${type.charAt(0).toUpperCase() + type.slice(1)} Report</h2><table style="border-collapse:collapse;width:100%">${headers}${rows}</table></div>`;
-
-    this.adminService.sendReportEmail(email, type, html).subscribe({
-      next: () => this.snackBar.open('Report email queued!', 'Close', { duration: 3000 }),
-      error: () => this.snackBar.open('Failed to queue email', 'Close', { duration: 3000 })
-    });
+    if (type === 'users') {
+      this.adminService.getUsers({ page: 1, pageSize: 10000 }).subscribe({
+        next: (result) => {
+          const data = result.items.map(u => ({ Username: u.userName, Email: u.email, Role: u.role, Status: u.isActive ? 'Active' : 'Inactive', Posts: u.postsCount, Comments: u.commentsCount, Joined: new Date(u.createdAt).toLocaleDateString() }));
+          this.adminService.sendReportEmail(adminEmail, 'Users', buildHtml(data)).subscribe({
+            next: () => this.snackBar.open('Report emailed to ' + adminEmail, 'Close', { duration: 3000 }),
+            error: () => this.snackBar.open('Failed to queue email', 'Close', { duration: 3000 })
+          });
+        }
+      });
+    } else if (type === 'posts') {
+      this.adminService.getPosts({ page: 1, pageSize: 10000 }).subscribe({
+        next: (result) => {
+          const data = result.items.map(p => ({ Title: p.title, Author: p.authorUserName, Likes: p.likeCount, Comments: p.commentCount, Published: p.isPublished ? 'Yes' : 'No', Date: new Date(p.createdAt).toLocaleDateString() }));
+          this.adminService.sendReportEmail(adminEmail, 'Posts', buildHtml(data)).subscribe({
+            next: () => this.snackBar.open('Report emailed to ' + adminEmail, 'Close', { duration: 3000 }),
+            error: () => this.snackBar.open('Failed to queue email', 'Close', { duration: 3000 })
+          });
+        }
+      });
+    } else if (type === 'comments') {
+      this.adminService.getComments({ page: 1, pageSize: 10000 }).subscribe({
+        next: (result) => {
+          const data = result.items.map(c => ({ Comment: c.content, User: c.userName, Post: c.postTitle, Date: new Date(c.createdAt).toLocaleDateString() }));
+          this.adminService.sendReportEmail(adminEmail, 'Comments', buildHtml(data)).subscribe({
+            next: () => this.snackBar.open('Report emailed to ' + adminEmail, 'Close', { duration: 3000 }),
+            error: () => this.snackBar.open('Failed to queue email', 'Close', { duration: 3000 })
+          });
+        }
+      });
+    }
   }
 }
