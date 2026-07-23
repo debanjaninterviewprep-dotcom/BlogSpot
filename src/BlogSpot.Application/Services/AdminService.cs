@@ -72,7 +72,7 @@ public class AdminService : IAdminService
                 <p>Hi <strong>{user.UserName}</strong>,</p>
                 <p>Your BlogSpot account has been <strong>{status}</strong> by an administrator.</p>
                 {(user.IsActive ? "<p>You can now log in and use all features.</p>" : "<p>If you believe this is a mistake, please contact support.</p>")}
-                <p style='color:#536471;font-size:13px;margin-top:24px'>— The BlogSpot Team</p>
+                <p style='color:#536471;font-size:13px;margin-top:24px'>-- The BlogSpot Team</p>
             </div>", ct);
     }
 
@@ -97,7 +97,7 @@ public class AdminService : IAdminService
                 <p>Hi <strong>{user.UserName}</strong>,</p>
                 <p>Your role on BlogSpot has been changed to <strong>{role}</strong>.</p>
                 {(role == "Admin" ? "<p>You now have access to the Admin Dashboard and management features.</p>" : "<p>Your permissions have been updated accordingly.</p>")}
-                <p style='color:#536471;font-size:13px;margin-top:24px'>— The BlogSpot Team</p>
+                <p style='color:#536471;font-size:13px;margin-top:24px'>-- The BlogSpot Team</p>
             </div>", ct);
     }
 
@@ -154,9 +154,9 @@ public class AdminService : IAdminService
             $@"<div style='font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px'>
                 <h2 style='color:#f4212e'>Post Removed</h2>
                 <p>Hi <strong>{authorName}</strong>,</p>
-                <p>Your post <strong>"{postTitle}"</strong> has been removed by an administrator for violating our community guidelines.</p>
+                <p>Your post <strong>{postTitle}</strong> has been removed by an administrator for violating our community guidelines.</p>
                 <p>If you believe this is a mistake, please contact support.</p>
-                <p style='color:#536471;font-size:13px;margin-top:24px'>— The BlogSpot Team</p>
+                <p style='color:#536471;font-size:13px;margin-top:24px'>-- The BlogSpot Team</p>
             </div>", ct);
     }
 
@@ -209,9 +209,9 @@ public class AdminService : IAdminService
             $@"<div style='font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px'>
                 <h2 style='color:#f4212e'>Comment Removed</h2>
                 <p>Hi <strong>{userName}</strong>,</p>
-                <p>Your comment <em>"{commentSnippet}"</em> has been removed by an administrator for violating our community guidelines.</p>
+                <p>Your comment <em>{commentSnippet}</em> has been removed by an administrator for violating our community guidelines.</p>
                 <p>Please ensure your comments follow our community standards.</p>
-                <p style='color:#536471;font-size:13px;margin-top:24px'>— The BlogSpot Team</p>
+                <p style='color:#536471;font-size:13px;margin-top:24px'>-- The BlogSpot Team</p>
             </div>", ct);
     }
 
@@ -336,11 +336,11 @@ public class AdminService : IAdminService
             ("React Server Components: The Complete Guide", "React Server Components change how we think about data fetching. Learn the new mental model and migration path.", "Understanding and implementing React Server Components.", "React,JavaScript,Tutorial"),
             ("Python FastAPI: Build APIs 3x Faster", "FastAPI is taking the Python world by storm. Learn how to build production-ready APIs with automatic docs.", "Build modern Python APIs with FastAPI and Pydantic.", "Python,WebDev,Tutorial"),
             ("Effective Logging and Observability in .NET", "Logs nobody reads are useless. Learn structured logging, distributed tracing, and building useful dashboards.", "Building observable .NET applications with proper logging and tracing.", "CSharp,DevOps,Tutorial"),
-            ("The Senior Developer Mindset: Lessons Learned", "Becoming senior isn't about years of experience — it's about thinking differently. Lessons from my journey.", "Insights on developing a senior engineering mindset.", "Career"),
+            ("The Senior Developer Mindset: Lessons Learned", "Becoming senior isn't about years of experience -- it's about thinking differently. Lessons from my journey.", "Insights on developing a senior engineering mindset.", "Career"),
             ("Nginx vs Caddy vs Traefik: Choosing a Reverse Proxy", "Your reverse proxy affects performance, security, and ops complexity. Compare the top three choices.", "Comparing Nginx, Caddy, and Traefik for modern web applications.", "DevOps"),
             ("Flutter State Management: Provider vs Riverpod vs Bloc", "State management in Flutter is confusing. This guide cuts through the noise with practical comparisons.", "Choosing the right state management solution for Flutter apps.", "Mobile,Tutorial"),
             ("Designing a Scalable Notification System", "Notifications at scale are deceptively hard. Learn the architecture behind systems handling millions of events.", "Architecture guide for building scalable notification systems.", "Cloud,Database,Career"),
-            ("Introduction to Domain-Driven Design", "DDD isn't just about code — it's about aligning software with business reality. An accessible introduction.", "Getting started with Domain-Driven Design for complex systems.", "Career,CSharp,Tutorial"),
+            ("Introduction to Domain-Driven Design", "DDD isn't just about code -- it's about aligning software with business reality. An accessible introduction.", "Getting started with Domain-Driven Design for complex systems.", "Career,CSharp,Tutorial"),
             ("GitHub Copilot and AI Tools: Changing How We Code", "AI coding assistants are here to stay. How to use them effectively without losing your engineering instincts.", "Using AI coding tools effectively while maintaining code quality.", "AI,Career"),
         };
 

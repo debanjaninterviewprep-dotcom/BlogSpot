@@ -57,20 +57,20 @@ public class AuthService : IAuthService
 
         // Send welcome email
         await _emailQueueService.EnqueueAsync(user.Email,
-            "Welcome to BlogSpot! 🎉",
+            "Welcome to BlogSpot!",
             $@"<div style='font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px'>
-                <h2 style='color:#1d9bf0'>Welcome to BlogSpot, {dto.DisplayName ?? dto.UserName}! 🎉</h2>
+                <h2 style='color:#1d9bf0'>Welcome to BlogSpot, {dto.DisplayName ?? dto.UserName}!</h2>
                 <p>We're thrilled to have you join our community of writers and readers.</p>
                 <p>Here's what you can do:</p>
                 <ul style='line-height:2;color:#0f1419'>
-                    <li>✍️ Write and publish your own blog posts</li>
-                    <li>💬 Comment and engage with other writers</li>
-                    <li>❤️ React to posts and comments you love</li>
-                    <li>🔖 Bookmark posts to read later</li>
-                    <li>👥 Follow your favorite authors</li>
+                    <li>Write and publish your own blog posts</li>
+                    <li>Comment and engage with other writers</li>
+                    <li>React to posts and comments you love</li>
+                    <li>Bookmark posts to read later</li>
+                    <li>Follow your favorite authors</li>
                 </ul>
                 <p>Start exploring and share your stories with the world!</p>
-                <p style='color:#536471;font-size:13px;margin-top:24px'>Happy blogging! — The BlogSpot Team</p>
+                <p style='color:#536471;font-size:13px;margin-top:24px'>Happy blogging! -- The BlogSpot Team</p>
             </div>", ct);
 
         return GenerateAuthResponse(user, profile);
