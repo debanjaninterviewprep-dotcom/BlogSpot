@@ -1,4 +1,5 @@
 using BlogSpot.Application.Interfaces;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -9,12 +10,14 @@ public class EmailProcessorJob : BackgroundService
 {
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<EmailProcessorJob> _logger;
-    private readonly TimeSpan _interval = TimeSpan.FromMinutes(2);
+    private readonly TimeSpan _interval;
 
-    public EmailProcessorJob(IServiceScopeFactory scopeFactory, ILogger<EmailProcessorJob> logger)
+    public EmailProcessorJob(IServiceScopeFactory scopeFactory, ILogger<EmailProcessorJob> logger, IConfiguration configuration)
     {
         _scopeFactory = scopeFactory;
         _logger = logger;
+        var minutes = double.Parse(configuration["Email:JobIntervalMinutes"] ?? "1");
+        _interval = TimeSpan.FromMinutes(minutes);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
