@@ -18,6 +18,7 @@ namespace BlogSpot.Infrastructure.Migrations
                     Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", Npgsql.EntityFrameworkCore.PostgreSQL.Metadata.NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     UserId = table.Column<Guid>(type: "uuid", nullable: true),
+                    UserName = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     Action = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     EntityType = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     EntityId = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),

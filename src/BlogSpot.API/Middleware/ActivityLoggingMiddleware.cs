@@ -22,6 +22,7 @@ public class ActivityLoggingMiddleware
             return;
 
         var userId = GetUserId(context);
+        var userName = context.User.Identity?.Name;
         var action = DeriveAction(context.Request.Method, path);
         var level = context.Response.StatusCode >= 400 ? Domain.Enums.LogLevel.Error : Domain.Enums.LogLevel.Info;
 
@@ -36,6 +37,7 @@ public class ActivityLoggingMiddleware
                 httpMethod: context.Request.Method,
                 endpoint: path,
                 userId: userId,
+                userName: userName,
                 level: level,
                 ipAddress: ipAddress,
                 userAgent: userAgent,

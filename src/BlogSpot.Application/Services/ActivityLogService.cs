@@ -20,6 +20,7 @@ public class ActivityLogService : IActivityLogService
         string httpMethod,
         string endpoint,
         Guid? userId = null,
+        string? userName = null,
         string? entityType = null,
         string? entityId = null,
         string? details = null,
@@ -32,6 +33,7 @@ public class ActivityLogService : IActivityLogService
         var log = new ActivityLog
         {
             UserId = userId,
+            UserName = userName,
             Action = action,
             EntityType = entityType,
             EntityId = entityId,
@@ -81,7 +83,7 @@ public class ActivityLogService : IActivityLogService
             {
                 Id = l.Id,
                 UserId = l.UserId,
-                UserName = l.User != null ? l.User.UserName : null,
+                UserName = l.UserName,
                 Action = l.Action,
                 EntityType = l.EntityType,
                 EntityId = l.EntityId,

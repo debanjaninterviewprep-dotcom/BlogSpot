@@ -11,6 +11,7 @@ public class ActivityLogConfiguration : IEntityTypeConfiguration<ActivityLog>
         builder.HasKey(a => a.Id);
         builder.Property(a => a.Id).ValueGeneratedOnAdd();
 
+        builder.Property(a => a.UserName).HasMaxLength(50);
         builder.Property(a => a.Action).HasMaxLength(100).IsRequired();
         builder.Property(a => a.EntityType).HasMaxLength(50);
         builder.Property(a => a.EntityId).HasMaxLength(50);

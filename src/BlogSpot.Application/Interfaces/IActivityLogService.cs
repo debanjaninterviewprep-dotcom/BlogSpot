@@ -9,6 +9,7 @@ public interface IActivityLogService
         string httpMethod,
         string endpoint,
         Guid? userId = null,
+        string? userName = null,
         string? entityType = null,
         string? entityId = null,
         string? details = null,
