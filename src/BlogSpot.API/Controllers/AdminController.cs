@@ -13,11 +13,13 @@ public class AdminController : ControllerBase
 {
     private readonly IAdminService _adminService;
     private readonly IEmailQueueService _emailQueueService;
+    private readonly IActivityLogService _activityLogService;
 
-    public AdminController(IAdminService adminService, IEmailQueueService emailQueueService)
+    public AdminController(IAdminService adminService, IEmailQueueService emailQueueService, IActivityLogService activityLogService)
     {
         _adminService = adminService;
         _emailQueueService = emailQueueService;
+        _activityLogService = activityLogService;
     }
 
     // --- Users ---
@@ -110,6 +112,16 @@ public class AdminController : ControllerBase
             ct);
 
         return Ok(new { message = "Report email queued successfully." });
+    }
+
+    // --- Activity Logs ---
+
+    [HttpGet("activity-logs")]
+    public async Task<ActionResult<PagedResult<ActivityLogDto>>> GetActivityLogs(
+        [FromQuery] ActivityLogFilterDto filter, CancellationToken ct)
+    {
+        var result = await _activityLogService.GetLogsAsync(filter, ct);
+        return Ok(result);
     }
 }
 

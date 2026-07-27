@@ -154,6 +154,7 @@ app.UseSwagger();
 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "BlogSpot API v1"));
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseMiddleware<ActivityLoggingMiddleware>();
 
 // Only redirect to HTTPS in development (Render handles SSL at proxy level)
 if (app.Environment.IsDevelopment())

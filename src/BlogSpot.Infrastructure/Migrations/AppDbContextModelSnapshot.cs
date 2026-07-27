@@ -17,10 +17,78 @@ namespace BlogSpot.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
+                .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
                 .HasAnnotation("ProductVersion", "8.0.11")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+            modelBuilder.Entity("BlogSpot.Domain.Entities.ActivityLog", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Details")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Endpoint")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("EntityId")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("EntityType")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("HttpMethod")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(45)
+                        .HasColumnType("character varying(45)");
+
+                    b.Property<string>("Level")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<int?>("StatusCode")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UserAgent")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Action");
+
+                    b.HasIndex("Level");
+
+                    b.HasIndex("Timestamp");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ActivityLogs", (string)null);
+                });
 
             modelBuilder.Entity("BlogSpot.Domain.Entities.BlogPost", b =>
                 {
@@ -88,7 +156,7 @@ namespace BlogSpot.Infrastructure.Migrations
 
                     b.HasIndex("IsPublished", "CreatedAt");
 
-                    b.ToTable("BlogPosts");
+                    b.ToTable("BlogPosts", (string)null);
                 });
 
             modelBuilder.Entity("BlogSpot.Domain.Entities.BlogPostTag", b =>
@@ -103,7 +171,7 @@ namespace BlogSpot.Infrastructure.Migrations
 
                     b.HasIndex("TagId");
 
-                    b.ToTable("BlogPostTags");
+                    b.ToTable("BlogPostTags", (string)null);
                 });
 
             modelBuilder.Entity("BlogSpot.Domain.Entities.Bookmark", b =>
@@ -131,7 +199,7 @@ namespace BlogSpot.Infrastructure.Migrations
                     b.HasIndex("UserId", "BlogPostId")
                         .IsUnique();
 
-                    b.ToTable("Bookmarks");
+                    b.ToTable("Bookmarks", (string)null);
                 });
 
             modelBuilder.Entity("BlogSpot.Domain.Entities.Comment", b =>
@@ -171,7 +239,7 @@ namespace BlogSpot.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Comments");
+                    b.ToTable("Comments", (string)null);
                 });
 
             modelBuilder.Entity("BlogSpot.Domain.Entities.DraftBlog", b =>
@@ -219,7 +287,7 @@ namespace BlogSpot.Infrastructure.Migrations
 
                     b.HasIndex("BlogPostId");
 
-                    b.ToTable("DraftBlogs");
+                    b.ToTable("DraftBlogs", (string)null);
                 });
 
             modelBuilder.Entity("BlogSpot.Domain.Entities.Follow", b =>
@@ -240,7 +308,7 @@ namespace BlogSpot.Infrastructure.Migrations
                     b.HasIndex("FollowerId", "FollowingId")
                         .IsUnique();
 
-                    b.ToTable("Follows");
+                    b.ToTable("Follows", (string)null);
                 });
 
             modelBuilder.Entity("BlogSpot.Domain.Entities.Like", b =>
@@ -268,7 +336,7 @@ namespace BlogSpot.Infrastructure.Migrations
                     b.HasIndex("UserId", "BlogPostId")
                         .IsUnique();
 
-                    b.ToTable("Likes");
+                    b.ToTable("Likes", (string)null);
                 });
 
             modelBuilder.Entity("BlogSpot.Domain.Entities.Notification", b =>
@@ -311,7 +379,7 @@ namespace BlogSpot.Infrastructure.Migrations
 
                     b.HasIndex("UserId", "IsRead", "CreatedAt");
 
-                    b.ToTable("Notifications");
+                    b.ToTable("Notifications", (string)null);
                 });
 
             modelBuilder.Entity("BlogSpot.Domain.Entities.PostImage", b =>
@@ -345,7 +413,7 @@ namespace BlogSpot.Infrastructure.Migrations
 
                     b.HasIndex("BlogPostId");
 
-                    b.ToTable("PostImages");
+                    b.ToTable("PostImages", (string)null);
                 });
 
             modelBuilder.Entity("BlogSpot.Domain.Entities.Profile", b =>
@@ -400,7 +468,7 @@ namespace BlogSpot.Infrastructure.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("Profiles");
+                    b.ToTable("Profiles", (string)null);
                 });
 
             modelBuilder.Entity("BlogSpot.Domain.Entities.Reaction", b =>
@@ -433,7 +501,7 @@ namespace BlogSpot.Infrastructure.Migrations
                     b.HasIndex("UserId", "BlogPostId", "Type")
                         .IsUnique();
 
-                    b.ToTable("Reactions");
+                    b.ToTable("Reactions", (string)null);
                 });
 
             modelBuilder.Entity("BlogSpot.Domain.Entities.Tag", b =>
@@ -463,7 +531,7 @@ namespace BlogSpot.Infrastructure.Migrations
                     b.HasIndex("NormalizedName")
                         .IsUnique();
 
-                    b.ToTable("Tags");
+                    b.ToTable("Tags", (string)null);
                 });
 
             modelBuilder.Entity("BlogSpot.Domain.Entities.User", b =>
@@ -508,7 +576,17 @@ namespace BlogSpot.Infrastructure.Migrations
                     b.HasIndex("UserName")
                         .IsUnique();
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
+                });
+
+            modelBuilder.Entity("BlogSpot.Domain.Entities.ActivityLog", b =>
+                {
+                    b.HasOne("BlogSpot.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("BlogSpot.Domain.Entities.BlogPost", b =>

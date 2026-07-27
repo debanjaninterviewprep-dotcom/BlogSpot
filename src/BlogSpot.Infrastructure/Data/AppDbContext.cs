@@ -23,6 +23,7 @@ public class AppDbContext : DbContext
     public DbSet<CommentLike> CommentLikes => Set<CommentLike>();
     public DbSet<EmailQueue> EmailQueues => Set<EmailQueue>();
     public DbSet<OtpVerification> OtpVerifications => Set<OtpVerification>();
+    public DbSet<ActivityLog> ActivityLogs => Set<ActivityLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
