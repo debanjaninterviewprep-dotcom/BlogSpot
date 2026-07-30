@@ -77,6 +77,10 @@ export class AdminService {
     return this.http.post<{ message: string }>(`${this.apiUrl}/seed`, {});
   }
 
+  formatExistingPosts(): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/format-posts`, {});
+  }
+
   // --- Email Queue ---
 
   getEmails(pagination: PaginationParams): Observable<PagedResult<EmailQueueItem>> {

@@ -29,6 +29,7 @@ import { PostCardComponent } from './components/post-card/post-card.component';
 import { UserCardComponent } from './components/user-card/user-card.component';
 import { LoadingSpinnerComponent } from './components/loading-spinner/loading-spinner.component';
 import { ImageUrlPipe } from './pipes/image-url.pipe';
+import { FormatContentPipe } from './pipes/format-content.pipe';
 
 const materialModules = [
   MatToolbarModule,
@@ -58,7 +59,8 @@ const materialModules = [
     PostCardComponent,
     UserCardComponent,
     LoadingSpinnerComponent,
-    ImageUrlPipe
+    ImageUrlPipe,
+    FormatContentPipe
   ],
   imports: [
     CommonModule,
@@ -76,7 +78,8 @@ const materialModules = [
     PostCardComponent,
     UserCardComponent,
     LoadingSpinnerComponent,
-    ImageUrlPipe
+    ImageUrlPipe,
+    FormatContentPipe
   ]
 })
 export class SharedModule { }

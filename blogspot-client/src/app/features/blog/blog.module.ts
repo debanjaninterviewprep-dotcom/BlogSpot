@@ -7,6 +7,7 @@ import { BlogDetailComponent } from './blog-detail/blog-detail.component';
 import { BlogSearchComponent } from './blog-search/blog-search.component';
 import { BookmarksComponent } from './bookmarks/bookmarks.component';
 import { DraftsComponent } from './drafts/drafts.component';
+import { QuillModule } from 'ngx-quill';
 
 const routes: Routes = [
   { path: 'create', component: BlogCreateComponent, canActivate: [AuthGuard] },
@@ -27,6 +28,7 @@ const routes: Routes = [
   ],
   imports: [
     SharedModule,
+    QuillModule.forRoot(),
     RouterModule.forChild(routes)
   ]
 })

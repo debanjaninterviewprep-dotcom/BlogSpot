@@ -89,6 +89,13 @@ public class AdminController : ControllerBase
         return Ok(new { message = result });
     }
 
+    [HttpPost("format-posts")]
+    public async Task<ActionResult> FormatExistingPosts(CancellationToken ct)
+    {
+        var result = await _adminService.FormatExistingPostsAsync(ct);
+        return Ok(new { message = result });
+    }
+
     // --- Email Queue ---
 
     [HttpGet("emails")]

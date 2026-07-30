@@ -55,7 +55,7 @@ import { BlogPost, Comment, ReactionType, ReactionSummaryDto } from '@core/model
                [alt]="img.altText || post.title" class="post-image">
         </div>
 
-        <div class="post-content" [innerHTML]="post.content"></div>
+        <div class="post-content ql-editor" [innerHTML]="post.content | formatContent"></div>
 
         <mat-divider></mat-divider>
 
@@ -199,7 +199,51 @@ import { BlogPost, Comment, ReactionType, ReactionSummaryDto } from '@core/model
     .post-category { margin-bottom: 16px; }
     .post-images { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
     .post-image { max-width: 100%; max-height: 400px; border-radius: 8px; object-fit: cover; }
-    .post-content { line-height: 1.8; font-size: 16px; margin-bottom: 24px; word-break: break-word; overflow-wrap: break-word; }
+    .post-content { 
+      line-height: 1.8; 
+      font-size: 17px; 
+      margin-bottom: 24px; 
+      word-break: break-word; 
+      overflow-wrap: break-word;
+      color: #1a1a1a;
+    }
+    .post-content p { margin: 0 0 1.2em 0; }
+    .post-content h1, .post-content h2, .post-content h3 { margin: 1.5em 0 0.6em; font-weight: 700; color: #111; }
+    .post-content h1 { font-size: 1.8em; }
+    .post-content h2 { font-size: 1.5em; }
+    .post-content h3 { font-size: 1.25em; }
+    .post-content ul, .post-content ol { margin: 0.8em 0; padding-left: 1.5em; }
+    .post-content li { margin: 0.4em 0; }
+    .post-content blockquote { 
+      border-left: 4px solid #1976d2; 
+      margin: 1em 0; 
+      padding: 0.8em 1.2em; 
+      background: #f5f8fa; 
+      color: #444;
+      font-style: italic;
+      border-radius: 0 8px 8px 0;
+    }
+    .post-content code { 
+      background: #f0f0f0; 
+      padding: 2px 6px; 
+      border-radius: 4px; 
+      font-size: 0.9em;
+      font-family: 'Fira Code', monospace;
+    }
+    .post-content pre { 
+      background: #282c34; 
+      color: #abb2bf; 
+      padding: 16px; 
+      border-radius: 8px; 
+      overflow-x: auto; 
+      margin: 1em 0;
+    }
+    .post-content pre code { background: none; color: inherit; padding: 0; }
+    .post-content img { max-width: 100%; border-radius: 8px; margin: 1em 0; }
+    .post-content a { color: #1976d2; text-decoration: none; }
+    .post-content a:hover { text-decoration: underline; }
+    .post-content strong { font-weight: 700; }
+    .post-content em { font-style: italic; }
     .post-engagement { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; }
     .reaction-bar { display: flex; align-items: center; gap: 12px; }
     .emoji-reactions { display: flex; gap: 4px; }

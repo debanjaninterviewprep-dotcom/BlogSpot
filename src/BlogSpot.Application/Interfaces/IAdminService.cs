@@ -16,4 +16,5 @@ public interface IAdminService
     Task AdminDeleteCommentAsync(Guid commentId, CancellationToken ct = default);
 
     Task<string> SeedDummyDataAsync(CancellationToken ct = default);
+    Task<string> FormatExistingPostsAsync(CancellationToken ct = default);
 }

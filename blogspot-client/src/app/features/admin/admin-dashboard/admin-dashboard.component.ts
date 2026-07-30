@@ -12,10 +12,16 @@ import { ExportService } from '@core/services/export.service';
     <div class="admin-container">
       <div class="admin-header">
         <h1><mat-icon>admin_panel_settings</mat-icon> Admin Dashboard</h1>
-        <button mat-raised-button color="accent" (click)="seedData()" [disabled]="isSeeding">
-          <mat-icon>{{ isSeeding ? 'hourglass_empty' : 'data_array' }}</mat-icon>
-          {{ isSeeding ? 'Seeding...' : 'Seed Dummy Data' }}
-        </button>
+        <div class="header-actions">
+          <button mat-raised-button color="warn" (click)="formatPosts()" [disabled]="isFormatting">
+            <mat-icon>{{ isFormatting ? 'hourglass_empty' : 'auto_fix_high' }}</mat-icon>
+            {{ isFormatting ? 'Formatting...' : 'Format All Posts' }}
+          </button>
+          <button mat-raised-button color="accent" (click)="seedData()" [disabled]="isSeeding">
+            <mat-icon>{{ isSeeding ? 'hourglass_empty' : 'data_array' }}</mat-icon>
+            {{ isSeeding ? 'Seeding...' : 'Seed Dummy Data' }}
+          </button>
+        </div>
       </div>
 
       <mat-tab-group>
@@ -280,6 +286,7 @@ import { ExportService } from '@core/services/export.service';
   styles: [`
     .admin-container { max-width: 1100px; margin: 0 auto; padding-top: 16px; }
     .admin-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 8px; }
+    .header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
     h1 { display: flex; align-items: center; gap: 8px; margin: 0; }
     .tab-content { padding: 16px 0; overflow-x: auto; }
     .tab-toolbar {
@@ -421,6 +428,7 @@ export class AdminDashboardComponent implements OnInit {
   emailColumns = ['toEmail', 'subject', 'status', 'createdAt', 'sentAt', 'error'];
 
   isSeeding = false;
+  isFormatting = false;
 
   constructor(
     private adminService: AdminService,
@@ -552,6 +560,21 @@ export class AdminDashboardComponent implements OnInit {
       error: (err: any) => {
         this.isSeeding = false;
         this.snackBar.open(err.error?.message || 'Seeding failed', 'Close', { duration: 5000 });
+      }
+    });
+  }
+
+  formatPosts(): void {
+    if (!confirm('This will convert all plain-text blog posts to formatted HTML. Proceed?')) return;
+    this.isFormatting = true;
+    this.adminService.formatExistingPosts().subscribe({
+      next: (res: { message: string }) => {
+        this.isFormatting = false;
+        this.snackBar.open(res.message, 'Close', { duration: 8000 });
+      },
+      error: (err: any) => {
+        this.isFormatting = false;
+        this.snackBar.open(err.error?.message || 'Formatting failed', 'Close', { duration: 5000 });
       }
     });
   }

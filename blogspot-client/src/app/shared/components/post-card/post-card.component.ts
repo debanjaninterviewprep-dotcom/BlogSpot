@@ -26,7 +26,7 @@ import { BlogPost, ReactionType } from '@core/models/blog.model';
 
       <a [routerLink]="['/blog', post.slug]" class="post-body-link">
         <h3 class="post-title">{{ post.title }}</h3>
-        <p class="post-summary">{{ post.summary || (post.content | slice:0:200) + '...' }}</p>
+        <p class="post-summary">{{ post.summary || stripHtml(post.content).slice(0, 200) + '...' }}</p>
       </a>
 
       <div class="post-tags" *ngIf="post.tags?.length">
@@ -257,4 +257,9 @@ export class PostCardComponent {
     { type: 'Fire' as ReactionType, emoji: '🔥' },
     { type: 'Clap' as ReactionType, emoji: '👏' },
   ];
+
+  stripHtml(html: string): string {
+    if (!html) return '';
+    return html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  }
 }

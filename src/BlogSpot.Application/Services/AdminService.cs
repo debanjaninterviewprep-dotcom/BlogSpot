@@ -459,4 +459,114 @@ public class AdminService : IAdminService
 
         return $"Seeded {users.Count} users, {posts.Count} posts, {follows.Count} follows, {likes.Count} likes, {comments.Count} comments. All passwords: Test@1234";
     }
+
+    public async Task<string> FormatExistingPostsAsync(CancellationToken ct = default)
+    {
+        var posts = await _uow.BlogPosts.Query()
+            .Where(p => !p.Content.StartsWith("<"))
+            .ToListAsync(ct);
+
+        if (!posts.Any())
+            return "No plain-text posts found. All posts are already formatted.";
+
+        int formatted = 0;
+        foreach (var post in posts)
+        {
+            // Skip if already HTML (has block-level tags)
+            if (System.Text.RegularExpressions.Regex.IsMatch(post.Content, @"<(p|div|h[1-6]|ul|ol|li|blockquote|pre|br\s*/?)[\s>]", System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+                continue;
+
+            post.Content = ConvertPlainTextToHtml(post.Content);
+            post.UpdatedAt = DateTime.UtcNow;
+            _uow.BlogPosts.Update(post);
+            formatted++;
+        }
+
+        if (formatted > 0)
+            await _uow.SaveChangesAsync(ct);
+
+        return $"Successfully formatted {formatted} posts from plain text to HTML.";
+    }
+
+    /// <summary>
+    /// Converts plain text blog content to properly structured HTML.
+    /// Handles paragraphs, headings, lists, blockquotes, bold, italic, and code.
+    /// </summary>
+    private static string ConvertPlainTextToHtml(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return text;
+
+        // Normalize line endings
+        text = text.Replace("\r\n", "\n").Replace("\r", "\n");
+
+        // Split into blocks by double newlines (paragraphs)
+        var blocks = System.Text.RegularExpressions.Regex.Split(text.Trim(), @"\n{2,}");
+        var htmlParts = new System.Collections.Generic.List<string>();
+
+        foreach (var block in blocks)
+        {
+            var trimmed = block.Trim();
+            if (string.IsNullOrEmpty(trimmed)) continue;
+
+            var lines = trimmed.Split('\n');
+
+            // Check if heading (# style)
+            if (System.Text.RegularExpressions.Regex.IsMatch(trimmed, @"^#{1,3}\s"))
+            {
+                var match = System.Text.RegularExpressions.Regex.Match(trimmed, @"^(#{1,3})\s+(.+)$");
+                if (match.Success)
+                {
+                    var level = match.Groups[1].Value.Length + 1; // # → h2, ## → h3
+                    htmlParts.Add($"<h{level}>{FormatInline(match.Groups[2].Value)}</h{level}>");
+                    continue;
+                }
+            }
+
+            // Check if unordered list (all lines start with - or *)
+            if (lines.All(l => System.Text.RegularExpressions.Regex.IsMatch(l.Trim(), @"^[-*•]\s")))
+            {
+                var items = lines.Select(l => System.Text.RegularExpressions.Regex.Replace(l.Trim(), @"^[-*•]\s+", ""));
+                htmlParts.Add("<ul>" + string.Join("", items.Select(i => $"<li>{FormatInline(i)}</li>")) + "</ul>");
+                continue;
+            }
+
+            // Check if ordered list (all lines start with number.)
+            if (lines.All(l => System.Text.RegularExpressions.Regex.IsMatch(l.Trim(), @"^\d+[.)]\s")))
+            {
+                var items = lines.Select(l => System.Text.RegularExpressions.Regex.Replace(l.Trim(), @"^\d+[.)]\s+", ""));
+                htmlParts.Add("<ol>" + string.Join("", items.Select(i => $"<li>{FormatInline(i)}</li>")) + "</ol>");
+                continue;
+            }
+
+            // Check if blockquote (lines start with >)
+            if (lines.All(l => l.TrimStart().StartsWith(">")))
+            {
+                var content = string.Join("<br>", lines.Select(l => FormatInline(l.TrimStart().TrimStart('>').TrimStart())));
+                htmlParts.Add($"<blockquote>{content}</blockquote>");
+                continue;
+            }
+
+            // Regular paragraph - preserve single line breaks with <br>
+            var paragraphContent = string.Join("<br>", lines.Select(l => FormatInline(l.Trim())));
+            htmlParts.Add($"<p>{paragraphContent}</p>");
+        }
+
+        return string.Join("\n", htmlParts);
+    }
+
+    /// <summary>
+    /// Formats inline markdown-style text: **bold**, *italic*, `code`
+    /// </summary>
+    private static string FormatInline(string text)
+    {
+        // Bold: **text** or __text__
+        text = System.Text.RegularExpressions.Regex.Replace(text, @"\*\*(.+?)\*\*", "<strong>$1</strong>");
+        text = System.Text.RegularExpressions.Regex.Replace(text, @"__(.+?)__", "<strong>$1</strong>");
+        // Italic: *text* or _text_
+        text = System.Text.RegularExpressions.Regex.Replace(text, @"\*(.+?)\*", "<em>$1</em>");
+        text = System.Text.RegularExpressions.Regex.Replace(text, @"_(.+?)_", "<em>$1</em>");
+        // Code: `text`
+        text = System.Text.RegularExpressions.Regex.Replace(text, @"`(.+?)`", "<code>$1</code>");
+        return text;
+    }
 }

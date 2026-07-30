@@ -4,6 +4,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Subject, debounceTime, takeUntil } from 'rxjs';
 import { BlogService } from '@core/services/blog.service';
+import { GrammarService, GrammarMatch } from '@core/services/grammar.service';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import { MatChipInputEvent } from '@angular/material/chips';
 
@@ -57,12 +58,60 @@ import { MatChipInputEvent } from '@angular/material/chips';
               <mat-hint>Press Enter or comma to add</mat-hint>
             </mat-form-field>
 
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Content</mat-label>
-              <textarea matInput formControlName="content" rows="15"
-                        placeholder="Write your blog post content here... (supports rich text)"></textarea>
-              <mat-error>Content must be at least 20 characters</mat-error>
-            </mat-form-field>
+            <!-- Rich Text Editor -->
+            <div class="editor-section">
+              <label class="editor-label">Content</label>
+              <quill-editor
+                formControlName="content"
+                [modules]="quillModules"
+                [styles]="{ height: '350px' }"
+                placeholder="Write your blog post content here..."
+                (onContentChanged)="onContentChanged($event)">
+              </quill-editor>
+              <mat-error *ngIf="postForm.get('content')?.touched && postForm.get('content')?.hasError('required')">
+                Content is required
+              </mat-error>
+              <mat-error *ngIf="postForm.get('content')?.touched && postForm.get('content')?.hasError('minlength')">
+                Content must be at least 20 characters
+              </mat-error>
+            </div>
+
+            <!-- Grammar Check -->
+            <div class="grammar-section">
+              <button mat-stroked-button type="button" color="accent"
+                      (click)="checkGrammar()" [disabled]="grammarChecking">
+                <mat-icon>spellcheck</mat-icon>
+                {{ grammarChecking ? 'Checking...' : 'Check Grammar' }}
+                <mat-spinner *ngIf="grammarChecking" diameter="16" class="inline-spinner"></mat-spinner>
+              </button>
+              <span class="grammar-status" *ngIf="grammarResult !== null">
+                <mat-icon [color]="grammarIssues.length === 0 ? 'primary' : 'warn'">
+                  {{ grammarIssues.length === 0 ? 'check_circle' : 'warning' }}
+                </mat-icon>
+                {{ grammarIssues.length === 0 ? 'No issues found!' : grammarIssues.length + ' issue(s) found' }}
+              </span>
+            </div>
+
+            <!-- Grammar Issues List -->
+            <div class="grammar-issues" *ngIf="grammarIssues.length > 0">
+              <div class="grammar-issue" *ngFor="let issue of grammarIssues; let i = index">
+                <div class="issue-header">
+                  <mat-icon color="warn" class="issue-icon">error_outline</mat-icon>
+                  <span class="issue-message">{{ issue.message }}</span>
+                </div>
+                <div class="issue-context">
+                  <span class="issue-text">"...{{ issue.context }}..."</span>
+                </div>
+                <div class="issue-replacements" *ngIf="issue.replacements.length > 0">
+                  <span class="suggestion-label">Suggestions:</span>
+                  <button mat-stroked-button class="suggestion-btn"
+                          *ngFor="let replacement of issue.replacements.slice(0, 3)"
+                          (click)="applyGrammarFix(issue, replacement)">
+                    {{ replacement }}
+                  </button>
+                </div>
+              </div>
+            </div>
 
             <div class="actions">
               <button mat-button type="button" (click)="cancel()">Cancel</button>
@@ -103,6 +152,77 @@ import { MatChipInputEvent } from '@angular/material/chips';
       gap: 8px;
       margin-top: 16px;
     }
+    .editor-section {
+      margin: 8px 0 16px;
+    }
+    .editor-label {
+      display: block;
+      font-size: 12px;
+      color: rgba(0,0,0,.6);
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
+    .grammar-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 8px 0;
+    }
+    .grammar-status {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 13px;
+    }
+    .inline-spinner {
+      display: inline-block;
+      margin-left: 8px;
+    }
+    .grammar-issues {
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 12px;
+      max-height: 250px;
+      overflow-y: auto;
+      background: #fafafa;
+    }
+    .grammar-issue {
+      padding: 10px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .grammar-issue:last-child { border-bottom: none; }
+    .issue-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .issue-icon { font-size: 18px; width: 18px; height: 18px; margin-top: 2px; }
+    .issue-message { font-size: 14px; font-weight: 500; }
+    .issue-context {
+      margin: 4px 0 4px 26px;
+      font-size: 13px;
+      color: #666;
+    }
+    .issue-text {
+      background: #fff3cd;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .issue-replacements {
+      margin: 6px 0 0 26px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .suggestion-label { font-size: 12px; color: #888; }
+    .suggestion-btn {
+      font-size: 12px !important;
+      padding: 2px 8px !important;
+      min-height: 24px !important;
+      line-height: 24px !important;
+      color: #1976d2;
+    }
     .actions {
       display: flex;
       justify-content: flex-end;
@@ -122,6 +242,27 @@ export class BlogCreateComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private draftId: string | null = null;
 
+  // Grammar check
+  grammarChecking = false;
+  grammarResult: boolean | null = null;
+  grammarIssues: GrammarMatch[] = [];
+
+  // Quill editor config
+  quillModules = {
+    toolbar: [
+      ['bold', 'italic', 'underline', 'strike'],
+      ['blockquote', 'code-block'],
+      [{ 'header': 1 }, { 'header': 2 }, { 'header': 3 }],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      [{ 'indent': '-1'}, { 'indent': '+1' }],
+      [{ 'size': ['small', false, 'large', 'huge'] }],
+      [{ 'color': [] }, { 'background': [] }],
+      [{ 'align': [] }],
+      ['link', 'image'],
+      ['clean']
+    ]
+  };
+
   categories = [
     'Technology', 'Programming', 'Design', 'Science',
     'Business', 'Lifestyle', 'Travel', 'Health',
@@ -131,6 +272,7 @@ export class BlogCreateComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private blogService: BlogService,
+    private grammarService: GrammarService,
     private router: Router,
     private route: ActivatedRoute,
     private snackBar: MatSnackBar
@@ -298,5 +440,46 @@ export class BlogCreateComponent implements OnInit, OnDestroy {
 
   cancel(): void {
     this.router.navigate(['/feed']);
+  }
+
+  onContentChanged(event: any): void {
+    // Reset grammar results when content changes
+    if (this.grammarResult !== null) {
+      this.grammarResult = null;
+      this.grammarIssues = [];
+    }
+  }
+
+  checkGrammar(): void {
+    const content = this.postForm.get('content')?.value;
+    if (!content) {
+      this.snackBar.open('Write some content first', 'Close', { duration: 2000 });
+      return;
+    }
+
+    this.grammarChecking = true;
+    this.grammarService.checkGrammar(content).subscribe({
+      next: (issues) => {
+        this.grammarIssues = issues;
+        this.grammarResult = true;
+        this.grammarChecking = false;
+      },
+      error: () => {
+        this.grammarChecking = false;
+        this.snackBar.open('Grammar check service unavailable. Try again later.', 'Close', { duration: 3000 });
+      }
+    });
+  }
+
+  applyGrammarFix(issue: GrammarMatch, replacement: string): void {
+    let content = this.postForm.get('content')?.value || '';
+    // Replace the error text with the suggestion
+    const before = content.substring(0, issue.offset);
+    const after = content.substring(issue.offset + issue.length);
+    content = before + replacement + after;
+    this.postForm.patchValue({ content });
+    // Remove the fixed issue
+    this.grammarIssues = this.grammarIssues.filter(i => i !== issue);
+    this.snackBar.open('Fix applied!', 'Close', { duration: 1500 });
   }
 }
