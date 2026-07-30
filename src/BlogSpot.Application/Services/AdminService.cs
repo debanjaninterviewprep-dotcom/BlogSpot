@@ -491,6 +491,8 @@ public class AdminService : IAdminService
     /// <summary>
     /// Converts plain text blog content to properly structured HTML.
     /// Handles paragraphs, headings, lists, blockquotes, bold, italic, and code.
+    /// If content has no newlines (single block of text), splits into paragraphs
+    /// intelligently based on sentence boundaries and topic transitions.
     /// </summary>
     private static string ConvertPlainTextToHtml(string text)
     {
@@ -498,6 +500,12 @@ public class AdminService : IAdminService
 
         // Normalize line endings
         text = text.Replace("\r\n", "\n").Replace("\r", "\n");
+
+        // If no newlines exist and text is long, use intelligent paragraph splitting
+        if (!text.Contains('\n') && text.Length > 200)
+        {
+            return SplitIntoParagraphs(text);
+        }
 
         // Split into blocks by double newlines (paragraphs)
         var blocks = System.Text.RegularExpressions.Regex.Split(text.Trim(), @"\n{2,}");
@@ -546,11 +554,94 @@ public class AdminService : IAdminService
                 continue;
             }
 
+            // Single block with no double-newlines but is long — split intelligently
+            if (lines.Length == 1 && trimmed.Length > 200)
+            {
+                htmlParts.Add(SplitIntoParagraphs(trimmed));
+                continue;
+            }
+
             // Regular paragraph - preserve single line breaks with <br>
             var paragraphContent = string.Join("<br>", lines.Select(l => FormatInline(l.Trim())));
             htmlParts.Add($"<p>{paragraphContent}</p>");
         }
 
+        return string.Join("\n", htmlParts);
+    }
+
+    /// <summary>
+    /// Splits a long block of text (with no newlines) into logical paragraphs.
+    /// Uses transition phrases and sentence grouping to create natural breaks.
+    /// </summary>
+    private static string SplitIntoParagraphs(string text)
+    {
+        // Split into sentences
+        var sentences = System.Text.RegularExpressions.Regex.Split(text, @"(?<=[.!?])\s+")
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .ToList();
+
+        if (sentences.Count <= 2)
+            return $"<p>{FormatInline(text)}</p>";
+
+        // Transition phrases that indicate a new paragraph should start
+        var transitionPatterns = new[]
+        {
+            @"^(However|Moreover|Furthermore|Additionally|In addition|On the other hand)",
+            @"^(Nevertheless|Nonetheless|In contrast|Conversely|Meanwhile)",
+            @"^(Therefore|Consequently|As a result|Thus|Hence|Accordingly)",
+            @"^(For example|For instance|Specifically|In particular|To illustrate)",
+            @"^(In conclusion|To summarize|In summary|Overall|Finally|Ultimately)",
+            @"^(First|Second|Third|Next|Then|Lastly|Initially)",
+            @"^(The transition|The honest|The key|The main|The problem|The solution)",
+            @"^(Common pitfalls|Common mistakes|Key benefits|Key challenges)",
+            @"^(Microservices|Monoliths|This approach|This means|This is)",
+            @"^(When you|When it|If you|While this|Although|Despite)"
+        };
+
+        var paragraphs = new System.Collections.Generic.List<System.Collections.Generic.List<string>>();
+        var currentParagraph = new System.Collections.Generic.List<string>();
+
+        for (int i = 0; i < sentences.Count; i++)
+        {
+            var sentence = sentences[i].Trim();
+
+            // Check if this sentence should start a new paragraph
+            bool shouldBreak = false;
+
+            if (i > 0 && currentParagraph.Count >= 2)
+            {
+                // Check for transition phrases
+                foreach (var pattern in transitionPatterns)
+                {
+                    if (System.Text.RegularExpressions.Regex.IsMatch(sentence, pattern, System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+                    {
+                        shouldBreak = true;
+                        break;
+                    }
+                }
+
+                // Also break if current paragraph is getting too long (4+ sentences)
+                if (!shouldBreak && currentParagraph.Count >= 4)
+                {
+                    shouldBreak = true;
+                }
+            }
+
+            if (shouldBreak && currentParagraph.Count > 0)
+            {
+                paragraphs.Add(currentParagraph);
+                currentParagraph = new System.Collections.Generic.List<string>();
+            }
+
+            currentParagraph.Add(sentence);
+        }
+
+        // Add the last paragraph
+        if (currentParagraph.Count > 0)
+            paragraphs.Add(currentParagraph);
+
+        // Build HTML
+        var htmlParts = paragraphs.Select(p => $"<p>{FormatInline(string.Join(" ", p))}</p>");
         return string.Join("\n", htmlParts);
     }
 

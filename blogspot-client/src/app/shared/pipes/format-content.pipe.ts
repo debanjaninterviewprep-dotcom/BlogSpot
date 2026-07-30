@@ -47,6 +47,11 @@ export class FormatContentPipe implements PipeTransform {
     // Normalize line endings
     text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
+    // If no newlines and text is long, split into paragraphs intelligently
+    if (!text.includes('\n') && text.length > 200) {
+      return this.splitIntoParagraphs(text);
+    }
+
     // Split into paragraphs by double newlines
     const blocks = text.split(/\n{2,}/);
     const htmlBlocks: string[] = [];
@@ -66,6 +71,9 @@ export class FormatContentPipe implements PipeTransform {
         htmlBlocks.push(this.convertHeading(trimmed));
       } else if (this.isBlockquote(trimmed)) {
         htmlBlocks.push(this.convertBlockquote(lines));
+      } else if (lines.length === 1 && trimmed.length > 200) {
+        // Single long block without newlines — split intelligently
+        htmlBlocks.push(this.splitIntoParagraphs(trimmed));
       } else {
         // Regular paragraph - join with <br> for single newlines
         const formattedLines = lines.map(l => this.formatInlineText(l.trim())).join('<br>');
@@ -140,5 +148,55 @@ export class FormatContentPipe implements PipeTransform {
     html = html.replace(/on\w+='[^']*'/gi, '');
     html = html.replace(/javascript:/gi, '');
     return html;
+  }
+
+  /**
+   * Splits a long block of text (no newlines) into logical paragraphs
+   * using sentence boundaries and transition phrase detection.
+   */
+  private splitIntoParagraphs(text: string): string {
+    // Split into sentences
+    const sentences = text.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 0);
+
+    if (sentences.length <= 2) {
+      return `<p>${this.formatInlineText(text)}</p>`;
+    }
+
+    // Transition phrases that indicate a new paragraph
+    const transitionPattern = /^(However|Moreover|Furthermore|Additionally|In addition|On the other hand|Nevertheless|Nonetheless|In contrast|Conversely|Meanwhile|Therefore|Consequently|As a result|Thus|Hence|Accordingly|For example|For instance|Specifically|In particular|To illustrate|In conclusion|To summarize|In summary|Overall|Finally|Ultimately|First|Second|Third|Next|Then|Lastly|Initially|The transition|The honest|The key|The main|The problem|The solution|Common pitfalls|Common mistakes|Key benefits|Key challenges|Microservices|Monoliths|This approach|This means|This is|When you|When it|If you|While this|Although|Despite)/i;
+
+    const paragraphs: string[][] = [];
+    let currentParagraph: string[] = [];
+
+    for (let i = 0; i < sentences.length; i++) {
+      const sentence = sentences[i].trim();
+      let shouldBreak = false;
+
+      if (i > 0 && currentParagraph.length >= 2) {
+        // Check for transition phrases
+        if (transitionPattern.test(sentence)) {
+          shouldBreak = true;
+        }
+        // Break if paragraph is getting too long (4+ sentences)
+        if (!shouldBreak && currentParagraph.length >= 4) {
+          shouldBreak = true;
+        }
+      }
+
+      if (shouldBreak && currentParagraph.length > 0) {
+        paragraphs.push(currentParagraph);
+        currentParagraph = [];
+      }
+
+      currentParagraph.push(sentence);
+    }
+
+    if (currentParagraph.length > 0) {
+      paragraphs.push(currentParagraph);
+    }
+
+    return paragraphs
+      .map(p => `<p>${this.formatInlineText(p.join(' '))}</p>`)
+      .join('\n');
   }
 }
