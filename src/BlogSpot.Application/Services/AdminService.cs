@@ -462,18 +462,17 @@ public class AdminService : IAdminService
 
     public async Task<string> FormatExistingPostsAsync(CancellationToken ct = default)
     {
-        var posts = await _uow.BlogPosts.Query()
-            .Where(p => !p.Content.StartsWith("<"))
-            .ToListAsync(ct);
+        // Get ALL posts and filter in memory for reliable detection
+        var posts = await _uow.BlogPosts.Query().ToListAsync(ct);
 
         if (!posts.Any())
-            return "No plain-text posts found. All posts are already formatted.";
+            return "No posts found in the database.";
 
         int formatted = 0;
         foreach (var post in posts)
         {
-            // Skip if already HTML (has block-level tags)
-            if (System.Text.RegularExpressions.Regex.IsMatch(post.Content, @"<(p|div|h[1-6]|ul|ol|li|blockquote|pre|br\s*/?)[\s>]", System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+            // Skip if already properly formatted (contains <p> or <div> block-level tags)
+            if (System.Text.RegularExpressions.Regex.IsMatch(post.Content, @"<p[\s>]|<div[\s>]|<h[1-6][\s>]", System.Text.RegularExpressions.RegexOptions.IgnoreCase))
                 continue;
 
             post.Content = ConvertPlainTextToHtml(post.Content);
@@ -485,7 +484,9 @@ public class AdminService : IAdminService
         if (formatted > 0)
             await _uow.SaveChangesAsync(ct);
 
-        return $"Successfully formatted {formatted} posts from plain text to HTML.";
+        return formatted > 0
+            ? $"Successfully formatted {formatted} posts from plain text to HTML."
+            : "All posts are already properly formatted.";
     }
 
     /// <summary>
