@@ -15,7 +15,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 
         <!-- Filter chips -->
         <div class="filter-bar">
-          <button class="filter-chip" [class.active]="activeFilter === 'feed'" (click)="setFilter('feed')">
+          <button class="filter-chip" *ngIf="authService.isLoggedIn" [class.active]="activeFilter === 'feed'" (click)="setFilter('feed')">
             <mat-icon>home</mat-icon> For You
           </button>
           <button class="filter-chip" [class.active]="activeFilter === 'latest'" (click)="setFilter('latest')">
@@ -264,6 +264,9 @@ export class FeedComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    if (!this.authService.isLoggedIn) {
+      this.activeFilter = 'trending';
+    }
     if (this.authService.isLoggedIn) {
       this.loadSuggestedUsers();
     }
