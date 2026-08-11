@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable, map, timeout, retry } from 'rxjs';
 
 export interface GrammarMatch {
   message: string;
@@ -48,17 +48,19 @@ export class GrammarService {
    * Strips HTML before sending to API.
    */
   checkGrammar(content: string, language: string = 'en-US'): Observable<GrammarMatch[]> {
-    // Strip HTML tags for grammar checking
     const plainText = this.stripHtml(content);
 
-    const body = new URLSearchParams();
-    body.set('text', plainText);
-    body.set('language', language);
-    body.set('enabledOnly', 'false');
+    // HttpParams handles special-character encoding correctly (URLSearchParams does not)
+    const body = new HttpParams()
+      .set('text', plainText)
+      .set('language', language)
+      .set('enabledOnly', 'false');
 
     return this.http.post<LanguageToolResponse>(this.apiUrl, body.toString(), {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
     }).pipe(
+      timeout(15000),
+      retry({ count: 1, delay: 2000 }),
       map(response => this.mapMatches(response, plainText))
     );
   }

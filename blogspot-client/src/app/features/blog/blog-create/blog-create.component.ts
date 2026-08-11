@@ -464,9 +464,12 @@ export class BlogCreateComponent implements OnInit, OnDestroy {
         this.grammarResult = true;
         this.grammarChecking = false;
       },
-      error: () => {
+      error: (err) => {
         this.grammarChecking = false;
-        this.snackBar.open('Grammar check service unavailable. Try again later.', 'Close', { duration: 3000 });
+        const msg = err?.status === 429
+          ? 'Too many requests to grammar service. Wait a moment and try again.'
+          : 'Grammar check failed. The free LanguageTool API may be temporarily overloaded.';
+        this.snackBar.open(msg, 'Close', { duration: 4000 });
       }
     });
   }
