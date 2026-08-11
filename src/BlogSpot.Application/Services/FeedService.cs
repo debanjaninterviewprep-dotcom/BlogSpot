@@ -110,8 +110,12 @@ public class FeedService : IFeedService
         {
             var sevenDaysAgo = DateTime.UtcNow.AddDays(-7);
 
-            var query = GetFullPostQuery()
-                .Where(p => p.IsPublished && p.CreatedAt >= sevenDaysAgo)
+            var recentQuery = GetFullPostQuery()
+                .Where(p => p.IsPublished && p.CreatedAt >= sevenDaysAgo);
+
+            var hasRecent = await recentQuery.AnyAsync(ct);
+
+            var query = (hasRecent ? recentQuery : GetFullPostQuery().Where(p => p.IsPublished))
                 .OrderByDescending(p =>
                     p.ViewCount +
                     (p.Reactions.Count * 3) +
