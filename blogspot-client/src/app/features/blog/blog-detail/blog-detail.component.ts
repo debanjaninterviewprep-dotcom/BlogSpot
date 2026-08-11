@@ -192,9 +192,9 @@ import { BlogPost, Comment, ReactionType, ReactionSummaryDto } from '@core/model
     .post-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
     .author-info { display: flex; align-items: center; gap: 12px; }
     .author-avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
-    .author-name { text-decoration: none; font-weight: 500; color: #333; }
+    .author-name { text-decoration: none; font-weight: 500; color: var(--color-text-primary); }
     .author-name:hover { text-decoration: underline; }
-    .post-date { font-size: 13px; color: #888; margin: 0; }
+    .post-date { font-size: 13px; color: var(--color-text-secondary); margin: 0; }
     .post-title { font-size: 32px; font-weight: 700; margin: 0 0 16px 0; line-height: 1.3; word-break: break-word; }
     .post-tags { margin-bottom: 12px; }
     .post-category { margin-bottom: 16px; }
@@ -206,34 +206,34 @@ import { BlogPost, Comment, ReactionType, ReactionSummaryDto } from '@core/model
       margin-bottom: 24px; 
       word-break: break-word; 
       overflow-wrap: break-word;
-      color: #1a1a1a;
+      color: var(--color-text-primary);
     }
     .post-content p { margin: 0 0 1.2em 0; }
-    .post-content h1, .post-content h2, .post-content h3 { margin: 1.5em 0 0.6em; font-weight: 700; color: #111; }
+    .post-content h1, .post-content h2, .post-content h3 { margin: 1.5em 0 0.6em; font-weight: 700; color: var(--color-text-primary); }
     .post-content h1 { font-size: 1.8em; }
     .post-content h2 { font-size: 1.5em; }
     .post-content h3 { font-size: 1.25em; }
     .post-content ul, .post-content ol { margin: 0.8em 0; padding-left: 1.5em; }
     .post-content li { margin: 0.4em 0; }
     .post-content blockquote { 
-      border-left: 4px solid #1976d2; 
+      border-left: 4px solid var(--color-primary); 
       margin: 1em 0; 
       padding: 0.8em 1.2em; 
-      background: #f5f8fa; 
-      color: #444;
+      background: var(--color-bg-secondary); 
+      color: var(--color-text-secondary);
       font-style: italic;
       border-radius: 0 8px 8px 0;
     }
     .post-content code { 
-      background: #f0f0f0; 
+      background: var(--color-bg-secondary); 
       padding: 2px 6px; 
       border-radius: 4px; 
       font-size: 0.9em;
       font-family: 'Fira Code', monospace;
     }
     .post-content pre { 
-      background: #282c34; 
-      color: #abb2bf; 
+      background: #1e1e2e; 
+      color: #cdd6f4; 
       padding: 16px; 
       border-radius: 8px; 
       overflow-x: auto; 
@@ -241,7 +241,7 @@ import { BlogPost, Comment, ReactionType, ReactionSummaryDto } from '@core/model
     }
     .post-content pre code { background: none; color: inherit; padding: 0; }
     .post-content img { max-width: 100%; border-radius: 8px; margin: 1em 0; }
-    .post-content a { color: #1976d2; text-decoration: none; }
+    .post-content a { color: var(--color-primary); text-decoration: none; }
     .post-content a:hover { text-decoration: underline; }
     .post-content strong { font-weight: 700; }
     .post-content em { font-style: italic; }
@@ -249,17 +249,17 @@ import { BlogPost, Comment, ReactionType, ReactionSummaryDto } from '@core/model
     .reaction-bar { display: flex; align-items: center; gap: 12px; }
     .emoji-reactions { display: flex; gap: 4px; }
     .reaction-btn { width: 36px; height: 36px; }
-    .reaction-btn.active { background: rgba(63,81,181,0.12); border-radius: 50%; }
+    .reaction-btn.active { background: var(--color-primary-light); border-radius: 50%; }
     .reaction-emoji { font-size: 18px; }
-    .comment-count { display: flex; align-items: center; gap: 4px; color: #666; }
+    .comment-count { display: flex; align-items: center; gap: 4px; color: var(--color-text-secondary); }
     .comments-section { margin-top: 24px; }
     .comment-form { margin-bottom: 24px; }
-    .comment { padding: 12px 0; border-bottom: 1px solid #eee; }
+    .comment { padding: 12px 0; border-bottom: 1px solid var(--color-border); }
     .comment-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
     .comment-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
     .comment-avatar.small { width: 24px; height: 24px; }
-    .comment-author { text-decoration: none; font-weight: 500; color: #333; font-size: 14px; }
-    .comment-date { font-size: 12px; color: #999; }
+    .comment-author { text-decoration: none; font-weight: 500; color: var(--color-text-primary); font-size: 14px; }
+    .comment-date { font-size: 12px; color: var(--color-text-secondary); }
     .comment-content { margin: 0; line-height: 1.5; }
     .comment-actions {
       display: flex;
