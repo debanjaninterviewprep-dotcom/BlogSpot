@@ -10,15 +10,20 @@ namespace BlogSpot.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            var boolType = migrationBuilder.ActiveProvider == "Npgsql.EntityFrameworkCore.PostgreSQL"
+                ? "boolean" : "bit";
+
             migrationBuilder.AddColumn<bool>(
                 name: "IsDeleted",
                 table: "BlogPosts",
+                type: boolType,
                 nullable: false,
                 defaultValue: false);
 
             migrationBuilder.AddColumn<bool>(
                 name: "IsDeleted",
                 table: "Comments",
+                type: boolType,
                 nullable: false,
                 defaultValue: false);
         }
