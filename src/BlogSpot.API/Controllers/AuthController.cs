@@ -6,6 +6,7 @@ using BlogSpot.Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace BlogSpot.API.Controllers;
 
@@ -18,14 +19,18 @@ public class AuthController : ControllerBase
     private readonly ILogger<AuthController> _logger;
     private readonly AppDbContext _db;
     private readonly IConfiguration _config;
+    private readonly IMemoryCache _cache;
+    private const int MaxLoginAttempts = 10;
+    private static readonly TimeSpan LockoutDuration = TimeSpan.FromMinutes(5);
 
-    public AuthController(IAuthService authService, IEmailQueueService emailQueueService, ILogger<AuthController> logger, AppDbContext db, IConfiguration config)
+    public AuthController(IAuthService authService, IEmailQueueService emailQueueService, ILogger<AuthController> logger, AppDbContext db, IConfiguration config, IMemoryCache cache)
     {
         _authService = authService;
         _emailQueueService = emailQueueService;
         _logger = logger;
         _db = db;
         _config = config;
+        _cache = cache;
     }
 
     [HttpPost("send-otp")]
@@ -67,11 +72,25 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
-    [EnableRateLimiting("auth-login")]
     public async Task<ActionResult<AuthResponseDto>> Login([FromBody] LoginDto dto, CancellationToken ct)
     {
-        var result = await _authService.LoginAsync(dto, ct);
-        return Ok(result);
+        var key = $"login_fail:{dto.EmailOrUsername.Trim().ToLower()}";
+        var attempts = _cache.GetOrCreate(key, e => { e.AbsoluteExpirationRelativeToNow = LockoutDuration; return 0; });
+
+        if (attempts >= MaxLoginAttempts)
+            return StatusCode(429, new { error = $"Too many failed attempts. Try again in {LockoutDuration.TotalMinutes} minutes." });
+
+        try
+        {
+            var result = await _authService.LoginAsync(dto, ct);
+            _cache.Remove(key);
+            return Ok(result);
+        }
+        catch
+        {
+            _cache.Set(key, attempts + 1, LockoutDuration);
+            throw;
+        }
     }
 
     [HttpPost("refresh")]

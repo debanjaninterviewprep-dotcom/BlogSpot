@@ -162,7 +162,7 @@ export class LoginComponent {
       error: (err) => {
         this.isLoading = false;
         this.snackBar.open(
-          err.error?.message || 'Login failed. Please check your credentials.',
+          err.error?.message || err.error?.error || 'Login failed. Please check your credentials.',
           'Close',
           { duration: 5000 }
         );

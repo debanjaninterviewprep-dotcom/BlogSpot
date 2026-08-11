@@ -2,6 +2,7 @@ using BlogSpot.API.Hubs;
 using BlogSpot.API.Middleware;
 using BlogSpot.Application;
 using BlogSpot.Infrastructure;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
@@ -47,6 +48,14 @@ builder.Services.AddResponseCompression(options =>
 // Response caching
 builder.Services.AddResponseCaching();
 
+// Trust X-Forwarded-For from Render's reverse proxy so rate limiting uses real client IP
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 // Rate limiting — per-IP, fixed window
 builder.Services.AddRateLimiter(options =>
 {
@@ -69,10 +78,6 @@ builder.Services.AddRateLimiter(options =>
     options.AddPolicy("otp-verify", ctx =>
         RateLimitPartition.GetFixedWindowLimiter(GetIp(ctx),
             _ => new FixedWindowRateLimiterOptions { Window = TimeSpan.FromMinutes(10), PermitLimit = 10, QueueLimit = 0 }));
-
-    options.AddPolicy("auth-login", ctx =>
-        RateLimitPartition.GetFixedWindowLimiter(GetIp(ctx),
-            _ => new FixedWindowRateLimiterOptions { Window = TimeSpan.FromMinutes(5), PermitLimit = 10, QueueLimit = 0 }));
 
     options.AddPolicy("auth-register", ctx =>
         RateLimitPartition.GetFixedWindowLimiter(GetIp(ctx),
@@ -186,6 +191,8 @@ using (var scope = app.Services.CreateScope())
 // Middleware pipeline
 app.UseSwagger();
 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "BlogSpot API v1"));
+
+app.UseForwardedHeaders(); // must be first so real client IP is available to rate limiter
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseMiddleware<ActivityLoggingMiddleware>();

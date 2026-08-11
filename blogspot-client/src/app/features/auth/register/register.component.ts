@@ -333,7 +333,7 @@ export class RegisterComponent {
       },
       error: (err) => {
         this.isSendingOtp = false;
-        this.snackBar.open(err.error?.message || 'Failed to send OTP', 'Close', { duration: 3000 });
+        this.snackBar.open(err.error?.message || err.error?.error || 'Failed to send OTP', 'Close', { duration: 3000 });
       }
     });
   }
@@ -352,7 +352,7 @@ export class RegisterComponent {
       },
       error: (err) => {
         this.isVerifying = false;
-        this.snackBar.open(err.error?.message || 'Invalid or expired OTP', 'Close', { duration: 3000 });
+        this.snackBar.open(err.error?.message || err.error?.error || 'Invalid or expired OTP', 'Close', { duration: 3000 });
       }
     });
   }
@@ -369,7 +369,7 @@ export class RegisterComponent {
       error: (err) => {
         this.isLoading = false;
         this.snackBar.open(
-          err.error?.message || 'Registration failed. Please try again.',
+          err.error?.message || err.error?.error || 'Registration failed. Please try again.',
           'Close',
           { duration: 5000 }
         );
