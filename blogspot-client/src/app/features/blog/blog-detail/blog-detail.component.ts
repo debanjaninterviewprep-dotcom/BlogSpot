@@ -299,11 +299,18 @@ import { BlogPost, Comment, ReactionType, ReactionSummaryDto } from '@core/model
       position: fixed;
       top: 0;
       left: 0;
-      height: 3px;
-      background: var(--gradient-primary, linear-gradient(135deg, #6c5ce7, #a29bfe));
-      transition: width 0.1s linear;
+      height: 5px;
+      background: linear-gradient(90deg, #6c5ce7, #a29bfe, #00cec9);
+      background-size: 200% 100%;
+      animation: shimmer 2s linear infinite;
+      transition: width 0.15s ease-out;
       z-index: 1100;
-      border-radius: 0 2px 2px 0;
+      border-radius: 0 3px 3px 0;
+      box-shadow: 0 0 10px rgba(108, 92, 231, 0.7), 0 0 20px rgba(162, 155, 254, 0.4);
+    }
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
     }
   `]
 })
