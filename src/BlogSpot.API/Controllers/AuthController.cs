@@ -4,6 +4,7 @@ using BlogSpot.Application.Interfaces;
 using BlogSpot.Domain.Enums;
 using BlogSpot.Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
 namespace BlogSpot.API.Controllers;
@@ -28,6 +29,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("send-otp")]
+    [EnableRateLimiting("otp-send")]
     public async Task<ActionResult> SendOtp([FromBody] SendOtpRequest request, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(request.Email))
@@ -38,6 +40,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("verify-otp")]
+    [EnableRateLimiting("otp-verify")]
     public async Task<ActionResult> VerifyOtp([FromBody] VerifyOtpRequest request, CancellationToken ct)
     {
         var isValid = await _emailQueueService.VerifyOtpAsync(request.Email, request.OtpCode, ct);
@@ -48,6 +51,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("register")]
+    [EnableRateLimiting("auth-register")]
     public async Task<ActionResult<AuthResponseDto>> Register([FromBody] RegisterDto dto, CancellationToken ct)
     {
         try
@@ -63,6 +67,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
+    [EnableRateLimiting("auth-login")]
     public async Task<ActionResult<AuthResponseDto>> Login([FromBody] LoginDto dto, CancellationToken ct)
     {
         var result = await _authService.LoginAsync(dto, ct);

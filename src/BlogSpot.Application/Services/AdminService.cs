@@ -145,7 +145,8 @@ public class AdminService : IAdminService
         var authorName = post.Author.UserName;
         var postTitle = post.Title;
 
-        _uow.BlogPosts.Remove(post);
+        post.IsDeleted = true;
+        _uow.BlogPosts.Update(post);
         await _uow.SaveChangesAsync(ct);
 
         // Email notification to author
@@ -200,7 +201,8 @@ public class AdminService : IAdminService
         var userName = comment.User.UserName;
         var commentSnippet = comment.Content.Length > 50 ? comment.Content[..50] + "..." : comment.Content;
 
-        _uow.Comments.Remove(comment);
+        comment.IsDeleted = true;
+        _uow.Comments.Update(comment);
         await _uow.SaveChangesAsync(ct);
 
         // Email notification to comment author

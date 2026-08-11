@@ -6,6 +6,7 @@ public class Comment : BaseEntity
 {
     public string Content { get; set; } = string.Empty;
     public bool IsEdited { get; set; } = false;
+    public bool IsDeleted { get; set; } = false;
 
     // Foreign keys
     public Guid UserId { get; set; }

@@ -56,3 +56,11 @@ export interface DailyStat {
   reactions: number;
   comments: number;
 }
+
+export interface NotificationPreferences {
+  follow: boolean;
+  reaction: boolean;
+  comment: boolean;
+  commentLike: boolean;
+  postPublished: boolean;
+}

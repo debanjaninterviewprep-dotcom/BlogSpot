@@ -4,6 +4,7 @@ using BlogSpot.Application.Interfaces;
 using BlogSpot.Domain.Entities;
 using BlogSpot.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace BlogSpot.Application.Services;
 
@@ -365,5 +366,31 @@ public class UserService : IUserService
             IsFollowedByCurrentUser = currentUserId.HasValue &&
                 (user.Followers?.Any(f => f.FollowerId == currentUserId.Value) ?? false)
         };
+    }
+
+    public async Task<NotificationPreferencesDto> GetNotificationPreferencesAsync(Guid userId, CancellationToken ct = default)
+    {
+        var profile = await _uow.Profiles.Query()
+            .FirstOrDefaultAsync(p => p.UserId == userId, ct);
+
+        if (profile?.NotificationPreferences == null)
+            return new NotificationPreferencesDto();
+
+        return JsonSerializer.Deserialize<NotificationPreferencesDto>(profile.NotificationPreferences)
+               ?? new NotificationPreferencesDto();
+    }
+
+    public async Task<NotificationPreferencesDto> UpdateNotificationPreferencesAsync(Guid userId, NotificationPreferencesDto dto, CancellationToken ct = default)
+    {
+        var profile = await _uow.Profiles.Query()
+            .FirstOrDefaultAsync(p => p.UserId == userId, ct)
+            ?? throw new KeyNotFoundException("Profile not found.");
+
+        profile.NotificationPreferences = JsonSerializer.Serialize(dto);
+        profile.UpdatedAt = DateTime.UtcNow;
+        _uow.Profiles.Update(profile);
+        await _uow.SaveChangesAsync(ct);
+
+        return dto;
     }
 }

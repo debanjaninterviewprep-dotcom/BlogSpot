@@ -26,4 +26,8 @@ public interface IUserService
 
     // Analytics
     Task<CreatorAnalyticsDto> GetCreatorAnalyticsAsync(Guid userId, CancellationToken ct = default);
+
+    // Notification preferences
+    Task<NotificationPreferencesDto> GetNotificationPreferencesAsync(Guid userId, CancellationToken ct = default);
+    Task<NotificationPreferencesDto> UpdateNotificationPreferencesAsync(Guid userId, NotificationPreferencesDto dto, CancellationToken ct = default);
 }

@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '@environments/environment';
-import { CreatorAnalytics, UpdateProfile, UserProfile } from '../models/user.model';
+import { CreatorAnalytics, NotificationPreferences, UpdateProfile, UserProfile } from '../models/user.model';
 import { PagedResult, PaginationParams } from '../models/pagination.model';
 
 @Injectable({
@@ -66,6 +66,14 @@ export class UserService {
 
   getCreatorAnalytics(): Observable<CreatorAnalytics> {
     return this.http.get<CreatorAnalytics>(`${this.apiUrl}/analytics`);
+  }
+
+  getNotificationPreferences(): Observable<NotificationPreferences> {
+    return this.http.get<NotificationPreferences>(`${this.apiUrl}/notification-preferences`);
+  }
+
+  updateNotificationPreferences(prefs: NotificationPreferences): Observable<NotificationPreferences> {
+    return this.http.put<NotificationPreferences>(`${this.apiUrl}/notification-preferences`, prefs);
   }
 
   searchUsers(query: string, pagination: PaginationParams): Observable<PagedResult<UserProfile>> {

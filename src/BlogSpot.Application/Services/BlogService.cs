@@ -5,6 +5,7 @@ using BlogSpot.Application.Interfaces;
 using BlogSpot.Domain.Entities;
 using BlogSpot.Domain.Enums;
 using BlogSpot.Domain.Interfaces;
+using Ganss.Xss;
 using Microsoft.EntityFrameworkCore;
 
 namespace BlogSpot.Application.Services;
@@ -14,6 +15,8 @@ namespace BlogSpot.Application.Services;
 /// </summary>
 public class BlogService : IBlogService
 {
+    private static readonly HtmlSanitizer _sanitizer = new();
+
     private readonly IUnitOfWork _uow;
     private readonly INotificationService _notificationService;
     private readonly IEmailQueueService _emailQueueService;
@@ -34,17 +37,19 @@ public class BlogService : IBlogService
         if (slugExists)
             slug = $"{slug}-{Guid.NewGuid().ToString()[..8]}";
 
+        var sanitizedContent = _sanitizer.Sanitize(dto.Content);
+
         var post = new BlogPost
         {
             Title = dto.Title,
-            Content = dto.Content,
-            Summary = dto.Summary,
+            Content = sanitizedContent,
+            Summary = string.IsNullOrWhiteSpace(dto.Summary) ? GenerateExcerpt(sanitizedContent) : dto.Summary.Trim(),
             Slug = slug,
             AuthorId = userId,
             IsPublished = !dto.IsDraft,
             IsDraft = dto.IsDraft,
             Category = dto.Category,
-            ReadingTimeMinutes = CalculateReadingTime(dto.Content)
+            ReadingTimeMinutes = CalculateReadingTime(sanitizedContent)
         };
 
         await _uow.BlogPosts.AddAsync(post, ct);
@@ -71,7 +76,7 @@ public class BlogService : IBlogService
                     $@"<div style='font-family:sans-serif;max-width:600px;margin:0 auto;padding:32px'>
                         <h2 style='color:#1d9bf0'>New Post on BlogSpot</h2>
                         <h3>{post.Title}</h3>
-                        <p style='color:#536471'>{post.Summary ?? post.Content[..Math.Min(200, post.Content.Length)]}...</p>
+                        <p style='color:#536471'>{post.Summary}...</p>
                         <p style='color:#536471;font-size:13px'>Posted by {author.UserName}</p>
                     </div>",
                     ct);
@@ -90,13 +95,15 @@ public class BlogService : IBlogService
         if (post.AuthorId != userId)
             throw new UnauthorizedAccessException("You can only edit your own posts.");
 
+        var sanitizedContent = _sanitizer.Sanitize(dto.Content);
+
         post.Title = dto.Title;
-        post.Content = dto.Content;
-        post.Summary = dto.Summary;
+        post.Content = sanitizedContent;
+        post.Summary = string.IsNullOrWhiteSpace(dto.Summary) ? GenerateExcerpt(sanitizedContent) : dto.Summary.Trim();
         post.Category = dto.Category;
         post.IsDraft = dto.IsDraft;
         post.IsPublished = !dto.IsDraft;
-        post.ReadingTimeMinutes = CalculateReadingTime(dto.Content);
+        post.ReadingTimeMinutes = CalculateReadingTime(sanitizedContent);
         post.UpdatedAt = DateTime.UtcNow;
 
         _uow.BlogPosts.Update(post);
@@ -117,7 +124,8 @@ public class BlogService : IBlogService
         if (!isAdmin && post.AuthorId != userId)
             throw new UnauthorizedAccessException("You can only delete your own posts.");
 
-        _uow.BlogPosts.Remove(post);
+        post.IsDeleted = true;
+        _uow.BlogPosts.Update(post);
         await _uow.SaveChangesAsync(ct);
     }
 
@@ -398,7 +406,8 @@ public class BlogService : IBlogService
                 throw new UnauthorizedAccessException("You do not have permission to delete this comment.");
         }
 
-        _uow.Comments.Remove(comment);
+        comment.IsDeleted = true;
+        _uow.Comments.Update(comment);
         await _uow.SaveChangesAsync(ct);
     }
 
@@ -739,6 +748,13 @@ public class BlogService : IBlogService
     /// <summary>
     /// Calculate reading time based on average 200 words per minute.
     /// </summary>
+    private static string GenerateExcerpt(string html, int maxLength = 200)
+    {
+        var text = Regex.Replace(html, "<[^>]+>", " ");
+        text = Regex.Replace(text, @"\s+", " ").Trim();
+        return text.Length <= maxLength ? text : text[..maxLength].TrimEnd();
+    }
+
     private static int CalculateReadingTime(string content)
     {
         if (string.IsNullOrWhiteSpace(content)) return 1;

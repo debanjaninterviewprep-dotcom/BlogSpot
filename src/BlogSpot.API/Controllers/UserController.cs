@@ -144,4 +144,25 @@ public class UserController : ControllerBase
         var result = await _userService.GetCreatorAnalyticsAsync(userId, ct);
         return Ok(result);
     }
+
+    // --- Notification Preferences ---
+
+    [Authorize]
+    [HttpGet("notification-preferences")]
+    public async Task<ActionResult<NotificationPreferencesDto>> GetNotificationPreferences(CancellationToken ct)
+    {
+        var userId = GetCurrentUserId()!.Value;
+        var result = await _userService.GetNotificationPreferencesAsync(userId, ct);
+        return Ok(result);
+    }
+
+    [Authorize]
+    [HttpPut("notification-preferences")]
+    public async Task<ActionResult<NotificationPreferencesDto>> UpdateNotificationPreferences(
+        [FromBody] NotificationPreferencesDto dto, CancellationToken ct)
+    {
+        var userId = GetCurrentUserId()!.Value;
+        var result = await _userService.UpdateNotificationPreferencesAsync(userId, dto, ct);
+        return Ok(result);
+    }
 }

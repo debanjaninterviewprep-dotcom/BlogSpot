@@ -6,6 +6,7 @@ import { MatChipInputEvent } from '@angular/material/chips';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import { UserService } from '@core/services/user.service';
 import { AuthService } from '@core/services/auth.service';
+import { NotificationPreferences } from '@core/models/user.model';
 
 @Component({
   selector: 'app-profile-edit',
@@ -104,6 +105,36 @@ import { AuthService } from '@core/services/auth.service';
               </button>
             </div>
           </form>
+
+          <!-- Notification Preferences -->
+          <div class="notif-prefs-section">
+            <h3 class="section-title">Notification Preferences</h3>
+            <p class="section-hint">Choose which notifications you want to receive.</p>
+            <div class="notif-toggle-row">
+              <span>New follower</span>
+              <mat-slide-toggle [(ngModel)]="notifPrefs.follow" color="primary"></mat-slide-toggle>
+            </div>
+            <div class="notif-toggle-row">
+              <span>Reactions on my posts</span>
+              <mat-slide-toggle [(ngModel)]="notifPrefs.reaction" color="primary"></mat-slide-toggle>
+            </div>
+            <div class="notif-toggle-row">
+              <span>Comments on my posts</span>
+              <mat-slide-toggle [(ngModel)]="notifPrefs.comment" color="primary"></mat-slide-toggle>
+            </div>
+            <div class="notif-toggle-row">
+              <span>Likes on my comments</span>
+              <mat-slide-toggle [(ngModel)]="notifPrefs.commentLike" color="primary"></mat-slide-toggle>
+            </div>
+            <div class="notif-toggle-row">
+              <span>New post from admin</span>
+              <mat-slide-toggle [(ngModel)]="notifPrefs.postPublished" color="primary"></mat-slide-toggle>
+            </div>
+            <button mat-stroked-button color="primary" class="save-prefs-btn"
+                    (click)="saveNotifPrefs()" [disabled]="savingPrefs">
+              Save Preferences
+            </button>
+          </div>
         </mat-card-content>
       </mat-card>
     </div>
@@ -127,6 +158,17 @@ import { AuthService } from '@core/services/auth.service';
     form { display: flex; flex-direction: column; gap: 8px; }
     .section-title { margin: 16px 0 8px; font-size: 16px; color: #555; }
     .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+    .notif-prefs-section { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--color-border, #eee); }
+    .section-hint { font-size: 13px; color: var(--color-text-secondary, #666); margin: 0 0 16px; }
+    .notif-toggle-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--color-border, #f0f0f0);
+      font-size: 14px;
+    }
+    .save-prefs-btn { margin-top: 16px; }
   `]
 })
 export class ProfileEditComponent implements OnInit {
@@ -138,6 +180,8 @@ export class ProfileEditComponent implements OnInit {
   isLoading = false;
   skills: string[] = [];
   readonly separatorKeyCodes = [ENTER, COMMA] as const;
+  notifPrefs: NotificationPreferences = { follow: true, reaction: true, comment: true, commentLike: true, postPublished: true };
+  savingPrefs = false;
 
   constructor(
     private fb: FormBuilder,
@@ -174,6 +218,9 @@ export class ProfileEditComponent implements OnInit {
           this.coverPreviewUrl = profile.coverPhotoUrl || null;
           this.skills = profile.skills || [];
         }
+      });
+      this.userService.getNotificationPreferences().subscribe({
+        next: (prefs) => this.notifPrefs = prefs
       });
     }
   }
@@ -259,6 +306,20 @@ export class ProfileEditComponent implements OnInit {
       error: (err) => {
         this.isLoading = false;
         this.snackBar.open(err.error?.message || 'Failed to update profile', 'Close', { duration: 3000 });
+      }
+    });
+  }
+
+  saveNotifPrefs(): void {
+    this.savingPrefs = true;
+    this.userService.updateNotificationPreferences(this.notifPrefs).subscribe({
+      next: () => {
+        this.savingPrefs = false;
+        this.snackBar.open('Notification preferences saved!', 'Close', { duration: 3000 });
+      },
+      error: () => {
+        this.savingPrefs = false;
+        this.snackBar.open('Failed to save preferences', 'Close', { duration: 3000 });
       }
     });
   }

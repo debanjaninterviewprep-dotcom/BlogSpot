@@ -35,6 +35,8 @@ public class BlogPostConfiguration : IEntityTypeConfiguration<BlogPost>
         builder.HasIndex(p => new { p.IsPublished, p.CreatedAt });
         builder.HasIndex(p => p.Category);
 
+        builder.HasQueryFilter(p => !p.IsDeleted);
+
         // One-to-many with Images
         builder.HasMany(p => p.Images)
             .WithOne(i => i.BlogPost)

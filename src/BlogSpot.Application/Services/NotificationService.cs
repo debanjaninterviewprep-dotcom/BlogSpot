@@ -1,10 +1,12 @@
 using BlogSpot.Application.DTOs.Blog;
 using BlogSpot.Application.DTOs.Common;
+using BlogSpot.Application.DTOs.User;
 using BlogSpot.Application.Interfaces;
 using BlogSpot.Domain.Entities;
 using BlogSpot.Domain.Enums;
 using BlogSpot.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace BlogSpot.Application.Services;
 
@@ -93,6 +95,15 @@ public class NotificationService : INotificationService
         if (!Enum.TryParse<NotificationType>(type, true, out var parsedType))
             parsedType = NotificationType.Comment;
 
+        // Respect recipient's mute preferences
+        var profile = await _uow.Profiles.Query()
+            .FirstOrDefaultAsync(p => p.UserId == userId, ct);
+        if (profile?.NotificationPreferences != null)
+        {
+            var prefs = JsonSerializer.Deserialize<NotificationPreferencesDto>(profile.NotificationPreferences);
+            if (prefs != null && !IsTypeEnabled(parsedType, prefs)) return;
+        }
+
         var notification = new Notification
         {
             UserId = userId,
@@ -105,4 +116,14 @@ public class NotificationService : INotificationService
         await _uow.Notifications.AddAsync(notification, ct);
         await _uow.SaveChangesAsync(ct);
     }
+
+    private static bool IsTypeEnabled(NotificationType type, NotificationPreferencesDto prefs) => type switch
+    {
+        NotificationType.Follow => prefs.Follow,
+        NotificationType.Reaction => prefs.Reaction,
+        NotificationType.Comment => prefs.Comment,
+        NotificationType.CommentLike => prefs.CommentLike,
+        NotificationType.PostPublished => prefs.PostPublished,
+        _ => true
+    };
 }

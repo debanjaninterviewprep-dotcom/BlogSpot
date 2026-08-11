@@ -2,10 +2,12 @@ using BlogSpot.API.Hubs;
 using BlogSpot.API.Middleware;
 using BlogSpot.Application;
 using BlogSpot.Infrastructure;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Serilog;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -44,6 +46,38 @@ builder.Services.AddResponseCompression(options =>
 
 // Response caching
 builder.Services.AddResponseCaching();
+
+// Rate limiting — per-IP, fixed window
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.OnRejected = async (context, ct) =>
+    {
+        context.HttpContext.Response.ContentType = "application/json";
+        await context.HttpContext.Response.WriteAsync(
+            "{\"error\":\"Too many requests. Please try again later.\"}", ct);
+    };
+
+    static string GetIp(HttpContext ctx) =>
+        ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+    options.AddPolicy("otp-send", ctx =>
+        RateLimitPartition.GetFixedWindowLimiter(GetIp(ctx),
+            _ => new FixedWindowRateLimiterOptions { Window = TimeSpan.FromMinutes(10), PermitLimit = 5, QueueLimit = 0 }));
+
+    options.AddPolicy("otp-verify", ctx =>
+        RateLimitPartition.GetFixedWindowLimiter(GetIp(ctx),
+            _ => new FixedWindowRateLimiterOptions { Window = TimeSpan.FromMinutes(10), PermitLimit = 10, QueueLimit = 0 }));
+
+    options.AddPolicy("auth-login", ctx =>
+        RateLimitPartition.GetFixedWindowLimiter(GetIp(ctx),
+            _ => new FixedWindowRateLimiterOptions { Window = TimeSpan.FromMinutes(5), PermitLimit = 10, QueueLimit = 0 }));
+
+    options.AddPolicy("auth-register", ctx =>
+        RateLimitPartition.GetFixedWindowLimiter(GetIp(ctx),
+            _ => new FixedWindowRateLimiterOptions { Window = TimeSpan.FromMinutes(10), PermitLimit = 5, QueueLimit = 0 }));
+});
 
 // CORS
 builder.Services.AddCors(options =>
@@ -164,6 +198,8 @@ app.UseResponseCompression();
 app.UseResponseCaching();
 
 app.UseCors("AllowAngular");
+
+app.UseRateLimiter();
 
 app.UseStaticFiles(); // Serve uploaded images (after CORS so cross-origin requests work)
 

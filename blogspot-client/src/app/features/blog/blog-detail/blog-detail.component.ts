@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -9,6 +9,7 @@ import { BlogPost, Comment, ReactionType, ReactionSummaryDto } from '@core/model
 @Component({
   selector: 'app-blog-detail',
   template: `
+    <div class="read-progress-bar" [style.width.%]="readProgress"></div>
     <div class="detail-container" *ngIf="post">
       <mat-card class="post-detail">
         <div class="post-header">
@@ -294,10 +295,21 @@ import { BlogPost, Comment, ReactionType, ReactionSummaryDto } from '@core/model
     .reply { margin-left: 40px; padding: 8px 0; }
     .reply-btn { font-size: 12px; }
     .reply-form { margin-left: 40px; display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+    .read-progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      background: var(--gradient-primary, linear-gradient(135deg, #6c5ce7, #a29bfe));
+      transition: width 0.1s linear;
+      z-index: 1100;
+      border-radius: 0 2px 2px 0;
+    }
   `]
 })
 export class BlogDetailComponent implements OnInit {
   post: BlogPost | null = null;
+  readProgress = 0;
   comments: Comment[] = [];
   commentForm: FormGroup;
   loading = true;
@@ -329,6 +341,12 @@ export class BlogDetailComponent implements OnInit {
 
   get isAuthor(): boolean {
     return this.post?.authorId === this.authService.currentUser?.id;
+  }
+
+  @HostListener('window:scroll')
+  onScroll(): void {
+    const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+    this.readProgress = scrollable > 0 ? Math.min(100, (window.scrollY / scrollable) * 100) : 0;
   }
 
   canDeleteComment(comment: Comment): boolean {

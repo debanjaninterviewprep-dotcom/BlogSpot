@@ -17,6 +17,8 @@ public class CommentConfiguration : IEntityTypeConfiguration<Comment>
         builder.HasIndex(c => c.BlogPostId);
         builder.HasIndex(c => c.UserId);
 
+        builder.HasQueryFilter(c => !c.IsDeleted);
+
         // Self-referencing relationship for nested replies
         builder.HasOne(c => c.ParentComment)
             .WithMany(c => c.Replies)

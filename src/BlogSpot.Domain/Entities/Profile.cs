@@ -20,6 +20,9 @@ public class Profile : BaseEntity
     // Skills stored as comma-separated: "C#, Angular, SQL"
     public string? Skills { get; set; }
 
+    // Notification mute preferences stored as JSON
+    public string? NotificationPreferences { get; set; }
+
     // Foreign key
     public Guid UserId { get; set; }
     public User User { get; set; } = null!;

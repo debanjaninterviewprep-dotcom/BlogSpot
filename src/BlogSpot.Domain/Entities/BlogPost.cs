@@ -13,6 +13,7 @@ public class BlogPost : BaseEntity
     public string Slug { get; set; } = string.Empty;
     public bool IsPublished { get; set; } = true;
     public bool IsDraft { get; set; } = false;
+    public bool IsDeleted { get; set; } = false;
     public int ViewCount { get; set; } = 0;
     public int ReadingTimeMinutes { get; set; } = 0;
     public string? Category { get; set; }
