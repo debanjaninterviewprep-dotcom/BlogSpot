@@ -10,9 +10,13 @@ namespace BlogSpot.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            var textType = migrationBuilder.ActiveProvider == "Npgsql.EntityFrameworkCore.PostgreSQL"
+                ? "text" : "nvarchar(max)";
+
             migrationBuilder.AddColumn<string>(
                 name: "NotificationPreferences",
                 table: "Profiles",
+                type: textType,
                 nullable: true);
         }
 
