@@ -135,8 +135,15 @@ import { MatSnackBar } from '@angular/material/snack-bar';
       align-items: center;
       gap: 8px;
       padding: 12px 16px;
-      border-bottom: 1px solid var(--color-border);
+      position: relative;
       overflow-x: auto;
+    }
+    .filter-bar::after {
+      content: '';
+      position: absolute;
+      left: 16px; right: 16px; bottom: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--color-border) 15%, var(--color-border) 85%, transparent);
     }
     .filter-bar::-webkit-scrollbar { display: none; }
     .filter-chip {

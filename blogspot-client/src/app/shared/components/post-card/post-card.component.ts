@@ -90,9 +90,16 @@ import { BlogPost, ReactionType } from '@core/models/blog.model';
   styles: [`
     .post-card {
       padding: 16px 20px;
-      border-bottom: 1px solid var(--color-border);
+      position: relative;
       transition: background 0.15s, transform 0.2s ease, box-shadow 0.2s ease;
       cursor: default;
+    }
+    .post-card::after {
+      content: '';
+      position: absolute;
+      left: 20px; right: 20px; bottom: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--color-border) 15%, var(--color-border) 85%, transparent);
     }
     .post-card:hover {
       background: var(--color-bg-hover);
