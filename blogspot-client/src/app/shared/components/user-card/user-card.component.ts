@@ -30,6 +30,7 @@ import { UserProfile } from '@core/models/user.model';
     </div>
   `,
   styles: [`
+    :host { display: block; }
     .user-card {
       display: flex;
       align-items: center;

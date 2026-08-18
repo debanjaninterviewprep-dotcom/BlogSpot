@@ -60,13 +60,12 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 
         <!-- Posts -->
         <ng-container *ngFor="let post of posts; let i = index">
-          <div class="post-card-enter" [style.animation-delay.ms]="minAnimDelay(i)">
-            <app-post-card [post]="post"
-                           (onLike)="toggleLike($event)"
-                           (onBookmark)="toggleBookmark($event)"
-                           (onReaction)="toggleReaction($event)">
-            </app-post-card>
-          </div>
+          <app-post-card class="post-card-enter" [style.animation-delay.ms]="minAnimDelay(i)"
+                         [post]="post"
+                         (onLike)="toggleLike($event)"
+                         (onBookmark)="toggleBookmark($event)"
+                         (onReaction)="toggleReaction($event)">
+          </app-post-card>
           <!-- Inline suggestions after 3rd post (or after last if < 3) -->
           <ng-container *ngIf="suggestedUsers.length > 0 && authService.isLoggedIn &&
                                ((posts.length >= 3 && i === 2) || (posts.length < 3 && i === posts.length - 1))">

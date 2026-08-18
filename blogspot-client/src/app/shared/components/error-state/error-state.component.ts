@@ -13,6 +13,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
     </div>
   `,
   styles: [`
+    :host { display: block; }
     .error-state {
       text-align: center;
       padding: 64px 24px;

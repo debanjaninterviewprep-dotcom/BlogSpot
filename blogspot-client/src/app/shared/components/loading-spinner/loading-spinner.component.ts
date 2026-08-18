@@ -20,6 +20,7 @@ import { Component, Input } from '@angular/core';
     </ng-template>
   `,
   styles: [`
+    :host { display: block; }
     .sr-only {
       position: absolute;
       width: 1px; height: 1px;

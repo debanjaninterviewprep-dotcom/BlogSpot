@@ -88,6 +88,7 @@ import { BlogPost, ReactionType } from '@core/models/blog.model';
     </article>
   `,
   styles: [`
+    :host { display: block; }
     .post-card {
       padding: 16px 20px;
       position: relative;
