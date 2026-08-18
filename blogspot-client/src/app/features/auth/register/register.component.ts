@@ -21,7 +21,7 @@ function passwordStrengthValidator(control: AbstractControl): ValidationErrors |
     <div class="auth-container">
       <div class="auth-card">
         <div class="auth-brand">
-          <mat-icon class="brand-icon">rss_feed</mat-icon>
+          <img src="favicon.svg" class="brand-logo" alt="BlogSpot">
         </div>
         <h1 class="auth-title">Create your account</h1>
 
@@ -171,6 +171,11 @@ function passwordStrengthValidator(control: AbstractControl): ValidationErrors |
       width: 40px;
       height: 40px;
       color: #1d9bf0;
+    }
+    .brand-logo {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
     }
     .auth-title {
       font-size: 28px;
