@@ -244,6 +244,7 @@ public class BlogService : IBlogService
 
     public async Task<bool> ToggleLikeAsync(Guid userId, Guid postId, CancellationToken ct = default)
     {
+        var actor = await _uow.Users.GetByIdAsync(userId, ct);
         var existingLike = (await _uow.Likes.FindAsync(
             l => l.UserId == userId && l.BlogPostId == postId, ct)).FirstOrDefault();
 
@@ -251,11 +252,13 @@ public class BlogService : IBlogService
         {
             _uow.Likes.Remove(existingLike);
             await _uow.SaveChangesAsync(ct);
+            await _log.Info(ActivityActions.LikePost, nameof(BlogService), actor?.UserName, "Unliked", ct);
             return false;
         }
 
         await _uow.Likes.AddAsync(new Like { UserId = userId, BlogPostId = postId }, ct);
         await _uow.SaveChangesAsync(ct);
+        await _log.Info(ActivityActions.LikePost, nameof(BlogService), actor?.UserName, "Liked", ct);
         return true;
     }
 
@@ -266,6 +269,7 @@ public class BlogService : IBlogService
         if (!Enum.TryParse<ReactionType>(reactionType, true, out var parsedType))
             throw new ArgumentException($"Invalid reaction type: {reactionType}");
 
+        var actor = await _uow.Users.GetByIdAsync(userId, ct);
         var existing = (await _uow.Reactions.FindAsync(
             r => r.UserId == userId && r.BlogPostId == postId, ct)).FirstOrDefault();
 
@@ -276,6 +280,7 @@ public class BlogService : IBlogService
                 // Remove reaction
                 _uow.Reactions.Remove(existing);
                 await _uow.SaveChangesAsync(ct);
+                await _log.Info(ActivityActions.Reaction, nameof(BlogService), actor?.UserName, $"Removed {reactionType}", ct);
             }
             else
             {
@@ -284,6 +289,7 @@ public class BlogService : IBlogService
                 existing.UpdatedAt = DateTime.UtcNow;
                 _uow.Reactions.Update(existing);
                 await _uow.SaveChangesAsync(ct);
+                await _log.Info(ActivityActions.Reaction, nameof(BlogService), actor?.UserName, $"Changed to {reactionType}", ct);
             }
         }
         else
@@ -296,15 +302,15 @@ public class BlogService : IBlogService
                 Type = parsedType
             }, ct);
             await _uow.SaveChangesAsync(ct);
+            await _log.Info(ActivityActions.Reaction, nameof(BlogService), actor?.UserName, $"Added {reactionType}", ct);
 
             // Notify post author
             var post = await _uow.BlogPosts.GetByIdAsync(postId, ct);
             if (post != null && post.AuthorId != userId)
             {
-                var user = await _uow.Users.GetByIdAsync(userId, ct);
                 await _notificationService.CreateNotificationAsync(
                     post.AuthorId, userId, "Reaction",
-                    $"{user?.UserName} reacted {reactionType} to your post",
+                    $"{actor?.UserName} reacted {reactionType} to your post",
                     postId, ct);
             }
         }
@@ -341,6 +347,7 @@ public class BlogService : IBlogService
 
     public async Task<bool> ToggleBookmarkAsync(Guid userId, Guid postId, CancellationToken ct = default)
     {
+        var actor = await _uow.Users.GetByIdAsync(userId, ct);
         var existing = (await _uow.Bookmarks.FindAsync(
             b => b.UserId == userId && b.BlogPostId == postId, ct)).FirstOrDefault();
 
@@ -348,11 +355,13 @@ public class BlogService : IBlogService
         {
             _uow.Bookmarks.Remove(existing);
             await _uow.SaveChangesAsync(ct);
+            await _log.Info(ActivityActions.Bookmark, nameof(BlogService), actor?.UserName, "Removed", ct);
             return false;
         }
 
         await _uow.Bookmarks.AddAsync(new Bookmark { UserId = userId, BlogPostId = postId }, ct);
         await _uow.SaveChangesAsync(ct);
+        await _log.Info(ActivityActions.Bookmark, nameof(BlogService), actor?.UserName, "Added", ct);
         return true;
     }
 
@@ -514,6 +523,9 @@ public class BlogService : IBlogService
         await _uow.PostImages.AddAsync(image, ct);
         await _uow.SaveChangesAsync(ct);
 
+        var actor = await _uow.Users.GetByIdAsync(userId, ct);
+        await _log.Info(ActivityActions.ImageAdded, nameof(BlogService), actor?.UserName, post.Title, ct);
+
         return new PostImageDto { Id = image.Id, ImageUrl = image.ImageUrl, AltText = image.AltText, SortOrder = image.SortOrder };
     }
 
@@ -530,6 +542,9 @@ public class BlogService : IBlogService
 
         _uow.PostImages.Remove(image);
         await _uow.SaveChangesAsync(ct);
+
+        var actor = await _uow.Users.GetByIdAsync(userId, ct);
+        await _log.Info(ActivityActions.ImageRemoved, nameof(BlogService), actor?.UserName, post.Title, ct);
     }
 
     // --- Drafts ---
@@ -621,6 +636,9 @@ public class BlogService : IBlogService
 
         _uow.Drafts.Remove(draft);
         await _uow.SaveChangesAsync(ct);
+
+        var actor = await _uow.Users.GetByIdAsync(userId, ct);
+        await _log.Info(ActivityActions.DraftDeleted, nameof(BlogService), actor?.UserName, draft.Title, ct);
     }
 
     public async Task<DraftBlogDto?> GetDraftByIdAsync(Guid userId, Guid draftId, CancellationToken ct = default)

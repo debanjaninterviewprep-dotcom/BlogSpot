@@ -227,7 +227,7 @@ public class AdminService : IAdminService
             </div>", ct);
     }
 
-    public async Task<string> SeedDummyDataAsync(CancellationToken ct = default)
+    public async Task<string> SeedDummyDataAsync(string? actorUserName = null, CancellationToken ct = default)
     {
         // Check if already seeded (more than 5 users means data exists)
         var existingCount = await _uow.Users.CountAsync(ct: ct);
@@ -469,10 +469,12 @@ public class AdminService : IAdminService
         await _uow.Comments.AddRangeAsync(comments, ct);
         await _uow.SaveChangesAsync(ct);
 
-        return $"Seeded {users.Count} users, {posts.Count} posts, {follows.Count} follows, {likes.Count} likes, {comments.Count} comments. All passwords: Test@1234";
+        var seedSummary = $"Seeded {users.Count} users, {posts.Count} posts, {follows.Count} follows, {likes.Count} likes, {comments.Count} comments. All passwords: Test@1234";
+        await _log.Info(ActivityActions.AdminAction, nameof(AdminService), actorUserName, seedSummary, ct);
+        return seedSummary;
     }
 
-    public async Task<string> FormatExistingPostsAsync(CancellationToken ct = default)
+    public async Task<string> FormatExistingPostsAsync(string? actorUserName = null, CancellationToken ct = default)
     {
         // Get ALL posts and filter in memory for reliable detection
         var posts = await _uow.BlogPosts.Query().ToListAsync(ct);
@@ -496,9 +498,11 @@ public class AdminService : IAdminService
         if (formatted > 0)
             await _uow.SaveChangesAsync(ct);
 
-        return formatted > 0
+        var resultMessage = formatted > 0
             ? $"Successfully formatted {formatted} posts from plain text to HTML."
             : "All posts are already properly formatted.";
+        await _log.Info(ActivityActions.AdminAction, nameof(AdminService), actorUserName, resultMessage, ct);
+        return resultMessage;
     }
 
     /// <summary>

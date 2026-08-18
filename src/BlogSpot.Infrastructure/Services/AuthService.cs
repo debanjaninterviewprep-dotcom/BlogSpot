@@ -116,6 +116,8 @@ public class AuthService : IAuthService
             .FirstOrDefaultAsync(u => u.Id == userId, ct)
             ?? throw new UnauthorizedAccessException("Invalid refresh token.");
 
+        await _log.Info(ActivityActions.TokenRefreshed, nameof(AuthService), user.UserName, ct: ct);
+
         return GenerateAuthResponse(user, user.Profile);
     }
 

@@ -85,14 +85,14 @@ public class AdminController : ControllerBase
     [HttpPost("seed")]
     public async Task<ActionResult> SeedData(CancellationToken ct)
     {
-        var result = await _adminService.SeedDummyDataAsync(ct);
+        var result = await _adminService.SeedDummyDataAsync(User.Identity?.Name, ct);
         return Ok(new { message = result });
     }
 
     [HttpPost("format-posts")]
     public async Task<ActionResult> FormatExistingPosts(CancellationToken ct)
     {
-        var result = await _adminService.FormatExistingPostsAsync(ct);
+        var result = await _adminService.FormatExistingPostsAsync(User.Identity?.Name, ct);
         return Ok(new { message = result });
     }
 

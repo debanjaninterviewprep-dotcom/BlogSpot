@@ -17,4 +17,16 @@ public static class ActivityActions
     public const string UpdatePost = "UpdatePost";
     public const string DeleteComment = "DeleteComment";
     public const string AdminAction = "AdminAction";
+    public const string LikePost = "LikePost";
+    public const string Reaction = "Reaction";
+    public const string Bookmark = "Bookmark";
+    public const string DraftDeleted = "DraftDeleted";
+    public const string ImageAdded = "ImageAdded";
+    public const string ImageRemoved = "ImageRemoved";
+    public const string ProfileUpdated = "ProfileUpdated";
+    public const string RemoveFollower = "RemoveFollower";
+    public const string LoginFailed = "LoginFailed";
+    public const string OtpSent = "OtpSent";
+    public const string OtpVerified = "OtpVerified";
+    public const string TokenRefreshed = "TokenRefreshed";
 }

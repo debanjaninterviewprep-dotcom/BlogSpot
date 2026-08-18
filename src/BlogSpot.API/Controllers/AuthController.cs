@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using BlogSpot.Application.Constants;
 using BlogSpot.Application.DTOs.Auth;
 using BlogSpot.Application.Interfaces;
 using BlogSpot.Domain.Enums;
@@ -18,17 +19,19 @@ public class AuthController : ControllerBase
     private readonly IAuthService _authService;
     private readonly IEmailQueueService _emailQueueService;
     private readonly ILogger<AuthController> _logger;
+    private readonly IActivityLogService _log;
     private readonly AppDbContext _db;
     private readonly IConfiguration _config;
     private readonly IMemoryCache _cache;
     private const int MaxLoginAttempts = 10;
     private static readonly TimeSpan LockoutDuration = TimeSpan.FromMinutes(5);
 
-    public AuthController(IAuthService authService, IEmailQueueService emailQueueService, ILogger<AuthController> logger, AppDbContext db, IConfiguration config, IMemoryCache cache)
+    public AuthController(IAuthService authService, IEmailQueueService emailQueueService, ILogger<AuthController> logger, IActivityLogService log, AppDbContext db, IConfiguration config, IMemoryCache cache)
     {
         _authService = authService;
         _emailQueueService = emailQueueService;
         _logger = logger;
+        _log = log;
         _db = db;
         _config = config;
         _cache = cache;
@@ -42,6 +45,7 @@ public class AuthController : ControllerBase
             return BadRequest(new { message = "Email is required." });
 
         await _emailQueueService.SendOtpAsync(request.Email, ct);
+        await _log.Info(ActivityActions.OtpSent, nameof(AuthController), null, request.Email, ct);
         return Ok(new { message = "OTP sent to your email." });
     }
 
@@ -53,6 +57,7 @@ public class AuthController : ControllerBase
         if (!isValid)
             return BadRequest(new { message = "Invalid or expired OTP." });
 
+        await _log.Info(ActivityActions.OtpVerified, nameof(AuthController), null, request.Email, ct);
         return Ok(new { verified = true });
     }
 
@@ -90,6 +95,7 @@ public class AuthController : ControllerBase
         catch
         {
             _cache.Set(key, attempts + 1, LockoutDuration);
+            await _log.Warn(ActivityActions.LoginFailed, nameof(AuthController), null, dto.EmailOrUsername, ct);
             throw;
         }
     }
@@ -133,6 +139,7 @@ public class AuthController : ControllerBase
         await _db.SaveChangesAsync(ct);
 
         _logger.LogInformation("User '{Username}' promoted to Admin via API", request.UserName);
+        await _log.Info(ActivityActions.AdminAction, nameof(AuthController), null, $"Promoted '{request.UserName}' to Admin via secret-key endpoint", ct);
         return Ok(new { message = $"User '{request.UserName}' has been promoted to Admin." });
     }
 }

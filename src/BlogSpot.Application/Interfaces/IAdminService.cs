@@ -15,6 +15,6 @@ public interface IAdminService
     Task<PagedResult<AdminCommentDto>> GetAllCommentsAsync(PaginationParams pagination, CancellationToken ct = default);
     Task AdminDeleteCommentAsync(Guid commentId, string? actorUserName = null, CancellationToken ct = default);
 
-    Task<string> SeedDummyDataAsync(CancellationToken ct = default);
-    Task<string> FormatExistingPostsAsync(CancellationToken ct = default);
+    Task<string> SeedDummyDataAsync(string? actorUserName = null, CancellationToken ct = default);
+    Task<string> FormatExistingPostsAsync(string? actorUserName = null, CancellationToken ct = default);
 }

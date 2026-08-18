@@ -75,6 +75,8 @@ public class UserService : IUserService
         _uow.Profiles.Update(user.Profile);
         await _uow.SaveChangesAsync(ct);
 
+        await _log.Info(ActivityActions.ProfileUpdated, nameof(UserService), user.UserName, "Profile info updated", ct);
+
         return (await GetProfileAsync(userId, userId, ct))!;
     }
 
@@ -97,6 +99,8 @@ public class UserService : IUserService
         _uow.Profiles.Update(user.Profile);
         await _uow.SaveChangesAsync(ct);
 
+        await _log.Info(ActivityActions.ProfileUpdated, nameof(UserService), user.UserName, "Profile picture updated", ct);
+
         return imageUrl;
     }
 
@@ -118,6 +122,8 @@ public class UserService : IUserService
 
         _uow.Profiles.Update(user.Profile);
         await _uow.SaveChangesAsync(ct);
+
+        await _log.Info(ActivityActions.ProfileUpdated, nameof(UserService), user.UserName, "Cover photo updated", ct);
 
         return imageUrl;
     }
@@ -177,6 +183,9 @@ public class UserService : IUserService
         {
             followerUser.Following.Remove(followRecord);
             await _uow.SaveChangesAsync(ct);
+
+            var currentUser = await _uow.Users.GetByIdAsync(currentUserId, ct);
+            await _log.Info(ActivityActions.RemoveFollower, nameof(UserService), currentUser?.UserName, followerUser.UserName, ct);
         }
     }
 
