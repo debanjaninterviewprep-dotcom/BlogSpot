@@ -150,33 +150,37 @@ function passwordStrengthValidator(control: AbstractControl): ValidationErrors |
       justify-content: center;
       align-items: flex-start;
       min-height: calc(100vh - 56px);
+      width: 100%;
       padding: 32px 16px;
       box-sizing: border-box;
       position: relative;
       overflow: hidden;
+      background:
+        radial-gradient(ellipse 80% 60% at 15% 20%, rgba(108, 92, 231, 0.10), transparent 60%),
+        radial-gradient(ellipse 80% 60% at 85% 80%, rgba(0, 206, 201, 0.10), transparent 60%);
     }
     .auth-container::before,
     .auth-container::after {
       content: '';
       position: absolute;
-      width: 420px;
-      height: 420px;
+      width: 640px;
+      height: 640px;
       border-radius: 50%;
-      filter: blur(90px);
-      opacity: 0.25;
+      filter: blur(120px);
+      opacity: 0.3;
       z-index: 0;
       pointer-events: none;
     }
     .auth-container::before {
       background: var(--gradient-primary, linear-gradient(135deg, #6c5ce7, #a29bfe));
-      top: -120px;
-      left: -120px;
+      top: -200px;
+      left: -220px;
       animation: blobFloat1 14s ease-in-out infinite;
     }
     .auth-container::after {
       background: var(--gradient-accent, linear-gradient(135deg, #00cec9, #81ecec));
-      bottom: -120px;
-      right: -120px;
+      bottom: -200px;
+      right: -220px;
       animation: blobFloat2 16s ease-in-out infinite;
     }
     @keyframes blobFloat1 {

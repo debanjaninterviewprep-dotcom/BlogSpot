@@ -20,10 +20,13 @@ import { User } from '../../models/auth.model';
           <span class="logo-text">BlogSpot</span>
         </a>
 
-        <div class="search-box" *ngIf="authService.isLoggedIn" #searchContainer>
+        <div class="search-box" *ngIf="authService.isLoggedIn" [class.mobile-open]="mobileSearchOpen" #searchContainer>
           <div class="search-wrapper" [class.focused]="searchActive">
+            <button *ngIf="mobileSearchOpen" class="mobile-search-back" aria-label="Close search" (click)="closeMobileSearch()">
+              <mat-icon>arrow_back</mat-icon>
+            </button>
             <mat-icon class="search-icon">search</mat-icon>
-            <input type="text" placeholder="Search users & posts..." class="search-input"
+            <input type="text" placeholder="Search posts &amp; bloggers..." class="search-input"
                    [(ngModel)]="searchQuery"
                    (input)="onSearchInput($event)"
                    (focus)="searchActive = true"
@@ -33,7 +36,7 @@ import { User } from '../../models/auth.model';
               <mat-icon>close</mat-icon>
             </button>
           </div>
-          <!-- Autocomplete dropdown -->
+          <!-- Autocomplete dropdown: updates live as you type, no need to press Enter -->
           <div class="search-dropdown" *ngIf="searchActive && searchQuery.length >= 1">
             <!-- Loading -->
             <div class="search-loading" *ngIf="searchLoading">
@@ -43,9 +46,23 @@ import { User } from '../../models/auth.model';
             <div class="search-empty" *ngIf="!searchLoading && searchQuery.length >= 2 && searchedUsers.length === 0 && searchedPosts.length === 0">
               No results for "{{ searchQuery }}"
             </div>
-            <!-- Users -->
+            <!-- Posts -->
+            <div class="search-section" *ngIf="searchedPosts.length > 0">
+              <div class="search-section-header"><mat-icon>article</mat-icon> Posts</div>
+              <a *ngFor="let post of searchedPosts" class="search-item post-item"
+                 [routerLink]="['/blog', post.slug]"
+                 (mousedown)="$event.preventDefault()"
+                 (click)="clearSearch()">
+                <span class="search-post-icon-wrap"><mat-icon class="search-post-icon">article</mat-icon></span>
+                <div class="search-item-info">
+                  <span class="search-item-name">{{ post.title }}</span>
+                  <span class="search-item-sub">by {{ post.authorDisplayName || post.authorUserName }}</span>
+                </div>
+              </a>
+            </div>
+            <!-- Bloggers -->
             <div class="search-section" *ngIf="searchedUsers.length > 0">
-              <div class="search-section-header">People</div>
+              <div class="search-section-header"><mat-icon>person</mat-icon> Bloggers</div>
               <a *ngFor="let user of searchedUsers" class="search-item user-item"
                  [routerLink]="['/profile', user.userName]"
                  (mousedown)="$event.preventDefault()"
@@ -54,20 +71,6 @@ import { User } from '../../models/auth.model';
                 <div class="search-item-info">
                   <span class="search-item-name">{{ user.displayName || user.userName }}</span>
                   <span class="search-item-sub">{{'@'}}{{ user.userName }}</span>
-                </div>
-              </a>
-            </div>
-            <!-- Posts -->
-            <div class="search-section" *ngIf="searchedPosts.length > 0">
-              <div class="search-section-header">Posts</div>
-              <a *ngFor="let post of searchedPosts" class="search-item post-item"
-                 [routerLink]="['/blog', post.slug]"
-                 (mousedown)="$event.preventDefault()"
-                 (click)="clearSearch()">
-                <mat-icon class="search-post-icon">article</mat-icon>
-                <div class="search-item-info">
-                  <span class="search-item-name">{{ post.title }}</span>
-                  <span class="search-item-sub">by {{ post.authorDisplayName || post.authorUserName }}</span>
                 </div>
               </a>
             </div>
@@ -82,6 +85,11 @@ import { User } from '../../models/auth.model';
         <div class="spacer"></div>
 
         <div class="nav-actions" *ngIf="authService.isLoggedIn; else loginButtons">
+          <!-- Mobile search trigger: search box is hidden inline on small screens, opened via this icon instead -->
+          <button class="nav-btn show-mobile-only" *ngIf="!mobileSearchOpen"
+                  (click)="openMobileSearch()" aria-label="Search" matTooltip="Search">
+            <mat-icon>search</mat-icon>
+          </button>
           <a routerLink="/feed" class="nav-btn" matTooltip="Home" aria-label="Home" routerLinkActive="active"
              [routerLinkActiveOptions]="{exact: true}">
             <mat-icon>home</mat-icon>
@@ -233,6 +241,13 @@ import { User } from '../../models/auth.model';
       margin: 0 16px;
       position: relative;
     }
+    .mobile-search-back {
+      display: none;
+      background: none; border: none; cursor: pointer; padding: 0; margin-right: 6px;
+      align-items: center; justify-content: center;
+      color: var(--color-text-secondary);
+      flex-shrink: 0;
+    }
     .search-wrapper {
       display: flex;
       align-items: center;
@@ -283,6 +298,9 @@ import { User } from '../../models/auth.model';
       padding: 24px; text-align: center; color: var(--color-text-secondary); font-size: var(--font-size-base);
     }
     .search-section-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
       font-size: 11px;
       font-weight: var(--font-weight-bold);
       color: var(--color-text-secondary);
@@ -290,6 +308,7 @@ import { User } from '../../models/auth.model';
       text-transform: uppercase;
       letter-spacing: 0.08em;
     }
+    .search-section-header mat-icon { font-size: 14px; width: 14px; height: 14px; }
     .search-section + .search-section {
       border-top: 1px solid var(--color-border);
     }
@@ -305,7 +324,13 @@ import { User } from '../../models/auth.model';
     }
     .search-item:hover { background: var(--color-bg-hover); }
     .search-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
-    .search-post-icon { color: var(--color-text-secondary); font-size: 24px; width: 24px; height: 24px; flex-shrink: 0; margin: 0 6px; }
+    .search-post-icon-wrap {
+      display: flex; align-items: center; justify-content: center;
+      width: 36px; height: 36px; border-radius: 10px;
+      background: var(--color-primary-light);
+      flex-shrink: 0;
+    }
+    .search-post-icon { color: var(--color-primary); font-size: 18px; width: 18px; height: 18px; }
     .search-item-info { display: flex; flex-direction: column; min-width: 0; }
     .search-item-name { font-size: var(--font-size-base); font-weight: var(--font-weight-semibold); color: var(--color-text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .search-item-sub { font-size: var(--font-size-xs); color: var(--color-text-secondary); }
@@ -403,6 +428,19 @@ import { User } from '../../models/auth.model';
     @media (max-width: 600px) {
       .navbar { height: 52px; }
       .search-box { display: none; }
+      .search-box.mobile-open {
+        display: flex;
+        position: fixed;
+        top: 0; left: 0; right: 0;
+        height: 52px;
+        margin: 0;
+        padding: 0 12px;
+        background: var(--navbar-bg, #fff);
+        z-index: 1002;
+        align-items: center;
+      }
+      .search-box.mobile-open .search-wrapper { flex: 1; }
+      .mobile-search-back { display: flex; }
       .nav-btn { width: 36px; height: 36px; }
       .nav-btn mat-icon { font-size: 20px; width: 20px; height: 20px; }
       .logo-text { font-size: 17px; }
@@ -421,6 +459,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   notifications: any[] = [];
   searchQuery = '';
   searchActive = false;
+  mobileSearchOpen = false;
   searchLoading = false;
   searchedUsers: any[] = [];
   searchedPosts: any[] = [];
@@ -523,6 +562,16 @@ export class NavbarComponent implements OnInit, OnDestroy {
     this.searchActive = false;
     this.searchedUsers = [];
     this.searchedPosts = [];
+  }
+
+  openMobileSearch(): void {
+    this.mobileSearchOpen = true;
+    this.searchActive = true;
+  }
+
+  closeMobileSearch(): void {
+    this.mobileSearchOpen = false;
+    this.clearSearch();
   }
 
   onSearchBlur(): void {
