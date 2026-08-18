@@ -57,7 +57,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
       transition: box-shadow 0.15s;
     }
     .draft-card:hover {
-      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      box-shadow: var(--card-hover-shadow, 0 2px 12px rgba(0,0,0,0.08));
     }
     .draft-card mat-card-header {
       padding: 16px 16px 0;

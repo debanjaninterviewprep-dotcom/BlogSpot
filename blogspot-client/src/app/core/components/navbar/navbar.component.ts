@@ -29,7 +29,7 @@ import { User } from '../../models/auth.model';
                    (focus)="searchActive = true"
                    (blur)="onSearchBlur()"
                    (keyup.enter)="onSearch($event)">
-            <button *ngIf="searchQuery" class="search-clear" (mousedown)="$event.preventDefault()" (click)="clearSearch()">
+            <button *ngIf="searchQuery" class="search-clear" aria-label="Clear search" (mousedown)="$event.preventDefault()" (click)="clearSearch()">
               <mat-icon>close</mat-icon>
             </button>
           </div>
@@ -50,7 +50,7 @@ import { User } from '../../models/auth.model';
                  [routerLink]="['/profile', user.userName]"
                  (mousedown)="$event.preventDefault()"
                  (click)="clearSearch()">
-                <img [src]="user.profilePictureUrl || 'assets/default-avatar.svg'" class="search-avatar">
+                <img [src]="user.profilePictureUrl || 'assets/default-avatar.svg'" class="search-avatar" [alt]="user.userName">
                 <div class="search-item-info">
                   <span class="search-item-name">{{ user.displayName || user.userName }}</span>
                   <span class="search-item-sub">{{'@'}}{{ user.userName }}</span>
@@ -82,19 +82,19 @@ import { User } from '../../models/auth.model';
         <div class="spacer"></div>
 
         <div class="nav-actions" *ngIf="authService.isLoggedIn; else loginButtons">
-          <a routerLink="/feed" class="nav-btn" matTooltip="Home" routerLinkActive="active"
+          <a routerLink="/feed" class="nav-btn" matTooltip="Home" aria-label="Home" routerLinkActive="active"
              [routerLinkActiveOptions]="{exact: true}">
             <mat-icon>home</mat-icon>
           </a>
-          <a routerLink="/blog/create" class="nav-btn" matTooltip="New Post" routerLinkActive="active">
+          <a routerLink="/blog/create" class="nav-btn" matTooltip="New Post" aria-label="New post" routerLinkActive="active">
             <mat-icon>edit_square</mat-icon>
           </a>
-          <a routerLink="/blog/bookmarks" class="nav-btn" matTooltip="Saved Posts" routerLinkActive="active">
+          <a routerLink="/blog/bookmarks" class="nav-btn" matTooltip="Saved Posts" aria-label="Saved posts" routerLinkActive="active">
             <mat-icon>bookmark</mat-icon>
           </a>
 
           <!-- Notifications -->
-          <button class="nav-btn" [matMenuTriggerFor]="notifMenu" matTooltip="Notifications">
+          <button class="nav-btn" [matMenuTriggerFor]="notifMenu" matTooltip="Notifications" [attr.aria-label]="'Notifications' + (unreadCount > 0 ? ', ' + unreadCount + ' unread' : '')">
             <mat-icon [matBadge]="unreadCount > 0 ? unreadCount : null"
                       matBadgeColor="warn" matBadgeSize="small">
               notifications
@@ -121,15 +121,16 @@ import { User } from '../../models/auth.model';
 
           <!-- Dark Mode -->
           <button class="nav-btn" (click)="toggleTheme()"
-                  [matTooltip]="themeService.isDark ? 'Light mode' : 'Dark mode'">
+                  [matTooltip]="themeService.isDark ? 'Light mode' : 'Dark mode'"
+                  [attr.aria-label]="themeService.isDark ? 'Switch to light mode' : 'Switch to dark mode'">
             <mat-icon>{{ themeService.isDark ? 'light_mode' : 'dark_mode' }}</mat-icon>
           </button>
 
-          <a class="nav-btn hide-sm" *ngIf="authService.isAdmin" routerLink="/admin" matTooltip="Admin" routerLinkActive="active">
+          <a class="nav-btn hide-sm" *ngIf="authService.isAdmin" routerLink="/admin" matTooltip="Admin" aria-label="Admin dashboard" routerLinkActive="active">
             <mat-icon>admin_panel_settings</mat-icon>
           </a>
 
-          <button class="avatar-btn" [matMenuTriggerFor]="userMenu">
+          <button class="avatar-btn" [matMenuTriggerFor]="userMenu" aria-label="Account menu">
             <mat-icon class="avatar-icon">account_circle</mat-icon>
           </button>
           <mat-menu #userMenu="matMenu">
@@ -154,7 +155,8 @@ import { User } from '../../models/auth.model';
 
         <ng-template #loginButtons>
           <button class="nav-btn" (click)="toggleTheme()"
-                  [matTooltip]="themeService.isDark ? 'Light mode' : 'Dark mode'">
+                  [matTooltip]="themeService.isDark ? 'Light mode' : 'Dark mode'"
+                  [attr.aria-label]="themeService.isDark ? 'Switch to light mode' : 'Switch to dark mode'">
             <mat-icon>{{ themeService.isDark ? 'light_mode' : 'dark_mode' }}</mat-icon>
           </button>
           <a routerLink="/auth/login" class="login-link">Sign in</a>
@@ -170,7 +172,7 @@ import { User } from '../../models/auth.model';
       z-index: 1000;
       height: 56px;
       background: #fff;
-      border-bottom: 1px solid #eff3f4;
+      border-bottom: 1px solid var(--color-border);
       display: flex;
       align-items: center;
       transition: background 0.2s, border-color 0.2s;
@@ -188,10 +190,10 @@ import { User } from '../../models/auth.model';
       align-items: center;
       gap: 8px;
       text-decoration: none;
-      font-size: 20px;
-      font-weight: 700;
+      font-size: var(--font-size-xl);
+      font-weight: var(--font-weight-bold);
       letter-spacing: -0.03em;
-      color: #0f1419;
+      color: var(--color-text-primary);
       white-space: nowrap;
       transition: color 0.2s;
     }
@@ -218,7 +220,7 @@ import { User } from '../../models/auth.model';
     .search-wrapper {
       display: flex;
       align-items: center;
-      background: #eff3f4;
+      background: var(--color-border);
       border-radius: 24px;
       padding: 0 16px;
       height: 40px;
@@ -227,22 +229,22 @@ import { User } from '../../models/auth.model';
     }
     .search-wrapper.focused {
       background: #fff;
-      border-color: #1d9bf0;
+      border-color: var(--color-primary);
     }
-    .search-wrapper.focused .search-icon { color: #1d9bf0; }
+    .search-wrapper.focused .search-icon { color: var(--color-primary); }
     .search-clear {
       background: none; border: none; cursor: pointer; padding: 0;
       display: flex; align-items: center;
     }
-    .search-clear mat-icon { font-size: 18px; width: 18px; height: 18px; color: #536471; }
+    .search-clear mat-icon { font-size: 18px; width: 18px; height: 18px; color: var(--color-text-secondary); }
     .search-dropdown {
       position: absolute;
       top: 48px;
       left: 0; right: 0;
       background: #fff;
       border-radius: 16px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08);
-      border: 1px solid #eff3f4;
+      box-shadow: var(--card-hover-shadow);
+      border: 1px solid var(--color-border);
       max-height: 420px;
       overflow-y: auto;
       z-index: 1001;
@@ -254,26 +256,26 @@ import { User } from '../../models/auth.model';
       to { opacity: 1; transform: translateY(0) scale(1); }
     }
     .search-dropdown::-webkit-scrollbar { width: 4px; }
-    .search-dropdown::-webkit-scrollbar-thumb { background: #cfd9de; border-radius: 2px; }
+    .search-dropdown::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 2px; }
     .search-loading {
       display: flex; align-items: center; justify-content: center;
-      padding: 24px; color: #536471; font-size: 13px; gap: 8px;
+      padding: 24px; color: var(--color-text-secondary); font-size: var(--font-size-sm); gap: 8px;
     }
     .search-loading mat-icon { animation: spin 1s linear infinite; font-size: 16px; width: 16px; height: 16px; }
     @keyframes spin { to { transform: rotate(360deg); } }
     .search-empty {
-      padding: 24px; text-align: center; color: #536471; font-size: 14px;
+      padding: 24px; text-align: center; color: var(--color-text-secondary); font-size: var(--font-size-base);
     }
     .search-section-header {
       font-size: 11px;
-      font-weight: 700;
-      color: #536471;
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text-secondary);
       padding: 12px 16px 6px;
       text-transform: uppercase;
       letter-spacing: 0.08em;
     }
     .search-section + .search-section {
-      border-top: 1px solid #eff3f4;
+      border-top: 1px solid var(--color-border);
     }
     .search-item {
       display: flex;
@@ -285,34 +287,34 @@ import { User } from '../../models/auth.model';
       transition: background 0.1s;
       cursor: pointer;
     }
-    .search-item:hover { background: #f7f9f9; }
+    .search-item:hover { background: var(--color-bg-hover); }
     .search-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
-    .search-post-icon { color: #536471; font-size: 24px; width: 24px; height: 24px; flex-shrink: 0; margin: 0 6px; }
+    .search-post-icon { color: var(--color-text-secondary); font-size: 24px; width: 24px; height: 24px; flex-shrink: 0; margin: 0 6px; }
     .search-item-info { display: flex; flex-direction: column; min-width: 0; }
-    .search-item-name { font-size: 14px; font-weight: 600; color: #0f1419; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .search-item-sub { font-size: 12px; color: #536471; }
+    .search-item-name { font-size: var(--font-size-base); font-weight: var(--font-weight-semibold); color: var(--color-text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .search-item-sub { font-size: var(--font-size-xs); color: var(--color-text-secondary); }
     .search-view-all {
       display: block;
       text-align: center;
       padding: 12px;
-      font-size: 14px;
-      font-weight: 600;
-      color: #1d9bf0;
+      font-size: var(--font-size-base);
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-primary);
       text-decoration: none;
-      border-top: 1px solid #eff3f4;
+      border-top: 1px solid var(--color-border);
     }
-    .search-view-all:hover { background: rgba(29,155,240,0.04); }
-    .search-icon { color: #536471; font-size: 20px; width: 20px; height: 20px; margin-right: 8px; }
+    .search-view-all:hover { background: var(--color-bg-hover); }
+    .search-icon { color: var(--color-text-secondary); font-size: 20px; width: 20px; height: 20px; margin-right: 8px; }
     .search-input {
       border: none;
       outline: none;
       background: transparent;
-      font-size: 14px;
+      font-size: var(--font-size-base);
       width: 100%;
-      color: #0f1419;
+      color: var(--color-text-primary);
       font-family: inherit;
     }
-    .search-input::placeholder { color: #536471; }
+    .search-input::placeholder { color: var(--color-text-secondary); }
     .spacer { flex: 1; }
     .nav-actions { display: flex; align-items: center; gap: 2px; }
     .nav-btn {
@@ -323,13 +325,13 @@ import { User } from '../../models/auth.model';
       border-radius: 50%;
       border: none;
       background: transparent;
-      color: #536471;
+      color: var(--color-text-secondary);
       cursor: pointer;
       transition: background 0.15s, color 0.15s;
       text-decoration: none;
     }
-    .nav-btn:hover { background: rgba(29,155,240,0.1); color: #1d9bf0; }
-    .nav-btn.active { color: #1d9bf0; }
+    .nav-btn:hover { background: var(--color-primary-light); color: var(--color-primary); }
+    .nav-btn.active { color: var(--color-primary); }
     .nav-btn mat-icon { font-size: 22px; width: 22px; height: 22px; }
     .avatar-btn {
       display: flex;
@@ -347,37 +349,37 @@ import { User } from '../../models/auth.model';
       flex-shrink: 0;
     }
     .avatar-btn:hover { opacity: 0.8; }
-    .avatar-icon { font-size: 32px; width: 32px; height: 32px; color: #536471; }
+    .avatar-icon { font-size: 32px; width: 32px; height: 32px; color: var(--color-text-secondary); }
     .login-link {
-      font-size: 14px;
-      font-weight: 600;
-      color: #0f1419;
+      font-size: var(--font-size-base);
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-text-primary);
       text-decoration: none;
       padding: 8px 16px;
       border-radius: 24px;
-      border: 1px solid #cfd9de;
+      border: 1px solid var(--color-border);
       transition: background 0.15s;
     }
-    .login-link:hover { background: rgba(15,20,25,0.05); }
+    .login-link:hover { background: var(--color-bg-hover); }
     .register-btn {
-      font-size: 14px;
-      font-weight: 600;
+      font-size: var(--font-size-base);
+      font-weight: var(--font-weight-semibold);
       color: #fff;
       text-decoration: none;
       padding: 8px 20px;
       border-radius: 24px;
-      background: #0f1419;
+      background: var(--gradient-primary);
       transition: opacity 0.15s;
     }
     .register-btn:hover { opacity: 0.85; }
     .notif-header {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 12px 16px; font-weight: 600; border-bottom: 1px solid #eff3f4;
-      font-size: 15px;
+      padding: 12px 16px; font-weight: var(--font-weight-semibold); border-bottom: 1px solid var(--color-border);
+      font-size: var(--font-size-md);
     }
-    .notif-empty { padding: 32px 16px; text-align: center; color: #536471; font-size: 14px; }
-    .unread { background-color: rgba(29,155,240,0.06); }
-    .view-all { text-align: center; width: 100%; color: #1d9bf0; font-weight: 600; font-size: 14px; }
+    .notif-empty { padding: 32px 16px; text-align: center; color: var(--color-text-secondary); font-size: var(--font-size-base); }
+    .unread { background-color: var(--color-primary-light); }
+    .view-all { text-align: center; width: 100%; color: var(--color-primary); font-weight: var(--font-weight-semibold); font-size: var(--font-size-base); }
     @media (max-width: 768px) {
       .search-box { flex: 0 1 240px; margin: 0 8px; }
     }

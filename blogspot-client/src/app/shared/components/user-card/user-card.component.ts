@@ -38,7 +38,7 @@ import { UserProfile } from '@core/models/user.model';
       transition: background 0.15s;
       cursor: default;
     }
-    .user-card:hover { background: rgba(0,0,0,0.03); }
+    .user-card:hover { background: var(--color-bg-hover); }
     .avatar-link { flex-shrink: 0; }
     .avatar {
       width: 44px; height: 44px;
@@ -55,9 +55,9 @@ import { UserProfile } from '@core/models/user.model';
       gap: 1px;
     }
     .display-name {
-      font-weight: 700;
-      font-size: 14px;
-      color: #0f1419;
+      font-weight: var(--font-weight-bold);
+      font-size: var(--font-size-base);
+      color: var(--color-text-primary);
       text-decoration: none;
       white-space: nowrap;
       overflow: hidden;
@@ -65,16 +65,16 @@ import { UserProfile } from '@core/models/user.model';
       line-height: 1.3;
     }
     .display-name:hover { text-decoration: underline; }
-    .handle { font-size: 13px; color: #536471; }
-    .stats { font-size: 12px; color: #536471; margin-top: 2px; }
+    .handle { font-size: var(--font-size-sm); color: var(--color-text-secondary); }
+    .stats { font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-top: 2px; }
     .follow-btn {
       flex-shrink: 0;
-      font-size: 13px;
-      font-weight: 700;
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-bold);
       padding: 6px 16px;
       border-radius: 24px;
       border: none;
-      background: #0f1419;
+      background: var(--gradient-primary);
       color: #fff;
       cursor: pointer;
       transition: opacity 0.15s, background 0.15s, color 0.15s;
@@ -83,28 +83,28 @@ import { UserProfile } from '@core/models/user.model';
     .follow-btn:hover { opacity: 0.85; }
     .follow-btn.following {
       background: transparent;
-      color: #0f1419;
-      border: 1px solid #cfd9de;
+      color: var(--color-text-primary);
+      border: 1px solid var(--color-border);
     }
     .follow-btn.following:hover {
-      border-color: #f4212e;
-      color: #f4212e;
-      background: rgba(244,33,46,0.06);
+      border-color: var(--color-danger);
+      color: var(--color-danger);
+      background: rgba(255, 107, 107, 0.08);
     }
     .remove-btn {
       flex-shrink: 0;
-      font-size: 13px;
-      font-weight: 600;
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-semibold);
       padding: 6px 14px;
       border-radius: 24px;
-      border: 1px solid #cfd9de;
+      border: 1px solid var(--color-border);
       background: transparent;
-      color: #f4212e;
+      color: var(--color-danger);
       cursor: pointer;
       transition: background 0.15s;
       font-family: inherit;
     }
-    .remove-btn:hover { background: rgba(244,33,46,0.06); }
+    .remove-btn:hover { background: rgba(255, 107, 107, 0.08); }
   `]
 })
 export class UserCardComponent {

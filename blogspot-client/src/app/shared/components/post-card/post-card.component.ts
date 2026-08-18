@@ -41,6 +41,7 @@ import { BlogPost, ReactionType } from '@core/models/blog.model';
 
       <div class="actions-bar">
         <button class="action-btn like-btn" [class.active]="post.isLikedByCurrentUser"
+                [attr.aria-label]="post.isLikedByCurrentUser ? 'Unlike post' : 'Like post'"
                 (click)="like()">
           <span class="action-icon-wrap" [class.burst]="justLiked">
             <mat-icon>{{ post.isLikedByCurrentUser ? 'favorite' : 'favorite_border' }}</mat-icon>
@@ -49,7 +50,7 @@ import { BlogPost, ReactionType } from '@core/models/blog.model';
           <span class="action-count" *ngIf="post.likeCount">{{ post.likeCount }}</span>
         </button>
 
-        <button class="action-btn comment-btn" [routerLink]="['/blog', post.slug]">
+        <button class="action-btn comment-btn" aria-label="View comments" [routerLink]="['/blog', post.slug]">
           <span class="action-icon-wrap">
             <mat-icon>chat_bubble_outline</mat-icon>
           </span>
@@ -60,6 +61,7 @@ import { BlogPost, ReactionType } from '@core/models/blog.model';
           <button class="action-btn reaction-btn" *ngFor="let r of reactionTypes"
                   [class.active]="post.currentUserReaction === r.type"
                   (click)="onReaction.emit({postId: post.id, type: r.type})"
+                  [attr.aria-label]="r.type + ' reaction'"
                   [matTooltip]="r.type">
             <span class="reaction-emoji">{{ r.emoji }}</span>
           </button>
@@ -67,7 +69,7 @@ import { BlogPost, ReactionType } from '@core/models/blog.model';
 
         <span class="spacer"></span>
 
-        <button class="action-btn view-btn">
+        <button class="action-btn view-btn" aria-label="View count">
           <span class="action-icon-wrap">
             <mat-icon>visibility</mat-icon>
           </span>
@@ -76,6 +78,7 @@ import { BlogPost, ReactionType } from '@core/models/blog.model';
 
         <button class="action-btn bookmark-btn" [class.active]="post.isBookmarkedByCurrentUser"
                 (click)="onBookmark.emit(post.id)"
+                [attr.aria-label]="post.isBookmarkedByCurrentUser ? 'Remove bookmark' : 'Bookmark'"
                 [matTooltip]="post.isBookmarkedByCurrentUser ? 'Remove bookmark' : 'Bookmark'">
           <span class="action-icon-wrap">
             <mat-icon>{{ post.isBookmarkedByCurrentUser ? 'bookmark' : 'bookmark_border' }}</mat-icon>
@@ -87,14 +90,14 @@ import { BlogPost, ReactionType } from '@core/models/blog.model';
   styles: [`
     .post-card {
       padding: 16px 20px;
-      border-bottom: 1px solid #eff3f4;
+      border-bottom: 1px solid var(--color-border);
       transition: background 0.15s, transform 0.2s ease, box-shadow 0.2s ease;
       cursor: default;
     }
     .post-card:hover {
-      background: rgba(0,0,0,0.015);
+      background: var(--color-bg-hover);
       transform: translateY(-3px);
-      box-shadow: 0 10px 24px rgba(108, 92, 231, 0.1);
+      box-shadow: var(--card-hover-shadow);
       position: relative;
       z-index: 1;
     }
@@ -120,37 +123,37 @@ import { BlogPost, ReactionType } from '@core/models/blog.model';
       flex-wrap: wrap;
     }
     .author-name {
-      font-weight: 700;
-      font-size: 15px;
-      color: #0f1419;
+      font-weight: var(--font-weight-bold);
+      font-size: var(--font-size-md);
+      color: var(--color-text-primary);
       text-decoration: none;
       line-height: 1.3;
     }
     .author-name:hover { text-decoration: underline; }
     .author-handle {
-      font-size: 13px;
-      color: #536471;
-      font-weight: 400;
+      font-size: var(--font-size-sm);
+      color: var(--color-text-secondary);
+      font-weight: var(--font-weight-normal);
     }
     .meta-line {
-      font-size: 13px;
-      color: #536471;
+      font-size: var(--font-size-sm);
+      color: var(--color-text-secondary);
       display: flex;
       gap: 4px;
       margin-top: 1px;
     }
     .post-body-link { text-decoration: none; color: inherit; display: block; }
     .post-title {
-      font-size: 18px;
-      font-weight: 700;
-      color: #0f1419;
+      font-size: var(--font-size-lg);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text-primary);
       margin: 8px 0 4px;
       line-height: 1.35;
       letter-spacing: -0.01em;
     }
     .post-summary {
-      font-size: 14px;
-      color: #536471;
+      font-size: var(--font-size-base);
+      color: var(--color-text-secondary);
       line-height: 1.55;
       margin: 0 0 8px;
     }
@@ -161,10 +164,10 @@ import { BlogPost, ReactionType } from '@core/models/blog.model';
       margin-bottom: 10px;
     }
     .tag {
-      font-size: 12px;
-      font-weight: 500;
-      color: #1d9bf0;
-      background: rgba(29,155,240,0.08);
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-medium);
+      color: var(--color-primary);
+      background: var(--color-primary-light);
       padding: 3px 10px;
       border-radius: 16px;
       cursor: default;
@@ -198,8 +201,8 @@ import { BlogPost, ReactionType } from '@core/models/blog.model';
       cursor: pointer;
       padding: 4px;
       border-radius: 50px;
-      font-size: 13px;
-      color: #536471;
+      font-size: var(--font-size-sm);
+      color: var(--color-text-secondary);
       transition: color 0.15s;
       text-decoration: none;
       font-family: inherit;
@@ -220,7 +223,7 @@ import { BlogPost, ReactionType } from '@core/models/blog.model';
       position: absolute;
       inset: 0;
       border-radius: 50%;
-      border: 2px solid #f91880;
+      border: 2px solid var(--color-like);
       animation: burstRing 0.5s ease-out forwards;
       pointer-events: none;
     }
@@ -235,22 +238,22 @@ import { BlogPost, ReactionType } from '@core/models/blog.model';
       100% { transform: scale(1.6); opacity: 0; }
     }
     .action-btn mat-icon { font-size: 18px; width: 18px; height: 18px; }
-    .action-count { font-size: 13px; padding-right: 4px; }
+    .action-count { font-size: var(--font-size-sm); padding-right: 4px; }
 
     /* Like */
-    .like-btn:hover { color: #f91880; }
-    .like-btn:hover .action-icon-wrap { background: rgba(249,24,128,0.1); }
-    .like-btn.active { color: #f91880; }
-    .like-btn.active mat-icon { color: #f91880; }
+    .like-btn:hover { color: var(--color-like); }
+    .like-btn:hover .action-icon-wrap { background: rgba(255, 107, 129, 0.1); }
+    .like-btn.active { color: var(--color-like); }
+    .like-btn.active mat-icon { color: var(--color-like); }
 
     /* Comment */
-    .comment-btn:hover { color: #1d9bf0; }
-    .comment-btn:hover .action-icon-wrap { background: rgba(29,155,240,0.1); }
+    .comment-btn:hover { color: var(--color-primary); }
+    .comment-btn:hover .action-icon-wrap { background: var(--color-primary-light); }
 
     /* Bookmark */
-    .bookmark-btn:hover { color: #1d9bf0; }
-    .bookmark-btn:hover .action-icon-wrap { background: rgba(29,155,240,0.1); }
-    .bookmark-btn.active { color: #1d9bf0; }
+    .bookmark-btn:hover { color: var(--color-primary); }
+    .bookmark-btn:hover .action-icon-wrap { background: var(--color-primary-light); }
+    .bookmark-btn.active { color: var(--color-primary); }
 
     /* View */
     .view-btn { cursor: default; }
@@ -258,12 +261,12 @@ import { BlogPost, ReactionType } from '@core/models/blog.model';
     /* Reactions */
     .reaction-group { display: flex; align-items: center; gap: 2px; }
     .reaction-btn { padding: 4px 6px; border-radius: 50%; }
-    .reaction-btn:hover { background: rgba(0,0,0,0.06); }
-    .reaction-btn.active { background: rgba(29,155,240,0.1); }
+    .reaction-btn:hover { background: var(--color-bg-hover); }
+    .reaction-btn.active { background: var(--color-primary-light); }
     .reaction-emoji { font-size: 16px; line-height: 1; }
     .spacer { flex: 1; }
 
-    @media (max-width: 599px) {
+    @media (max-width: 600px) {
       .post-card { padding: 12px; }
       .author-avatar { width: 38px; height: 38px; }
       .post-title { font-size: 16px; }

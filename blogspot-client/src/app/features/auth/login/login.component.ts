@@ -31,6 +31,7 @@ import { AuthService } from '@core/services/auth.service';
                    autocomplete="current-password">
             <mat-icon matPrefix>lock</mat-icon>
             <button mat-icon-button matSuffix type="button"
+                    [attr.aria-label]="hidePassword ? 'Show password' : 'Hide password'"
                     (click)="hidePassword = !hidePassword">
               <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
             </button>
@@ -103,7 +104,7 @@ import { AuthService } from '@core/services/auth.service';
       box-sizing: border-box;
       background: #fff;
       border-radius: 20px;
-      border: 1px solid #eff3f4;
+      border: 1px solid var(--color-border);
       position: relative;
       z-index: 1;
     }
@@ -116,7 +117,7 @@ import { AuthService } from '@core/services/auth.service';
       font-size: 40px;
       width: 40px;
       height: 40px;
-      color: #1d9bf0;
+      color: var(--color-primary);
     }
     .brand-logo {
       width: 48px;
@@ -126,7 +127,7 @@ import { AuthService } from '@core/services/auth.service';
     .auth-title {
       font-size: 28px;
       font-weight: 800;
-      color: #0f1419;
+      color: var(--color-text-primary);
       text-align: center;
       margin: 0 0 28px;
       letter-spacing: -0.03em;
@@ -141,10 +142,10 @@ import { AuthService } from '@core/services/auth.service';
       height: 48px;
       border: none;
       border-radius: 24px;
-      background: #0f1419;
+      background: var(--gradient-primary);
       color: #fff;
-      font-size: 15px;
-      font-weight: 700;
+      font-size: var(--font-size-md);
+      font-weight: var(--font-weight-bold);
       cursor: pointer;
       margin-top: 12px;
       transition: opacity 0.15s;
@@ -157,13 +158,13 @@ import { AuthService } from '@core/services/auth.service';
       justify-content: center;
       gap: 6px;
       margin-top: 24px;
-      font-size: 14px;
-      color: #536471;
+      font-size: var(--font-size-base);
+      color: var(--color-text-secondary);
     }
     .auth-link {
-      color: #1d9bf0;
+      color: var(--color-primary);
       text-decoration: none;
-      font-weight: 600;
+      font-weight: var(--font-weight-semibold);
     }
     .auth-link:hover { text-decoration: underline; }
     @media (max-width: 480px) {

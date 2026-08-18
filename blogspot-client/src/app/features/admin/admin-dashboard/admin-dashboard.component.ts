@@ -83,6 +83,7 @@ import { ExportService } from '@core/services/export.service';
                 <th mat-header-cell *matHeaderCellDef>Actions</th>
                 <td mat-cell *matCellDef="let user">
                   <button mat-icon-button (click)="toggleEdit(user)"
+                          [attr.aria-label]="editingUserId === user.id ? 'Close' : 'Manage user'"
                           [matTooltip]="editingUserId === user.id ? 'Close' : 'Manage'">
                     <mat-icon>{{ editingUserId === user.id ? 'close' : 'tune' }}</mat-icon>
                   </button>
@@ -167,7 +168,7 @@ import { ExportService } from '@core/services/export.service';
               <ng-container matColumnDef="actions">
                 <th mat-header-cell *matHeaderCellDef>Actions</th>
                 <td mat-cell *matCellDef="let post">
-                  <button mat-icon-button color="warn" (click)="deletePost(post)" matTooltip="Delete Post">
+                  <button mat-icon-button color="warn" (click)="deletePost(post)" matTooltip="Delete Post" aria-label="Delete post">
                     <mat-icon>delete</mat-icon>
                   </button>
                 </td>
@@ -219,7 +220,7 @@ import { ExportService } from '@core/services/export.service';
               <ng-container matColumnDef="actions">
                 <th mat-header-cell *matHeaderCellDef>Actions</th>
                 <td mat-cell *matCellDef="let c">
-                  <button mat-icon-button color="warn" (click)="deleteComment(c)" matTooltip="Delete Comment">
+                  <button mat-icon-button color="warn" (click)="deleteComment(c)" matTooltip="Delete Comment" aria-label="Delete comment">
                     <mat-icon>delete</mat-icon>
                   </button>
                 </td>
@@ -314,17 +315,17 @@ import { ExportService } from '@core/services/export.service';
     }
     table { width: 100%; }
     mat-chip { font-size: 12px; }
-    .admin-chip { background-color: rgba(29,155,240,0.12) !important; color: #1d9bf0 !important; }
-    .active-chip { background-color: rgba(0,186,124,0.12) !important; color: #00ba7c !important; }
-    .inactive-chip { background-color: rgba(244,33,46,0.1) !important; color: #f4212e !important; }
-    .sent-chip { background-color: rgba(0,186,124,0.12) !important; color: #00ba7c !important; }
-    .queued-chip { background-color: rgba(29,155,240,0.12) !important; color: #1d9bf0 !important; }
-    .failed-chip { background-color: rgba(244,33,46,0.1) !important; color: #f4212e !important; }
-    .error-cell { font-size: 12px; color: #f4212e; max-width: 200px; overflow: hidden; text-overflow: ellipsis; }
+    .admin-chip { background-color: var(--color-primary-light) !important; color: var(--color-primary) !important; }
+    .active-chip { background-color: rgba(0, 184, 148, 0.12) !important; color: var(--color-success) !important; }
+    .inactive-chip { background-color: rgba(255, 107, 107, 0.1) !important; color: var(--color-danger) !important; }
+    .sent-chip { background-color: rgba(0, 184, 148, 0.12) !important; color: var(--color-success) !important; }
+    .queued-chip { background-color: var(--color-primary-light) !important; color: var(--color-primary) !important; }
+    .failed-chip { background-color: rgba(255, 107, 107, 0.1) !important; color: var(--color-danger) !important; }
+    .error-cell { font-size: 12px; color: var(--color-danger); max-width: 200px; overflow: hidden; text-overflow: ellipsis; }
     .user-link { color: inherit; text-decoration: none; font-weight: 500; }
-    .user-link:hover { text-decoration: underline; color: #1d9bf0; }
+    .user-link:hover { text-decoration: underline; color: var(--color-primary); }
     .post-link { color: inherit; text-decoration: none; font-weight: 500; }
-    .post-link:hover { text-decoration: underline; color: #1d9bf0; }
+    .post-link:hover { text-decoration: underline; color: var(--color-primary); }
     .expanded-row { border-bottom: none !important; }
     .edit-row td { padding: 0 !important; border-bottom-color: var(--color-border, #eff3f4) !important; }
 
@@ -361,7 +362,7 @@ import { ExportService } from '@core/services/export.service';
       outline: none;
       transition: border-color 0.15s;
     }
-    .edit-field select:focus { border-color: #1d9bf0; }
+    .edit-field select:focus { border-color: var(--color-primary); }
 
     /* Toggle Switch */
     .status-toggle {
@@ -373,12 +374,12 @@ import { ExportService } from '@core/services/export.service';
     }
     .toggle-track {
       width: 36px; height: 20px;
-      background: #cfd9de;
+      background: var(--color-border);
       border-radius: 10px;
       position: relative;
       transition: background 0.2s;
     }
-    .status-toggle.active .toggle-track { background: #00ba7c; }
+    .status-toggle.active .toggle-track { background: var(--color-success); }
     .toggle-thumb {
       width: 16px; height: 16px;
       background: #fff;
@@ -389,7 +390,7 @@ import { ExportService } from '@core/services/export.service';
     }
     .status-toggle.active .toggle-thumb { transform: translateX(16px); }
 
-    @media (max-width: 599px) {
+    @media (max-width: 600px) {
       .edit-panel { flex-direction: column; align-items: flex-start; gap: 14px; }
     }
   `],

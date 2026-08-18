@@ -126,8 +126,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     .feed-main {
       flex: 1;
       min-width: 0;
-      border-left: 1px solid #eff3f4;
-      border-right: 1px solid #eff3f4;
+      border-left: 1px solid var(--color-border);
+      border-right: 1px solid var(--color-border);
     }
     /* ---- Filter bar ---- */
     .filter-bar {
@@ -135,7 +135,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
       align-items: center;
       gap: 8px;
       padding: 12px 16px;
-      border-bottom: 1px solid #eff3f4;
+      border-bottom: 1px solid var(--color-border);
       overflow-x: auto;
     }
     .filter-bar::-webkit-scrollbar { display: none; }
@@ -145,23 +145,23 @@ import { MatSnackBar } from '@angular/material/snack-bar';
       gap: 6px;
       padding: 7px 16px;
       border-radius: 24px;
-      border: 1px solid #cfd9de;
+      border: 1px solid var(--color-border);
       background: transparent;
-      color: #536471;
-      font-size: 14px;
-      font-weight: 500;
+      color: var(--color-text-secondary);
+      font-size: var(--font-size-base);
+      font-weight: var(--font-weight-medium);
       cursor: pointer;
       transition: all 0.15s;
       white-space: nowrap;
       font-family: inherit;
     }
     .filter-chip mat-icon { font-size: 16px; width: 16px; height: 16px; }
-    .filter-chip:hover { background: rgba(29,155,240,0.06); color: #1d9bf0; border-color: #1d9bf0; }
+    .filter-chip:hover { background: var(--color-primary-light); color: var(--color-primary); border-color: var(--color-primary); }
     .filter-chip.active {
-      background: #0f1419;
+      background: var(--gradient-primary);
       color: #fff;
-      border-color: #0f1419;
-      font-weight: 700;
+      border-color: transparent;
+      font-weight: var(--font-weight-bold);
     }
     /* ---- Sidebar ---- */
     .feed-sidebar {
@@ -173,7 +173,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
       align-self: flex-start;
     }
     .sidebar-card {
-      background: #f7f9f9;
+      background: var(--sidebar-bg);
       border-radius: 16px;
       padding: 16px 0;
       overflow: hidden;
@@ -181,7 +181,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     .sidebar-title {
       font-size: 19px;
       font-weight: 800;
-      color: #0f1419;
+      color: var(--color-text-primary);
       margin: 0;
       padding: 0 16px 12px;
       letter-spacing: -0.02em;
@@ -189,9 +189,9 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     .sidebar-show-more {
       display: block;
       padding: 12px 16px 4px;
-      font-size: 14px;
-      color: #1d9bf0;
-      font-weight: 500;
+      font-size: var(--font-size-base);
+      color: var(--color-primary);
+      font-weight: var(--font-weight-medium);
       cursor: pointer;
       background: none;
       border: none;
@@ -200,8 +200,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     .sidebar-show-more:hover { text-decoration: underline; }
     /* ---- Mobile suggestions ---- */
     .mobile-suggestions { display: none; }
-    .suggestions-scroll-card { border-bottom: 1px solid #eff3f4; padding: 16px 0; }
-    .suggestions-scroll-title { font-size: 16px; font-weight: 700; color: #0f1419; margin: 0 0 12px; padding: 0 16px; }
+    .suggestions-scroll-card { border-bottom: 1px solid var(--color-border); padding: 16px 0; }
+    .suggestions-scroll-title { font-size: 16px; font-weight: var(--font-weight-bold); color: var(--color-text-primary); margin: 0 0 12px; padding: 0 16px; }
     .suggestions-scroll-track {
       display: flex; gap: 12px; overflow-x: auto; padding: 0 16px 8px;
       scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
@@ -210,25 +210,25 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     .suggestion-item {
       display: flex; flex-direction: column; align-items: center;
       min-width: 140px; max-width: 140px; padding: 20px 12px 16px;
-      background: #f7f9f9; border-radius: 16px; border: 1px solid #eff3f4;
+      background: var(--sidebar-bg); border-radius: 16px; border: 1px solid var(--color-border);
       scroll-snap-align: start; flex-shrink: 0; gap: 6px;
     }
     .suggestion-avatar-link { flex-shrink: 0; }
     .suggestion-avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; }
-    .suggestion-name { font-size: 14px; font-weight: 700; color: #0f1419; text-decoration: none; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
+    .suggestion-name { font-size: var(--font-size-base); font-weight: var(--font-weight-bold); color: var(--color-text-primary); text-decoration: none; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
     .suggestion-name:hover { text-decoration: underline; }
-    .suggestion-handle { font-size: 12px; color: #536471; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
+    .suggestion-handle { font-size: var(--font-size-xs); color: var(--color-text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
     .suggestion-follow-btn {
-      margin-top: 6px; font-size: 13px; font-weight: 700; padding: 6px 20px;
-      border-radius: 24px; border: none; background: #0f1419; color: #fff;
+      margin-top: 6px; font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); padding: 6px 20px;
+      border-radius: 24px; border: none; background: var(--gradient-primary); color: #fff;
       cursor: pointer; transition: opacity 0.15s, background 0.15s, color 0.15s; font-family: inherit; white-space: nowrap;
     }
     .suggestion-follow-btn:hover { opacity: 0.85; }
-    .suggestion-follow-btn.following { background: transparent; color: #0f1419; border: 1px solid #cfd9de; }
-    .suggestion-follow-btn.following:hover { border-color: #f4212e; color: #f4212e; background: rgba(244,33,46,0.06); }
+    .suggestion-follow-btn.following { background: transparent; color: var(--color-text-primary); border: 1px solid var(--color-border); }
+    .suggestion-follow-btn.following:hover { border-color: var(--color-danger); color: var(--color-danger); background: rgba(255, 107, 107, 0.08); }
     /* ---- Misc ---- */
-    .empty-state { text-align: center; padding: 64px 24px; color: #536471; }
-    .empty-state mat-icon { font-size: 48px; width: 48px; height: 48px; color: #cfd9de; margin-bottom: 12px; }
+    .empty-state { text-align: center; padding: 64px 24px; color: var(--color-text-secondary); }
+    .empty-state mat-icon { font-size: 48px; width: 48px; height: 48px; color: var(--color-border); margin-bottom: 12px; }
     .empty-icon-float { animation: floatIcon 3s ease-in-out infinite; }
     @keyframes floatIcon {
       0%, 100% { transform: translateY(0); }
@@ -239,13 +239,13 @@ import { MatSnackBar } from '@angular/material/snack-bar';
       from { opacity: 0; transform: translateY(12px); }
       to { opacity: 1; transform: translateY(0); }
     }
-    .empty-state h3 { font-size: 18px; font-weight: 700; color: #0f1419; margin-bottom: 4px; }
-    .empty-state p { font-size: 14px; }
-    .skeleton-card { padding: 20px; margin-bottom: 0; border-bottom: 1px solid #eff3f4; border-radius: 0 !important; box-shadow: none !important; }
+    .empty-state h3 { font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); color: var(--color-text-primary); margin-bottom: 4px; }
+    .empty-state p { font-size: var(--font-size-base); }
+    .skeleton-card { padding: 20px; margin-bottom: 0; border-bottom: 1px solid var(--color-border); border-radius: 0 !important; box-shadow: none !important; }
     .skeleton-header { display: flex; gap: 12px; margin-bottom: 16px; }
-    .skeleton-circle { width: 44px; height: 44px; border-radius: 50%; background: #e0e0e0; animation: pulse 1.5s infinite; }
+    .skeleton-circle { width: 44px; height: 44px; border-radius: 50%; background: var(--skeleton-bg); animation: pulse 1.5s infinite; }
     .skeleton-lines { flex: 1; }
-    .skeleton-line { height: 12px; border-radius: 6px; background: #e0e0e0; margin-bottom: 8px; animation: pulse 1.5s infinite; }
+    .skeleton-line { height: 12px; border-radius: 6px; background: var(--skeleton-bg); margin-bottom: 8px; animation: pulse 1.5s infinite; }
     .skeleton-body { display: flex; flex-direction: column; gap: 8px; }
     .w40 { width: 40%; } .w60 { width: 60%; } .w80 { width: 80%; } .w100 { width: 100%; }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }

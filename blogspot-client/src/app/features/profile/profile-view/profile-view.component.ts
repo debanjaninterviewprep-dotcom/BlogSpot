@@ -52,15 +52,15 @@ import { MatSnackBar } from '@angular/material/snack-bar';
             <!-- Social Links -->
             <div class="social-links" *ngIf="profile.socialLinks">
               <a *ngIf="profile.socialLinks.github" [href]="profile.socialLinks.github"
-                 target="_blank" mat-icon-button matTooltip="GitHub">
+                 target="_blank" mat-icon-button matTooltip="GitHub" aria-label="GitHub profile">
                 <mat-icon>code</mat-icon>
               </a>
               <a *ngIf="profile.socialLinks.twitter" [href]="profile.socialLinks.twitter"
-                 target="_blank" mat-icon-button matTooltip="Twitter">
+                 target="_blank" mat-icon-button matTooltip="Twitter" aria-label="Twitter profile">
                 <mat-icon>tag</mat-icon>
               </a>
               <a *ngIf="profile.socialLinks.linkedin" [href]="profile.socialLinks.linkedin"
-                 target="_blank" mat-icon-button matTooltip="LinkedIn">
+                 target="_blank" mat-icon-button matTooltip="LinkedIn" aria-label="LinkedIn profile">
                 <mat-icon>work</mat-icon>
               </a>
             </div>
@@ -150,10 +150,10 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     <app-loading-spinner *ngIf="loading"></app-loading-spinner>
   `,
   styles: [`
-    .profile-container { max-width: 900px; margin: 0 auto; border-left: 1px solid #eff3f4; border-right: 1px solid #eff3f4; min-height: 100vh; }
+    .profile-container { max-width: 900px; margin: 0 auto; border-left: 1px solid var(--color-border); border-right: 1px solid var(--color-border); min-height: 100vh; }
     .cover-photo {
       height: 200px;
-      background: linear-gradient(135deg, #1d9bf0, #0d8bd9);
+      background: var(--gradient-primary);
       background-size: cover;
       background-position: center;
       position: relative;
@@ -162,28 +162,28 @@ import { MatSnackBar } from '@angular/material/snack-bar';
       position: absolute; inset: 0;
       background: linear-gradient(transparent 50%, rgba(0,0,0,0.2));
     }
-    .profile-header { padding: 16px 20px 20px; border: none; box-shadow: none; border-bottom: 1px solid #eff3f4; border-radius: 0 !important; }
+    .profile-header { padding: 16px 20px 20px; border: none; box-shadow: none; border-bottom: 1px solid var(--color-border); border-radius: 0 !important; }
     .profile-top { display: flex; gap: 16px; align-items: flex-start; }
     .profile-avatar {
       width: 120px; height: 120px; border-radius: 50%; object-fit: cover;
       border: 4px solid white; margin-top: -60px; background: white; flex-shrink: 0;
     }
     .profile-info { flex: 1; min-width: 0; }
-    .profile-info h1 { margin: 0; font-size: 20px; font-weight: 800; color: #0f1419; letter-spacing: -0.02em; }
-    .handle { color: #536471; margin: 2px 0 12px; font-size: 14px; }
-    .bio { margin-bottom: 12px; line-height: 1.5; font-size: 14px; color: #0f1419; }
+    .profile-info h1 { margin: 0; font-size: var(--font-size-xl); font-weight: 800; color: var(--color-text-primary); letter-spacing: -0.02em; }
+    .handle { color: var(--color-text-secondary); margin: 2px 0 12px; font-size: var(--font-size-base); }
+    .bio { margin-bottom: 12px; line-height: 1.5; font-size: var(--font-size-base); color: var(--color-text-primary); }
     .skills { margin-bottom: 12px; }
     .social-links { display: flex; gap: 4px; margin-bottom: 8px; }
-    .social-links a { color: #536471; }
-    .social-links a:hover { color: #1d9bf0; }
-    .meta { display: flex; flex-wrap: wrap; gap: 12px; color: #536471; font-size: 13px; margin-bottom: 12px; }
+    .social-links a { color: var(--color-text-secondary); }
+    .social-links a:hover { color: var(--color-primary); }
+    .meta { display: flex; flex-wrap: wrap; gap: 12px; color: var(--color-text-secondary); font-size: var(--font-size-sm); margin-bottom: 12px; }
     .meta span { display: flex; align-items: center; gap: 4px; }
-    .meta a { color: #1d9bf0; text-decoration: none; }
+    .meta a { color: var(--color-primary); text-decoration: none; }
     .meta a:hover { text-decoration: underline; }
-    .stats { display: flex; gap: 20px; font-size: 14px; color: #536471; }
+    .stats { display: flex; gap: 20px; font-size: var(--font-size-base); color: var(--color-text-secondary); }
     .stats span { cursor: pointer; transition: color 0.15s; }
     .stats span:hover { text-decoration: underline; }
-    .stats strong { color: #0f1419; font-weight: 700; }
+    .stats strong { color: var(--color-text-primary); font-weight: var(--font-weight-bold); }
     .profile-actions { display: flex; flex-direction: column; gap: 8px; }
     .profile-actions button {
       border-radius: 24px !important;
@@ -235,7 +235,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
       background-position: right 8px center;
       outline: none;
     }
-    .admin-field select:focus { border-color: #1d9bf0; }
+    .admin-field select:focus { border-color: var(--color-primary); }
     .status-toggle {
       display: flex; align-items: center; gap: 8px;
       background: none; border: none;
@@ -245,12 +245,12 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     }
     .toggle-track {
       width: 36px; height: 20px;
-      background: #cfd9de;
+      background: var(--color-border);
       border-radius: 10px;
       position: relative;
       transition: background 0.2s;
     }
-    .status-toggle.active .toggle-track { background: #00ba7c; }
+    .status-toggle.active .toggle-track { background: var(--color-success); }
     .toggle-thumb {
       width: 16px; height: 16px;
       background: #fff;
@@ -260,7 +260,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
       transition: transform 0.2s;
     }
     .status-toggle.active .toggle-thumb { transform: translateX(16px); }    .tab-content { padding: 0; }
-    .empty-state { text-align: center; padding: 48px 24px; color: #536471; font-size: 14px; }
+    .empty-state { text-align: center; padding: 48px 24px; color: var(--color-text-secondary); font-size: var(--font-size-base); }
     @media (max-width: 600px) {
       .profile-container { border: none; }
       .profile-header { padding: 12px 16px 16px; }

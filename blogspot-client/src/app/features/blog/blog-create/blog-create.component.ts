@@ -157,10 +157,10 @@ import { MatChipInputEvent } from '@angular/material/chips';
     }
     .editor-label {
       display: block;
-      font-size: 12px;
-      color: rgba(0,0,0,.6);
+      font-size: var(--font-size-xs);
+      color: var(--color-text-secondary);
       margin-bottom: 4px;
-      font-weight: 500;
+      font-weight: var(--font-weight-medium);
     }
     .grammar-section {
       display: flex;
@@ -179,16 +179,16 @@ import { MatChipInputEvent } from '@angular/material/chips';
       margin-left: 8px;
     }
     .grammar-issues {
-      border: 1px solid #e0e0e0;
+      border: 1px solid var(--color-border);
       border-radius: 8px;
       padding: 12px;
       max-height: 250px;
       overflow-y: auto;
-      background: #fafafa;
+      background: var(--color-bg-secondary);
     }
     .grammar-issue {
       padding: 10px 0;
-      border-bottom: 1px solid #eee;
+      border-bottom: 1px solid var(--color-border);
     }
     .grammar-issue:last-child { border-bottom: none; }
     .issue-header {
@@ -200,8 +200,8 @@ import { MatChipInputEvent } from '@angular/material/chips';
     .issue-message { font-size: 14px; font-weight: 500; }
     .issue-context {
       margin: 4px 0 4px 26px;
-      font-size: 13px;
-      color: #666;
+      font-size: var(--font-size-sm);
+      color: var(--color-text-secondary);
     }
     .issue-text {
       background: #fff3cd;
@@ -215,13 +215,13 @@ import { MatChipInputEvent } from '@angular/material/chips';
       gap: 6px;
       flex-wrap: wrap;
     }
-    .suggestion-label { font-size: 12px; color: #888; }
+    .suggestion-label { font-size: var(--font-size-xs); color: var(--color-text-secondary); }
     .suggestion-btn {
       font-size: 12px !important;
       padding: 2px 8px !important;
       min-height: 24px !important;
       line-height: 24px !important;
-      color: #1976d2;
+      color: var(--color-primary);
     }
     .actions {
       display: flex;

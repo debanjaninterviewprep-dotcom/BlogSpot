@@ -56,11 +56,11 @@ import { MatSnackBar } from '@angular/material/snack-bar';
   `,
   styles: [`
     .search-container { max-width: 720px; margin: 0 auto; padding: 0 16px; }
-    h2 { font-size: 20px; font-weight: 700; color: #0f1419; margin-bottom: 16px; }
+    h2 { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: var(--color-text-primary); margin-bottom: 16px; }
     .tab-content { padding: 16px 0; }
-    .empty-state { text-align: center; padding: 48px; color: #536471; }
-    .empty-state mat-icon { font-size: 48px; width: 48px; height: 48px; color: #cfd9de; }
-    .empty-state h3 { font-size: 18px; font-weight: 700; color: #0f1419; margin-top: 12px; }
+    .empty-state { text-align: center; padding: 48px; color: var(--color-text-secondary); }
+    .empty-state mat-icon { font-size: 48px; width: 48px; height: 48px; color: var(--color-border); }
+    .empty-state h3 { font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); color: var(--color-text-primary); margin-top: 12px; }
   `]
 })
 export class BlogSearchComponent implements OnInit {

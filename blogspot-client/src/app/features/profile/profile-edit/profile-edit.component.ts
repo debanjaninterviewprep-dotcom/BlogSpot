@@ -20,7 +20,7 @@ import { NotificationPreferences } from '@core/models/user.model';
           <!-- Cover Photo -->
           <div class="cover-section">
             <div class="cover-preview" [style.backgroundImage]="coverPreviewUrl ? 'url(' + (coverPreviewUrl | imageUrl) + ')' : ''">
-              <button mat-mini-fab color="primary" (click)="coverInput.click()">
+              <button mat-mini-fab color="primary" aria-label="Change cover photo" (click)="coverInput.click()">
                 <mat-icon>photo_camera</mat-icon>
               </button>
             </div>
@@ -29,7 +29,7 @@ import { NotificationPreferences } from '@core/models/user.model';
 
           <!-- Avatar -->
           <div class="avatar-section">
-            <img [src]="(previewUrl | imageUrl) || 'assets/default-avatar.svg'" class="avatar-preview">
+            <img [src]="(previewUrl | imageUrl) || 'assets/default-avatar.svg'" alt="Profile picture preview" class="avatar-preview">
             <button mat-stroked-button (click)="fileInput.click()">
               <mat-icon>photo_camera</mat-icon>
               Change Photo

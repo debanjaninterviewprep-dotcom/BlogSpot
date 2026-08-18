@@ -56,6 +56,7 @@ function passwordStrengthValidator(control: AbstractControl): ValidationErrors |
                    autocomplete="new-password">
             <mat-icon matPrefix>lock</mat-icon>
             <button mat-icon-button matSuffix type="button"
+                    [attr.aria-label]="hidePassword ? 'Show password' : 'Hide password'"
                     (click)="hidePassword = !hidePassword">
               <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
             </button>
@@ -193,7 +194,7 @@ function passwordStrengthValidator(control: AbstractControl): ValidationErrors |
       box-sizing: border-box;
       background: #fff;
       border-radius: 20px;
-      border: 1px solid #eff3f4;
+      border: 1px solid var(--color-border);
       position: relative;
       z-index: 1;
     }
@@ -206,7 +207,7 @@ function passwordStrengthValidator(control: AbstractControl): ValidationErrors |
       font-size: 40px;
       width: 40px;
       height: 40px;
-      color: #1d9bf0;
+      color: var(--color-primary);
     }
     .brand-logo {
       width: 48px;
@@ -216,7 +217,7 @@ function passwordStrengthValidator(control: AbstractControl): ValidationErrors |
     .auth-title {
       font-size: 28px;
       font-weight: 800;
-      color: #0f1419;
+      color: var(--color-text-primary);
       text-align: center;
       margin: 0 0 24px;
       letter-spacing: -0.03em;
@@ -231,10 +232,10 @@ function passwordStrengthValidator(control: AbstractControl): ValidationErrors |
       height: 48px;
       border: none;
       border-radius: 24px;
-      background: #0f1419;
+      background: var(--gradient-primary);
       color: #fff;
-      font-size: 15px;
-      font-weight: 700;
+      font-size: var(--font-size-md);
+      font-weight: var(--font-weight-bold);
       cursor: pointer;
       margin-top: 12px;
       transition: opacity 0.15s;
@@ -247,13 +248,13 @@ function passwordStrengthValidator(control: AbstractControl): ValidationErrors |
       flex-wrap: wrap;
       gap: 8px;
       margin: -2px 0 8px;
-      font-size: 12px;
+      font-size: var(--font-size-xs);
     }
     .password-hints span {
       display: flex;
       align-items: center;
       gap: 3px;
-      color: #536471;
+      color: var(--color-text-secondary);
       transition: color 0.2s;
     }
     .password-hints span mat-icon {
@@ -261,10 +262,10 @@ function passwordStrengthValidator(control: AbstractControl): ValidationErrors |
       width: 15px;
       height: 15px;
     }
-    .password-hints span.met { color: #00ba7c; }
+    .password-hints span.met { color: var(--color-success); }
     .password-mismatch {
-      color: #f4212e;
-      font-size: 12px;
+      color: var(--color-danger);
+      font-size: var(--font-size-xs);
       display: flex;
       align-items: center;
       gap: 4px;
@@ -280,46 +281,46 @@ function passwordStrengthValidator(control: AbstractControl): ValidationErrors |
       justify-content: center;
       gap: 6px;
       margin-top: 24px;
-      font-size: 14px;
-      color: #536471;
+      font-size: var(--font-size-base);
+      color: var(--color-text-secondary);
     }
     .auth-link {
-      color: #1d9bf0;
+      color: var(--color-primary);
       text-decoration: none;
-      font-weight: 600;
+      font-weight: var(--font-weight-semibold);
     }
     .auth-link:hover { text-decoration: underline; }
     /* OTP Section */
     .otp-section { margin-top: 8px; }
-    .otp-btn { background: #1d9bf0 !important; }
+    .otp-btn { background: var(--gradient-primary) !important; }
     .otp-info {
       display: flex; align-items: center; gap: 6px;
-      font-size: 13px; color: #00ba7c; margin: 0 0 8px;
+      font-size: var(--font-size-sm); color: var(--color-success); margin: 0 0 8px;
     }
     .otp-info mat-icon { font-size: 18px; width: 18px; height: 18px; }
     .otp-actions {
       display: flex; align-items: center; justify-content: space-between; gap: 8px;
     }
-    .resend-btn { color: #1d9bf0 !important; font-size: 13px !important; }
+    .resend-btn { color: var(--color-primary) !important; font-size: 13px !important; }
     .verify-btn {
       width: 100%;
       height: 40px;
-      border: 2px solid #1d9bf0;
+      border: 2px solid var(--color-primary);
       border-radius: 24px;
       background: transparent;
-      color: #1d9bf0;
-      font-size: 14px;
-      font-weight: 700;
+      color: var(--color-primary);
+      font-size: var(--font-size-base);
+      font-weight: var(--font-weight-bold);
       cursor: pointer;
       margin-top: 8px;
       font-family: inherit;
       transition: background 0.15s, color 0.15s;
     }
-    .verify-btn:hover:not(:disabled) { background: rgba(29,155,240,0.08); }
+    .verify-btn:hover:not(:disabled) { background: var(--color-primary-light); }
     .verify-btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .otp-verified {
       display: flex; align-items: center; gap: 6px;
-      color: #00ba7c; font-size: 14px; font-weight: 600; margin: 8px 0 0;
+      color: var(--color-success); font-size: var(--font-size-base); font-weight: var(--font-weight-semibold); margin: 8px 0 0;
     }
     .otp-verified mat-icon { font-size: 18px; width: 18px; height: 18px; }
     @media (max-width: 480px) {

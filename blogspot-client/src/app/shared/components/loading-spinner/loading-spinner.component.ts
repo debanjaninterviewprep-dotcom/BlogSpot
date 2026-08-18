@@ -4,20 +4,31 @@ import { Component, Input } from '@angular/core';
   selector: 'app-loading-spinner',
   template: `
     <ng-container *ngIf="inline; else fullOverlay">
-      <div class="spinner-inline">
+      <div class="spinner-inline" role="status" aria-live="polite">
         <div class="ring-inline"></div>
+        <span class="sr-only">Loading...</span>
       </div>
     </ng-container>
     <ng-template #fullOverlay>
-      <div class="spinner-overlay">
+      <div class="spinner-overlay" role="status" aria-live="polite">
         <div class="spinner-backdrop"></div>
         <div class="spinner-content">
           <div class="ring-full"></div>
+          <span class="sr-only">Loading...</span>
         </div>
       </div>
     </ng-template>
   `,
   styles: [`
+    .sr-only {
+      position: absolute;
+      width: 1px; height: 1px;
+      padding: 0; margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
     /* Inline (load-more) spinner */
     .spinner-inline {
       display: flex;
@@ -27,8 +38,8 @@ import { Component, Input } from '@angular/core';
     }
     .ring-inline {
       width: 36px; height: 36px;
-      border: 3px solid rgba(29, 155, 240, 0.2);
-      border-top-color: #1d9bf0;
+      border: 3px solid var(--color-primary-light);
+      border-top-color: var(--color-primary);
       border-radius: 50%;
       animation: spin 0.75s ease-in-out infinite;
     }

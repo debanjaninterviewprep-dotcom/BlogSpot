@@ -27,11 +27,11 @@ import { BlogPost, Comment, ReactionType, ReactionSummaryDto } from '@core/model
             </div>
           </div>
           <div class="post-actions" *ngIf="isAuthor || authService.isAdmin">
-            <button mat-icon-button [routerLink]="['/blog/edit', post.id]" matTooltip="Edit"
+            <button mat-icon-button [routerLink]="['/blog/edit', post.id]" matTooltip="Edit" aria-label="Edit post"
                     *ngIf="isAuthor">
               <mat-icon>edit</mat-icon>
             </button>
-            <button mat-icon-button color="warn" (click)="deletePost()" matTooltip="Delete">
+            <button mat-icon-button color="warn" (click)="deletePost()" matTooltip="Delete" aria-label="Delete post">
               <mat-icon>delete</mat-icon>
             </button>
           </div>
@@ -64,6 +64,7 @@ import { BlogPost, Comment, ReactionType, ReactionSummaryDto } from '@core/model
         <div class="post-engagement">
           <div class="reaction-bar">
             <button mat-button (click)="toggleLike()"
+                    [attr.aria-label]="post.isLikedByCurrentUser ? 'Unlike post' : 'Like post'"
                     [color]="post.isLikedByCurrentUser ? 'warn' : ''">
               <mat-icon>{{ post.isLikedByCurrentUser ? 'favorite' : 'favorite_border' }}</mat-icon>
               {{ post.likeCount }}
@@ -74,6 +75,7 @@ import { BlogPost, Comment, ReactionType, ReactionSummaryDto } from '@core/model
                       class="reaction-btn"
                       [class.active]="post.currentUserReaction === r.type"
                       (click)="toggleReaction(r.type)"
+                      [attr.aria-label]="r.type + ' reaction'"
                       [matTooltip]="r.type + (reactionSummary?.counts?.[r.type] ? ' (' + reactionSummary!.counts![r.type] + ')' : '')">
                 <span class="reaction-emoji">{{ r.emoji }}</span>
               </button>
@@ -86,7 +88,8 @@ import { BlogPost, Comment, ReactionType, ReactionSummaryDto } from '@core/model
           </div>
 
           <button mat-icon-button (click)="toggleBookmark()"
-                  [matTooltip]="post.isBookmarkedByCurrentUser ? 'Remove bookmark' : 'Save post'">
+                  [matTooltip]="post.isBookmarkedByCurrentUser ? 'Remove bookmark' : 'Save post'"
+                  [attr.aria-label]="post.isBookmarkedByCurrentUser ? 'Remove bookmark' : 'Save post'">
             <mat-icon>{{ post.isBookmarkedByCurrentUser ? 'bookmark' : 'bookmark_border' }}</mat-icon>
           </button>
         </div>
@@ -114,7 +117,7 @@ import { BlogPost, Comment, ReactionType, ReactionSummaryDto } from '@core/model
           <div *ngFor="let comment of comments" class="comment">
             <div class="comment-header">
               <img [src]="(comment.userProfilePictureUrl | imageUrl) || 'assets/default-avatar.svg'" 
-                   class="comment-avatar">
+                   [alt]="comment.userName" class="comment-avatar">
               <div>
                 <a [routerLink]="['/profile', comment.userName]" class="comment-author">
                   {{ comment.userDisplayName || comment.userName }}
@@ -122,7 +125,7 @@ import { BlogPost, Comment, ReactionType, ReactionSummaryDto } from '@core/model
                 <span class="comment-date">{{ comment.createdAt | date:'medium' }}</span>
               </div>
               <button mat-icon-button *ngIf="canDeleteComment(comment)"
-                      (click)="deleteComment(comment.id)" matTooltip="Delete comment">
+                      (click)="deleteComment(comment.id)" matTooltip="Delete comment" aria-label="Delete comment">
                 <mat-icon>delete_outline</mat-icon>
               </button>
             </div>
@@ -131,6 +134,7 @@ import { BlogPost, Comment, ReactionType, ReactionSummaryDto } from '@core/model
             <div class="comment-actions">
               <!-- Like -->
               <button class="comment-like-btn" [class.liked]="comment.isLikedByCurrentUser"
+                      [attr.aria-label]="comment.isLikedByCurrentUser ? 'Unlike comment' : 'Like comment'"
                       (click)="toggleCommentLike(comment)">
                 <mat-icon>{{ comment.isLikedByCurrentUser ? 'favorite' : 'favorite_border' }}</mat-icon>
                 <span *ngIf="comment.likeCount">{{ comment.likeCount }}</span>
@@ -155,19 +159,20 @@ import { BlogPost, Comment, ReactionType, ReactionSummaryDto } from '@core/model
             <div *ngFor="let reply of comment.replies" class="reply">
               <div class="comment-header">
                 <img [src]="(reply.userProfilePictureUrl | imageUrl) || 'assets/default-avatar.svg'" 
-                     class="comment-avatar small">
+                     [alt]="reply.userName" class="comment-avatar small">
                 <a [routerLink]="['/profile', reply.userName]" class="comment-author">
                   {{ reply.userDisplayName || reply.userName }}
                 </a>
                 <span class="comment-date">{{ reply.createdAt | date:'medium' }}</span>
                 <button mat-icon-button *ngIf="canDeleteComment(reply)"
-                        (click)="deleteReply(comment, reply.id)" matTooltip="Delete reply">
+                        (click)="deleteReply(comment, reply.id)" matTooltip="Delete reply" aria-label="Delete reply">
                   <mat-icon>delete_outline</mat-icon>
                 </button>
               </div>
               <p class="comment-content">{{ reply.content }}</p>
               <div class="comment-actions">
                 <button class="comment-like-btn" [class.liked]="reply.isLikedByCurrentUser"
+                        [attr.aria-label]="reply.isLikedByCurrentUser ? 'Unlike reply' : 'Like reply'"
                         (click)="toggleCommentLike(reply)">
                   <mat-icon>{{ reply.isLikedByCurrentUser ? 'favorite' : 'favorite_border' }}</mat-icon>
                   <span *ngIf="reply.likeCount">{{ reply.likeCount }}</span>
