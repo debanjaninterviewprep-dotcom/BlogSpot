@@ -196,6 +196,20 @@ import { User } from '../../models/auth.model';
       transition: color 0.2s;
     }
     .logo-img { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; }
+    .logo-text {
+      background: linear-gradient(90deg, var(--color-primary, #6c5ce7), var(--color-accent, #00cec9), var(--color-primary, #6c5ce7));
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+      animation: logoGradient 6s ease infinite;
+    }
+    @keyframes logoGradient {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
     .search-box {
       flex: 0 1 400px;
       margin: 0 16px;

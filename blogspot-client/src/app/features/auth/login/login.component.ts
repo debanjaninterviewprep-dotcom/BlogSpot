@@ -61,6 +61,40 @@ import { AuthService } from '@core/services/auth.service';
       min-height: calc(100vh - 56px);
       padding: 24px 16px;
       box-sizing: border-box;
+      position: relative;
+      overflow: hidden;
+    }
+    .auth-container::before,
+    .auth-container::after {
+      content: '';
+      position: absolute;
+      width: 420px;
+      height: 420px;
+      border-radius: 50%;
+      filter: blur(90px);
+      opacity: 0.25;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .auth-container::before {
+      background: var(--gradient-primary, linear-gradient(135deg, #6c5ce7, #a29bfe));
+      top: -120px;
+      left: -120px;
+      animation: blobFloat1 14s ease-in-out infinite;
+    }
+    .auth-container::after {
+      background: var(--gradient-accent, linear-gradient(135deg, #00cec9, #81ecec));
+      bottom: -120px;
+      right: -120px;
+      animation: blobFloat2 16s ease-in-out infinite;
+    }
+    @keyframes blobFloat1 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(40px, 30px) scale(1.1); }
+    }
+    @keyframes blobFloat2 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(-30px, -40px) scale(1.15); }
     }
     .auth-card {
       width: 100%;
@@ -70,6 +104,8 @@ import { AuthService } from '@core/services/auth.service';
       background: #fff;
       border-radius: 20px;
       border: 1px solid #eff3f4;
+      position: relative;
+      z-index: 1;
     }
     .auth-brand {
       display: flex;

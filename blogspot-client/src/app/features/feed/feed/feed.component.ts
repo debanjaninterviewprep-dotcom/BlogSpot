@@ -46,7 +46,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 
         <!-- Empty state -->
         <div *ngIf="!loading && posts.length === 0" class="empty-state">
-          <mat-icon>article</mat-icon>
+          <mat-icon class="empty-icon-float">article</mat-icon>
           <h3>No posts yet</h3>
           <p *ngIf="activeFilter === 'feed'">Follow some users or check Trending!</p>
           <p *ngIf="activeFilter !== 'feed'">Be the first to create a post!</p>
@@ -54,11 +54,13 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 
         <!-- Posts -->
         <ng-container *ngFor="let post of posts; let i = index">
-          <app-post-card [post]="post"
-                         (onLike)="toggleLike($event)"
-                         (onBookmark)="toggleBookmark($event)"
-                         (onReaction)="toggleReaction($event)">
-          </app-post-card>
+          <div class="post-card-enter" [style.animation-delay.ms]="minAnimDelay(i)">
+            <app-post-card [post]="post"
+                           (onLike)="toggleLike($event)"
+                           (onBookmark)="toggleBookmark($event)"
+                           (onReaction)="toggleReaction($event)">
+            </app-post-card>
+          </div>
           <!-- Inline suggestions after 3rd post (or after last if < 3) -->
           <ng-container *ngIf="suggestedUsers.length > 0 && authService.isLoggedIn &&
                                ((posts.length >= 3 && i === 2) || (posts.length < 3 && i === posts.length - 1))">
@@ -227,6 +229,16 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     /* ---- Misc ---- */
     .empty-state { text-align: center; padding: 64px 24px; color: #536471; }
     .empty-state mat-icon { font-size: 48px; width: 48px; height: 48px; color: #cfd9de; margin-bottom: 12px; }
+    .empty-icon-float { animation: floatIcon 3s ease-in-out infinite; }
+    @keyframes floatIcon {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    .post-card-enter { animation: cardFadeUp 0.4s ease both; }
+    @keyframes cardFadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
     .empty-state h3 { font-size: 18px; font-weight: 700; color: #0f1419; margin-bottom: 4px; }
     .empty-state p { font-size: 14px; }
     .skeleton-card { padding: 20px; margin-bottom: 0; border-bottom: 1px solid #eff3f4; border-radius: 0 !important; box-shadow: none !important; }
@@ -277,6 +289,11 @@ export class FeedComponent implements OnInit {
     if (this.activeFilter === filter) return;
     this.activeFilter = filter;
     this.loadPosts(true);
+  }
+
+  // Cap the stagger so cards further down the list don't wait too long to appear
+  minAnimDelay(index: number): number {
+    return Math.min(index, 8) * 40;
   }
 
   loadPosts(reset = false): void {

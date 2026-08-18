@@ -41,9 +41,10 @@ import { BlogPost, ReactionType } from '@core/models/blog.model';
 
       <div class="actions-bar">
         <button class="action-btn like-btn" [class.active]="post.isLikedByCurrentUser"
-                (click)="onLike.emit(post.id)">
-          <span class="action-icon-wrap">
+                (click)="like()">
+          <span class="action-icon-wrap" [class.burst]="justLiked">
             <mat-icon>{{ post.isLikedByCurrentUser ? 'favorite' : 'favorite_border' }}</mat-icon>
+            <span class="burst-ring" *ngIf="justLiked"></span>
           </span>
           <span class="action-count" *ngIf="post.likeCount">{{ post.likeCount }}</span>
         </button>
@@ -87,11 +88,15 @@ import { BlogPost, ReactionType } from '@core/models/blog.model';
     .post-card {
       padding: 16px 20px;
       border-bottom: 1px solid #eff3f4;
-      transition: background 0.15s;
+      transition: background 0.15s, transform 0.2s ease, box-shadow 0.2s ease;
       cursor: default;
     }
     .post-card:hover {
       background: rgba(0,0,0,0.015);
+      transform: translateY(-3px);
+      box-shadow: 0 10px 24px rgba(108, 92, 231, 0.1);
+      position: relative;
+      z-index: 1;
     }
     .post-header {
       display: flex;
@@ -206,6 +211,28 @@ import { BlogPost, ReactionType } from '@core/models/blog.model';
       width: 34px; height: 34px;
       border-radius: 50%;
       transition: background 0.15s;
+      position: relative;
+    }
+    .action-icon-wrap.burst mat-icon {
+      animation: likePop 0.4s ease;
+    }
+    .burst-ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 2px solid #f91880;
+      animation: burstRing 0.5s ease-out forwards;
+      pointer-events: none;
+    }
+    @keyframes likePop {
+      0% { transform: scale(1); }
+      30% { transform: scale(1.5); }
+      55% { transform: scale(0.9); }
+      100% { transform: scale(1); }
+    }
+    @keyframes burstRing {
+      0% { transform: scale(0.6); opacity: 0.6; }
+      100% { transform: scale(1.6); opacity: 0; }
     }
     .action-btn mat-icon { font-size: 18px; width: 18px; height: 18px; }
     .action-count { font-size: 13px; padding-right: 4px; }
@@ -261,5 +288,14 @@ export class PostCardComponent {
   stripHtml(html: string): string {
     if (!html) return '';
     return html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+
+  justLiked = false;
+
+  like(): void {
+    this.onLike.emit(this.post.id);
+    if (this.post.isLikedByCurrentUser) return; // only burst when going from unliked -> liked
+    this.justLiked = true;
+    setTimeout(() => this.justLiked = false, 500);
   }
 }
