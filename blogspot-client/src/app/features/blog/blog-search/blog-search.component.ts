@@ -55,7 +55,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     </div>
   `,
   styles: [`
-    .search-container { max-width: 720px; margin: 0 auto; padding: 0 16px; }
+    .search-container { max-width: 720px; margin: 0 auto; padding: 0 16px; min-height: calc(100vh - 56px); }
     h2 { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: var(--color-text-primary); margin-bottom: 16px; }
     .tab-content { padding: 16px 0; }
     .empty-state { text-align: center; padding: 48px; color: var(--color-text-secondary); }

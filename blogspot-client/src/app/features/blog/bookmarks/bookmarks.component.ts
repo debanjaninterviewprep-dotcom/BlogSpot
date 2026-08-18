@@ -32,7 +32,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     </div>
   `,
   styles: [`
-    .bookmarks-container { max-width: 720px; margin: 0 auto; }
+    .bookmarks-container { max-width: 720px; margin: 0 auto; min-height: calc(100vh - 56px); }
     .empty-state { text-align: center; padding: 48px; color: #888; }
     .empty-state mat-icon { font-size: 64px; width: 64px; height: 64px; color: #ccc; }
   `]

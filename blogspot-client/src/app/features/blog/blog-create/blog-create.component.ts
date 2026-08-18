@@ -134,6 +134,7 @@ import { MatChipInputEvent } from '@angular/material/chips';
     .create-container {
       max-width: 800px;
       margin: 0 auto;
+      min-height: calc(100vh - 56px);
     }
     mat-card { padding: 24px; }
     mat-card-header {

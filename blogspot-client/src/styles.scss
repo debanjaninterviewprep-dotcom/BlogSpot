@@ -90,9 +90,10 @@ html.dark-theme {
 
 /* Utility classes */
 .container {
-  max-width: 1200px;
+  width: 100%;
   margin: 0 auto;
   padding: 0 16px;
+  box-sizing: border-box;
 }
 
 .text-center { text-align: center; }
@@ -632,9 +633,10 @@ body { padding-top: 56px; }
 
 /* All page containers */
 .container {
-  max-width: 1200px;
+  width: 100%;
   margin: 0 auto;
   padding: 0 16px;
+  box-sizing: border-box;
 }
 
 /* ---- Small tablets & large phones (≤768px) ---- */

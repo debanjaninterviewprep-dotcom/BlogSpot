@@ -205,7 +205,7 @@ import { BlogPost, Comment, ReactionType, ReactionSummaryDto } from '@core/model
     <app-loading-spinner *ngIf="loading"></app-loading-spinner>
   `,
   styles: [`
-    .detail-container { max-width: 800px; margin: 0 auto; overflow: hidden; }
+    .detail-container { max-width: 800px; margin: 0 auto; overflow: hidden; min-height: calc(100vh - 56px); }
     .breadcrumb {
       display: flex;
       align-items: center;

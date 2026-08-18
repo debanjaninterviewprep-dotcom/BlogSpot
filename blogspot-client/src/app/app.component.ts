@@ -14,7 +14,9 @@ import { trigger, transition, style, animate } from '@angular/animations';
   `,
   styles: [`
     main {
-      min-height: calc(100vh - 64px);
+      display: block;
+      min-height: calc(100vh - 56px);
+      width: 100%;
     }
   `],
   animations: [

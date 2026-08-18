@@ -132,6 +132,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     .feed-main {
       flex: 1;
       min-width: 0;
+      min-height: calc(100vh - 56px);
       border-left: 1px solid var(--color-border);
       border-right: 1px solid var(--color-border);
     }

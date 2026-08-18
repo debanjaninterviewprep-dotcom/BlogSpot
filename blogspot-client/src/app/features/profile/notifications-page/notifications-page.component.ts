@@ -61,6 +61,7 @@ import { Notification } from '@core/models/notification.model';
       max-width: 640px;
       margin: 0 auto;
       padding: 16px;
+      min-height: calc(100vh - 56px);
     }
     .notifications-header {
       display: flex;
