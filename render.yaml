@@ -1,0 +1,56 @@
+# =============================================================
+# Render Blueprint — Backend API only
+# Database is hosted on Neon (https://neon.tech) — free forever
+# Frontend is hosted on Vercel — free forever
+# =============================================================
+#
+# SETUP STEPS:
+# 1. Create a free PostgreSQL database at https://neon.tech
+# 2. Copy the connection string from Neon dashboard
+# 3. In Render dashboard, set ConnectionStrings__DefaultConnection to your Neon URL
+# 4. Set Cors__AllowedOrigins__0 to your Vercel frontend URL (e.g. https://blogspot.vercel.app)
+# 5. Set AdminSeed__Password to a strong password
+# 6. After deploy, go to https://cron-job.org and add a FREE cron job:
+#    URL: https://<your-render-app>.onrender.com/api/health  — every 14 minutes
+#    This prevents the free service from sleeping.
+# =============================================================
+
+services:
+  # ---- .NET Backend API ----
+  - type: web
+    name: blogspot-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: DatabaseProvider
+        value: PostgreSQL
+      - key: ConnectionStrings__DefaultConnection
+        sync: false  # Paste your Neon connection string here (postgresql://user:pass@host/db?sslmode=require)
+      - key: Jwt__Key
+        generateValue: true
+      - key: Jwt__Issuer
+        value: BlogSpot.API
+      - key: Jwt__Audience
+        value: BlogSpot.Client
+      - key: Jwt__ExpirationInHours
+        value: "24"
+      - key: Cors__AllowedOrigins__0
+        sync: false  # Set to your Vercel URL e.g. https://blogspot-xyz.vercel.app
+      - key: AdminSeed__UserName
+        value: admin
+      - key: AdminSeed__Email
+        value: admin@blogspot.com
+      - key: AdminSeed__Password
+        sync: false  # Set a strong password in the Render dashboard
+      - key: AdminSeed__DisplayName
+        value: Administrator
+      # --- Cloudinary (persistent image storage - free at cloudinary.com) ---
+      - key: Cloudinary__CloudName
+        sync: false  # Your Cloudinary cloud name
+      - key: Cloudinary__ApiKey
+        sync: false  # Your Cloudinary API key
+      - key: Cloudinary__ApiSecret
+        sync: false  # Your Cloudinary API secret

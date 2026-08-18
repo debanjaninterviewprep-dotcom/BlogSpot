@@ -1,0 +1,88 @@
+# =========================
+# .NET / C# Backend
+# =========================
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+*.rsuser
+
+# NuGet
+**/packages/
+*.nupkg
+**/[Pp]ackages/
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+bld/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio cache/options
+.vs/
+*.VisualState.xml
+
+# =========================
+# Angular / Node.js Frontend
+# =========================
+blogspot-client/node_modules/
+blogspot-client/dist/
+blogspot-client/.angular/
+blogspot-client/.sass-cache/
+blogspot-client/tmp/
+blogspot-client/connect.lock
+blogspot-client/coverage/
+blogspot-client/libpeerconnection.log
+blogspot-client/testem.log
+blogspot-client/typings/
+
+# =========================
+# OS Generated Files
+# =========================
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+*.swp
+*.swo
+
+# =========================
+# IDE
+# =========================
+.idea/
+.vscode/
+*.code-workspace
+
+# =========================
+# Secrets (NEVER commit)
+# =========================
+appsettings.Production.json
+*.pfx
+*.key
+
+# =========================
+# Uploads (user content)
+# =========================
+src/BlogSpot.API/wwwroot/uploads/*
+!src/BlogSpot.API/wwwroot/uploads/.gitkeep
+
+# =========================
+# Logs
+# =========================
+src/BlogSpot.API/logs/
+*.log
+
+# =========================
+# Backups
+# =========================
+BackUps/

@@ -1,0 +1,50 @@
+# docker-compose.yml — for local testing with Docker
+# Run: docker-compose up --build
+version: '3.8'
+
+services:
+  # SQL Server Database
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      SA_PASSWORD: "BlogSpot@2024!"
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Express"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqldata:/var/opt/mssql
+
+  # .NET Backend API
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:8080"
+    depends_on:
+      - db
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Server=db;Database=BlogSpotDb;User Id=sa;Password=BlogSpot@2024!;TrustServerCertificate=True
+      - Jwt__Key=YourSuperSecretKeyThatShouldBeAtLeast32CharactersLong!2024
+      - Jwt__Issuer=BlogSpot.API
+      - Jwt__Audience=BlogSpot.Client
+      - Jwt__ExpirationInHours=24
+      - Cors__AllowedOrigins__0=http://localhost:4200
+      - Cors__AllowedOrigins__1=http://localhost
+
+  # Angular Frontend
+  client:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    environment:
+      - API_URL=http://api:8080
+
+volumes:
+  sqldata:

@@ -1,0 +1,7 @@
+{
+  "buildCommand": "npm run build -- --configuration production",
+  "outputDirectory": "dist/blogspot-client",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
