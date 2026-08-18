@@ -82,9 +82,9 @@ import { MatSnackBar } from '@angular/material/snack-bar';
         <app-loading-spinner [inline]="true" *ngIf="loading && posts.length > 0"></app-loading-spinner>
       </div>
 
-      <!-- Sidebar: Suggested Users -->
-      <div class="feed-sidebar" *ngIf="authService.isLoggedIn && suggestedUsers.length > 0">
-        <div class="sidebar-card">
+      <!-- Sidebar: Suggested Users (logged in) or Join promo (guests) -->
+      <div class="feed-sidebar" *ngIf="(authService.isLoggedIn && suggestedUsers.length > 0) || !authService.isLoggedIn">
+        <div class="sidebar-card" *ngIf="authService.isLoggedIn && suggestedUsers.length > 0">
           <h3 class="sidebar-title">Who to Follow</h3>
           <app-user-card *ngFor="let user of (sidebarExpanded ? suggestedUsers : suggestedUsers.slice(0,3))"
                          [user]="user"
@@ -92,6 +92,14 @@ import { MatSnackBar } from '@angular/material/snack-bar';
           </app-user-card>
           <a *ngIf="!sidebarExpanded && suggestedUsers.length > 3" class="sidebar-show-more" (click)="sidebarExpanded = true">Show more</a>
           <a *ngIf="sidebarExpanded && suggestedUsers.length > 3" class="sidebar-show-more" (click)="sidebarExpanded = false">Show less</a>
+        </div>
+
+        <div class="sidebar-card guest-promo" *ngIf="!authService.isLoggedIn">
+          <mat-icon class="guest-promo-icon">auto_awesome</mat-icon>
+          <h3 class="sidebar-title">New to BlogSpot?</h3>
+          <p class="guest-promo-text">Join to follow your favorite writers, react to posts, and get a personalized feed.</p>
+          <a routerLink="/auth/register" class="guest-promo-btn">Create account</a>
+          <a routerLink="/auth/login" class="guest-promo-link">Sign in</a>
         </div>
       </div>
 
@@ -212,6 +220,43 @@ import { MatSnackBar } from '@angular/material/snack-bar';
       font-family: inherit;
     }
     .sidebar-show-more:hover { text-decoration: underline; }
+    /* ---- Guest promo sidebar ---- */
+    .guest-promo { padding: 24px 20px; text-align: center; }
+    .guest-promo-icon {
+      font-size: 32px; width: 32px; height: 32px;
+      color: var(--color-primary);
+      margin-bottom: 8px;
+    }
+    .guest-promo .sidebar-title { padding: 0; text-align: center; }
+    .guest-promo-text {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-secondary);
+      line-height: 1.5;
+      margin: 8px 0 16px;
+    }
+    .guest-promo-btn {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px;
+      border-radius: 24px;
+      background: var(--gradient-primary);
+      color: #fff;
+      text-decoration: none;
+      font-weight: var(--font-weight-bold);
+      font-size: var(--font-size-base);
+      margin-bottom: 10px;
+      transition: opacity 0.15s;
+    }
+    .guest-promo-btn:hover { opacity: 0.85; }
+    .guest-promo-link {
+      display: block;
+      color: var(--color-primary);
+      text-decoration: none;
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
+    }
+    .guest-promo-link:hover { text-decoration: underline; }
     /* ---- Mobile suggestions ---- */
     .mobile-suggestions { display: none; }
     .suggestions-scroll-card { border-bottom: 1px solid var(--color-border); padding: 16px 0; }
