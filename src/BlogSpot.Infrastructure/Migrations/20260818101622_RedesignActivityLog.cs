@@ -11,6 +11,10 @@ namespace BlogSpot.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            var isNpgsql = migrationBuilder.ActiveProvider == "Npgsql.EntityFrameworkCore.PostgreSQL";
+            var varchar100 = isNpgsql ? "character varying(100)" : "nvarchar(100)";
+            var varchar1000 = isNpgsql ? "character varying(1000)" : "nvarchar(1000)";
+
             migrationBuilder.DropForeignKey(
                 name: "FK_ActivityLogs_Users_UserId",
                 table: "ActivityLogs");
@@ -58,7 +62,7 @@ namespace BlogSpot.Infrastructure.Migrations
             migrationBuilder.AddColumn<string>(
                 name: "Logger",
                 table: "ActivityLogs",
-                type: "nvarchar(100)",
+                type: varchar100,
                 maxLength: 100,
                 nullable: false,
                 defaultValue: "");
@@ -66,7 +70,7 @@ namespace BlogSpot.Infrastructure.Migrations
             migrationBuilder.AddColumn<string>(
                 name: "Message",
                 table: "ActivityLogs",
-                type: "nvarchar(1000)",
+                type: varchar1000,
                 maxLength: 1000,
                 nullable: true);
         }
@@ -74,6 +78,16 @@ namespace BlogSpot.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            var isNpgsql = migrationBuilder.ActiveProvider == "Npgsql.EntityFrameworkCore.PostgreSQL";
+            var varcharMax = isNpgsql ? "text" : "nvarchar(max)";
+            var varchar200 = isNpgsql ? "character varying(200)" : "nvarchar(200)";
+            var varchar50 = isNpgsql ? "character varying(50)" : "nvarchar(50)";
+            var varchar10 = isNpgsql ? "character varying(10)" : "nvarchar(10)";
+            var varchar45 = isNpgsql ? "character varying(45)" : "nvarchar(45)";
+            var varchar500 = isNpgsql ? "character varying(500)" : "nvarchar(500)";
+            var intType = isNpgsql ? "integer" : "int";
+            var guidType = isNpgsql ? "uuid" : "uniqueidentifier";
+
             migrationBuilder.DropColumn(
                 name: "Logger",
                 table: "ActivityLogs");
@@ -85,13 +99,13 @@ namespace BlogSpot.Infrastructure.Migrations
             migrationBuilder.AddColumn<string>(
                 name: "Details",
                 table: "ActivityLogs",
-                type: "nvarchar(max)",
+                type: varcharMax,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "Endpoint",
                 table: "ActivityLogs",
-                type: "nvarchar(200)",
+                type: varchar200,
                 maxLength: 200,
                 nullable: false,
                 defaultValue: "");
@@ -99,21 +113,21 @@ namespace BlogSpot.Infrastructure.Migrations
             migrationBuilder.AddColumn<string>(
                 name: "EntityId",
                 table: "ActivityLogs",
-                type: "nvarchar(50)",
+                type: varchar50,
                 maxLength: 50,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "EntityType",
                 table: "ActivityLogs",
-                type: "nvarchar(50)",
+                type: varchar50,
                 maxLength: 50,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "HttpMethod",
                 table: "ActivityLogs",
-                type: "nvarchar(10)",
+                type: varchar10,
                 maxLength: 10,
                 nullable: false,
                 defaultValue: "");
@@ -121,27 +135,27 @@ namespace BlogSpot.Infrastructure.Migrations
             migrationBuilder.AddColumn<string>(
                 name: "IpAddress",
                 table: "ActivityLogs",
-                type: "nvarchar(45)",
+                type: varchar45,
                 maxLength: 45,
                 nullable: true);
 
             migrationBuilder.AddColumn<int>(
                 name: "StatusCode",
                 table: "ActivityLogs",
-                type: "int",
+                type: intType,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "UserAgent",
                 table: "ActivityLogs",
-                type: "nvarchar(500)",
+                type: varchar500,
                 maxLength: 500,
                 nullable: true);
 
             migrationBuilder.AddColumn<Guid>(
                 name: "UserId",
                 table: "ActivityLogs",
-                type: "uniqueidentifier",
+                type: guidType,
                 nullable: true);
 
             migrationBuilder.CreateIndex(
