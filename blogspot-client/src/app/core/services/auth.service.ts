@@ -45,6 +45,8 @@ export class AuthService {
   }
 
   logout(): void {
+    // Fire-and-forget: record the logout server-side, but don't block clearing local session on failure
+    this.http.post(`${this.apiUrl}/logout`, {}).subscribe({ error: () => {} });
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');

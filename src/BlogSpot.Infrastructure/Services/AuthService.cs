@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using BlogSpot.Application.Constants;
 using BlogSpot.Application.DTOs.Auth;
 using BlogSpot.Application.Interfaces;
 using BlogSpot.Domain.Entities;
@@ -17,12 +18,14 @@ public class AuthService : IAuthService
     private readonly IUnitOfWork _uow;
     private readonly IConfiguration _config;
     private readonly IEmailQueueService _emailQueueService;
+    private readonly IActivityLogService _log;
 
-    public AuthService(IUnitOfWork uow, IConfiguration config, IEmailQueueService emailQueueService)
+    public AuthService(IUnitOfWork uow, IConfiguration config, IEmailQueueService emailQueueService, IActivityLogService log)
     {
         _uow = uow;
         _config = config;
         _emailQueueService = emailQueueService;
+        _log = log;
     }
 
     public async Task<AuthResponseDto> RegisterAsync(RegisterDto dto, CancellationToken ct = default)
@@ -54,6 +57,8 @@ public class AuthService : IAuthService
         await _uow.Profiles.AddAsync(profile, ct);
 
         await _uow.SaveChangesAsync(ct);
+
+        await _log.Info(ActivityActions.Register, nameof(AuthService), user.UserName, ct: ct);
 
         // Send welcome email
         await _emailQueueService.EnqueueAsync(user.Email,
@@ -90,7 +95,14 @@ public class AuthService : IAuthService
         if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
             throw new UnauthorizedAccessException("Invalid email or password.");
 
+        await _log.Info(ActivityActions.Login, nameof(AuthService), user.UserName, ct: ct);
+
         return GenerateAuthResponse(user, user.Profile);
+    }
+
+    public async Task LogoutAsync(string? userName, CancellationToken ct = default)
+    {
+        await _log.Info(ActivityActions.Logout, nameof(AuthService), userName, ct: ct);
     }
 
     public async Task<AuthResponseDto> RefreshTokenAsync(string refreshToken, CancellationToken ct = default)

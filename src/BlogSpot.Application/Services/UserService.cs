@@ -1,3 +1,4 @@
+using BlogSpot.Application.Constants;
 using BlogSpot.Application.DTOs.Common;
 using BlogSpot.Application.DTOs.User;
 using BlogSpot.Application.Interfaces;
@@ -15,11 +16,13 @@ public class UserService : IUserService
 {
     private readonly IUnitOfWork _uow;
     private readonly INotificationService _notificationService;
+    private readonly IActivityLogService _log;
 
-    public UserService(IUnitOfWork uow, INotificationService notificationService)
+    public UserService(IUnitOfWork uow, INotificationService notificationService, IActivityLogService log)
     {
         _uow = uow;
         _notificationService = notificationService;
+        _log = log;
     }
 
     public async Task<UserProfileDto?> GetProfileAsync(Guid userId, Guid? currentUserId = null, CancellationToken ct = default)
@@ -137,6 +140,7 @@ public class UserService : IUserService
         {
             user.Following.Remove(existingFollow);
             await _uow.SaveChangesAsync(ct);
+            await _log.Info(ActivityActions.Unfollow, nameof(UserService), user.UserName, followingUser.UserName, ct);
             return false;
         }
 
@@ -146,12 +150,12 @@ public class UserService : IUserService
             FollowingId = followingId
         });
         await _uow.SaveChangesAsync(ct);
+        await _log.Info(ActivityActions.Follow, nameof(UserService), user.UserName, followingUser.UserName, ct);
 
         // Notify followed user
-        var follower = await _uow.Users.GetByIdAsync(followerId, ct);
         await _notificationService.CreateNotificationAsync(
             followingId, followerId, "Follow",
-            $"{follower?.UserName} started following you",
+            $"{user.UserName} started following you",
             null, ct);
 
         return true;

@@ -3,6 +3,7 @@ using BlogSpot.Application.DTOs.Auth;
 using BlogSpot.Application.Interfaces;
 using BlogSpot.Domain.Enums;
 using BlogSpot.Infrastructure.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -98,6 +99,14 @@ public class AuthController : ControllerBase
     {
         var result = await _authService.RefreshTokenAsync(request.RefreshToken, ct);
         return Ok(result);
+    }
+
+    [HttpPost("logout")]
+    [Authorize]
+    public async Task<ActionResult> Logout(CancellationToken ct)
+    {
+        await _authService.LogoutAsync(User.Identity?.Name, ct);
+        return Ok();
     }
 
     /// <summary>

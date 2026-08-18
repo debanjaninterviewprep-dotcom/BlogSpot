@@ -1,3 +1,4 @@
+using BlogSpot.Application.Constants;
 using BlogSpot.Application.DTOs.Admin;
 using BlogSpot.Application.DTOs.Common;
 using BlogSpot.Application.Interfaces;
@@ -13,12 +14,14 @@ public class AdminService : IAdminService
     private readonly IUnitOfWork _uow;
     private readonly DbContext _dbContext;
     private readonly IEmailQueueService _emailQueueService;
+    private readonly IActivityLogService _log;
 
-    public AdminService(IUnitOfWork uow, DbContext dbContext, IEmailQueueService emailQueueService)
+    public AdminService(IUnitOfWork uow, DbContext dbContext, IEmailQueueService emailQueueService, IActivityLogService log)
     {
         _uow = uow;
         _dbContext = dbContext;
         _emailQueueService = emailQueueService;
+        _log = log;
     }
 
     public async Task<PagedResult<AdminUserDto>> GetAllUsersAsync(PaginationParams pagination, CancellationToken ct = default)
@@ -53,7 +56,7 @@ public class AdminService : IAdminService
         };
     }
 
-    public async Task ToggleUserActiveStatusAsync(Guid userId, CancellationToken ct = default)
+    public async Task ToggleUserActiveStatusAsync(Guid userId, string? actorUserName = null, CancellationToken ct = default)
     {
         var user = await _uow.Users.GetByIdAsync(userId, ct)
             ?? throw new KeyNotFoundException("User not found.");
@@ -65,6 +68,7 @@ public class AdminService : IAdminService
 
         // Email notification
         var status = user.IsActive ? "activated" : "deactivated";
+        await _log.Info(ActivityActions.AdminAction, nameof(AdminService), actorUserName, $"{status} user '{user.UserName}'", ct);
         await _emailQueueService.EnqueueAsync(user.Email,
             $"BlogSpot - Your account has been {status}",
             $@"<div style='font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px'>
@@ -76,7 +80,7 @@ public class AdminService : IAdminService
             </div>", ct);
     }
 
-    public async Task ChangeUserRoleAsync(Guid userId, string role, CancellationToken ct = default)
+    public async Task ChangeUserRoleAsync(Guid userId, string role, string? actorUserName = null, CancellationToken ct = default)
     {
         var user = await _uow.Users.GetByIdAsync(userId, ct)
             ?? throw new KeyNotFoundException("User not found.");
@@ -88,6 +92,8 @@ public class AdminService : IAdminService
         user.UpdatedAt = DateTime.UtcNow;
         _uow.Users.Update(user);
         await _uow.SaveChangesAsync(ct);
+
+        await _log.Info(ActivityActions.AdminAction, nameof(AdminService), actorUserName, $"Changed role of '{user.UserName}' to {role}", ct);
 
         // Email notification
         await _emailQueueService.EnqueueAsync(user.Email,
@@ -134,7 +140,7 @@ public class AdminService : IAdminService
         };
     }
 
-    public async Task AdminDeletePostAsync(Guid postId, CancellationToken ct = default)
+    public async Task AdminDeletePostAsync(Guid postId, string? actorUserName = null, CancellationToken ct = default)
     {
         var post = await _uow.BlogPosts.Query()
             .Include(p => p.Author)
@@ -148,6 +154,8 @@ public class AdminService : IAdminService
         post.IsDeleted = true;
         _uow.BlogPosts.Update(post);
         await _uow.SaveChangesAsync(ct);
+
+        await _log.Info(ActivityActions.AdminAction, nameof(AdminService), actorUserName, $"Deleted post '{postTitle}' by {authorName}", ct);
 
         // Email notification to author
         await _emailQueueService.EnqueueAsync(authorEmail,
@@ -190,7 +198,7 @@ public class AdminService : IAdminService
         };
     }
 
-    public async Task AdminDeleteCommentAsync(Guid commentId, CancellationToken ct = default)
+    public async Task AdminDeleteCommentAsync(Guid commentId, string? actorUserName = null, CancellationToken ct = default)
     {
         var comment = await _uow.Comments.Query()
             .Include(c => c.User)
@@ -204,6 +212,8 @@ public class AdminService : IAdminService
         comment.IsDeleted = true;
         _uow.Comments.Update(comment);
         await _uow.SaveChangesAsync(ct);
+
+        await _log.Info(ActivityActions.AdminAction, nameof(AdminService), actorUserName, $"Deleted comment by {userName}", ct);
 
         // Email notification to comment author
         await _emailQueueService.EnqueueAsync(userEmail,

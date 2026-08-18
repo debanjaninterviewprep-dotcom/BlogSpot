@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using BlogSpot.Application.Constants;
 using BlogSpot.Application.DTOs.Blog;
 using BlogSpot.Application.DTOs.Common;
 using BlogSpot.Application.Interfaces;
@@ -20,12 +21,14 @@ public class BlogService : IBlogService
     private readonly IUnitOfWork _uow;
     private readonly INotificationService _notificationService;
     private readonly IEmailQueueService _emailQueueService;
+    private readonly IActivityLogService _log;
 
-    public BlogService(IUnitOfWork uow, INotificationService notificationService, IEmailQueueService emailQueueService)
+    public BlogService(IUnitOfWork uow, INotificationService notificationService, IEmailQueueService emailQueueService, IActivityLogService log)
     {
         _uow = uow;
         _notificationService = notificationService;
         _emailQueueService = emailQueueService;
+        _log = log;
     }
 
     // --- CRUD ---
@@ -61,6 +64,10 @@ public class BlogService : IBlogService
 
         // If admin posts, email all users
         var author = await _uow.Users.GetByIdAsync(userId, ct);
+
+        if (post.IsPublished)
+            await _log.Info(ActivityActions.PostBlog, nameof(BlogService), author?.UserName, post.Title, ct);
+
         if (author?.Role == Domain.Enums.UserRole.Admin && post.IsPublished)
         {
             var allEmails = await _uow.Users.Query()
@@ -112,6 +119,9 @@ public class BlogService : IBlogService
         // Sync tags
         await SyncTagsAsync(post.Id, dto.Tags, ct);
 
+        var editor = await _uow.Users.GetByIdAsync(userId, ct);
+        await _log.Info(ActivityActions.UpdatePost, nameof(BlogService), editor?.UserName, post.Title, ct);
+
         return await GetPostByIdAsync(postId, userId, ct)
             ?? throw new InvalidOperationException("Failed to retrieve updated post.");
     }
@@ -127,6 +137,9 @@ public class BlogService : IBlogService
         post.IsDeleted = true;
         _uow.BlogPosts.Update(post);
         await _uow.SaveChangesAsync(ct);
+
+        var actor = await _uow.Users.GetByIdAsync(userId, ct);
+        await _log.Info(ActivityActions.DeletePost, nameof(BlogService), actor?.UserName, post.Title, ct);
     }
 
     public async Task<BlogPostDto?> GetPostByIdAsync(Guid postId, Guid? currentUserId = null, CancellationToken ct = default)
@@ -376,13 +389,15 @@ public class BlogService : IBlogService
         await _uow.Comments.AddAsync(comment, ct);
         await _uow.SaveChangesAsync(ct);
 
+        var commenter = await _uow.Users.GetByIdAsync(userId, ct);
+        await _log.Info(ActivityActions.Comment, nameof(BlogService), commenter?.UserName, ct: ct);
+
         // Notify post author
         if (post.AuthorId != userId)
         {
-            var user = await _uow.Users.GetByIdAsync(userId, ct);
             await _notificationService.CreateNotificationAsync(
                 post.AuthorId, userId, "Comment",
-                $"{user?.UserName} commented on your post",
+                $"{commenter?.UserName} commented on your post",
                 postId, ct);
         }
 
@@ -409,6 +424,9 @@ public class BlogService : IBlogService
         comment.IsDeleted = true;
         _uow.Comments.Update(comment);
         await _uow.SaveChangesAsync(ct);
+
+        var actor = await _uow.Users.GetByIdAsync(userId, ct);
+        await _log.Info(ActivityActions.DeleteComment, nameof(BlogService), actor?.UserName, ct: ct);
     }
 
     public async Task<PagedResult<CommentDto>> GetCommentsAsync(Guid postId, PaginationParams pagination, Guid? currentUserId = null, CancellationToken ct = default)
@@ -438,6 +456,7 @@ public class BlogService : IBlogService
 
     public async Task<bool> ToggleCommentLikeAsync(Guid userId, Guid commentId, CancellationToken ct = default)
     {
+        var actor = await _uow.Users.GetByIdAsync(userId, ct);
         var existing = await _uow.CommentLikes.Query()
             .FirstOrDefaultAsync(cl => cl.UserId == userId && cl.CommentId == commentId, ct);
 
@@ -445,6 +464,7 @@ public class BlogService : IBlogService
         {
             _uow.CommentLikes.Remove(existing);
             await _uow.SaveChangesAsync(ct);
+            await _log.Info(ActivityActions.LikeComment, nameof(BlogService), actor?.UserName, "Unliked", ct);
             return false; // unliked
         }
 
@@ -454,15 +474,15 @@ public class BlogService : IBlogService
             CommentId = commentId
         }, ct);
         await _uow.SaveChangesAsync(ct);
+        await _log.Info(ActivityActions.LikeComment, nameof(BlogService), actor?.UserName, "Liked", ct);
 
         // Notify comment author
         var comment = await _uow.Comments.GetByIdAsync(commentId, ct);
         if (comment != null && comment.UserId != userId)
         {
-            var user = await _uow.Users.GetByIdAsync(userId, ct);
             await _notificationService.CreateNotificationAsync(
                 comment.UserId, userId, "CommentLike",
-                $"{user?.UserName} liked your comment",
+                $"{actor?.UserName} liked your comment",
                 comment.BlogPostId, ct);
         }
 
@@ -552,6 +572,9 @@ public class BlogService : IBlogService
         }
 
         await _uow.SaveChangesAsync(ct);
+
+        var author = await _uow.Users.GetByIdAsync(userId, ct);
+        await _log.Info(ActivityActions.DraftSaved, nameof(BlogService), author?.UserName, draft.Title, ct);
 
         return new DraftBlogDto
         {

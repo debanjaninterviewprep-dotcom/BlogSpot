@@ -195,7 +195,6 @@ app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "BlogSpot AP
 app.UseForwardedHeaders(); // must be first so real client IP is available to rate limiter
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
-app.UseMiddleware<ActivityLoggingMiddleware>();
 
 // Only redirect to HTTPS in development (Render handles SSL at proxy level)
 if (app.Environment.IsDevelopment())

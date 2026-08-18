@@ -4,20 +4,9 @@ namespace BlogSpot.Application.Interfaces;
 
 public interface IActivityLogService
 {
-    Task LogAsync(
-        string action,
-        string httpMethod,
-        string endpoint,
-        Guid? userId = null,
-        string? userName = null,
-        string? entityType = null,
-        string? entityId = null,
-        string? details = null,
-        Domain.Enums.LogLevel level = Domain.Enums.LogLevel.Info,
-        string? ipAddress = null,
-        string? userAgent = null,
-        int? statusCode = null,
-        CancellationToken ct = default);
+    Task Info(string action, string logger, string? userName = null, string? message = null, CancellationToken ct = default);
+    Task Warn(string action, string logger, string? userName = null, string? message = null, CancellationToken ct = default);
+    Task Error(string action, string logger, string? userName = null, string? message = null, CancellationToken ct = default);
 
     Task<PagedResult<ActivityLogDto>> GetLogsAsync(ActivityLogFilterDto filter, CancellationToken ct = default);
 }
@@ -25,18 +14,11 @@ public interface IActivityLogService
 public class ActivityLogDto
 {
     public long Id { get; set; }
-    public Guid? UserId { get; set; }
-    public string? UserName { get; set; }
     public string Action { get; set; } = string.Empty;
-    public string? EntityType { get; set; }
-    public string? EntityId { get; set; }
-    public string? Details { get; set; }
+    public string Logger { get; set; } = string.Empty;
     public string Level { get; set; } = string.Empty;
-    public string? IpAddress { get; set; }
-    public string? UserAgent { get; set; }
-    public string HttpMethod { get; set; } = string.Empty;
-    public string Endpoint { get; set; } = string.Empty;
-    public int? StatusCode { get; set; }
+    public string? Message { get; set; }
+    public string? UserName { get; set; }
     public DateTime Timestamp { get; set; }
 }
 
@@ -52,10 +34,9 @@ public class ActivityLogFilterDto
         set => _pageSize = value > MaxPageSize ? MaxPageSize : value;
     }
 
-    public Guid? UserId { get; set; }
     public string? Action { get; set; }
-    public string? EntityType { get; set; }
     public string? Level { get; set; }
     public DateTime? From { get; set; }
     public DateTime? To { get; set; }
 }
+

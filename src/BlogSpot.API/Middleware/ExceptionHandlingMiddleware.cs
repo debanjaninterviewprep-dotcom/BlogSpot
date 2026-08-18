@@ -1,5 +1,7 @@
 using System.Net;
 using System.Text.Json;
+using BlogSpot.Application.Constants;
+using BlogSpot.Application.Interfaces;
 
 namespace BlogSpot.API.Middleware;
 
@@ -14,7 +16,7 @@ public class ExceptionHandlingMiddleware
         _logger = logger;
     }
 
-    public async Task InvokeAsync(HttpContext context)
+    public async Task InvokeAsync(HttpContext context, IActivityLogService log)
     {
         try
         {
@@ -23,6 +25,19 @@ public class ExceptionHandlingMiddleware
         catch (Exception ex)
         {
             _logger.LogError(ex, "An unhandled exception occurred.");
+            try
+            {
+                await log.Error(
+                    ActivityActions.UnhandledException,
+                    nameof(ExceptionHandlingMiddleware),
+                    context.User.Identity?.Name,
+                    ex.Message,
+                    CancellationToken.None);
+            }
+            catch
+            {
+                // Never let logging failures mask the original exception
+            }
             await HandleExceptionAsync(context, ex);
         }
     }

@@ -13,13 +13,13 @@ public class AdminController : ControllerBase
 {
     private readonly IAdminService _adminService;
     private readonly IEmailQueueService _emailQueueService;
-    private readonly IActivityLogService _activityLogService;
+    private readonly IActivityLogService _log;
 
-    public AdminController(IAdminService adminService, IEmailQueueService emailQueueService, IActivityLogService activityLogService)
+    public AdminController(IAdminService adminService, IEmailQueueService emailQueueService, IActivityLogService log)
     {
         _adminService = adminService;
         _emailQueueService = emailQueueService;
-        _activityLogService = activityLogService;
+        _log = log;
     }
 
     // --- Users ---
@@ -35,14 +35,14 @@ public class AdminController : ControllerBase
     [HttpPut("users/{userId:guid}/toggle-status")]
     public async Task<ActionResult> ToggleUserStatus(Guid userId, CancellationToken ct)
     {
-        await _adminService.ToggleUserActiveStatusAsync(userId, ct);
+        await _adminService.ToggleUserActiveStatusAsync(userId, User.Identity?.Name, ct);
         return NoContent();
     }
 
     [HttpPut("users/{userId:guid}/role")]
     public async Task<ActionResult> ChangeRole(Guid userId, [FromBody] ChangeRoleRequest request, CancellationToken ct)
     {
-        await _adminService.ChangeUserRoleAsync(userId, request.Role, ct);
+        await _adminService.ChangeUserRoleAsync(userId, request.Role, User.Identity?.Name, ct);
         return NoContent();
     }
 
@@ -59,7 +59,7 @@ public class AdminController : ControllerBase
     [HttpDelete("posts/{postId:guid}")]
     public async Task<ActionResult> DeletePost(Guid postId, CancellationToken ct)
     {
-        await _adminService.AdminDeletePostAsync(postId, ct);
+        await _adminService.AdminDeletePostAsync(postId, User.Identity?.Name, ct);
         return NoContent();
     }
 
@@ -76,7 +76,7 @@ public class AdminController : ControllerBase
     [HttpDelete("comments/{commentId:guid}")]
     public async Task<ActionResult> DeleteComment(Guid commentId, CancellationToken ct)
     {
-        await _adminService.AdminDeleteCommentAsync(commentId, ct);
+        await _adminService.AdminDeleteCommentAsync(commentId, User.Identity?.Name, ct);
         return NoContent();
     }
 
@@ -127,7 +127,7 @@ public class AdminController : ControllerBase
     public async Task<ActionResult<PagedResult<ActivityLogDto>>> GetActivityLogs(
         [FromQuery] ActivityLogFilterDto filter, CancellationToken ct)
     {
-        var result = await _activityLogService.GetLogsAsync(filter, ct);
+        var result = await _log.GetLogsAsync(filter, ct);
         return Ok(result);
     }
 }

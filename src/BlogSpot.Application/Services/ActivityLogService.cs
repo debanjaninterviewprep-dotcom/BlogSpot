@@ -15,35 +15,24 @@ public class ActivityLogService : IActivityLogService
         _dbContext = dbContext;
     }
 
-    public async Task LogAsync(
-        string action,
-        string httpMethod,
-        string endpoint,
-        Guid? userId = null,
-        string? userName = null,
-        string? entityType = null,
-        string? entityId = null,
-        string? details = null,
-        LogLevel level = LogLevel.Info,
-        string? ipAddress = null,
-        string? userAgent = null,
-        int? statusCode = null,
-        CancellationToken ct = default)
+    public Task Info(string action, string logger, string? userName = null, string? message = null, CancellationToken ct = default)
+        => WriteAsync(action, logger, LogLevel.Info, userName, message, ct);
+
+    public Task Warn(string action, string logger, string? userName = null, string? message = null, CancellationToken ct = default)
+        => WriteAsync(action, logger, LogLevel.Warning, userName, message, ct);
+
+    public Task Error(string action, string logger, string? userName = null, string? message = null, CancellationToken ct = default)
+        => WriteAsync(action, logger, LogLevel.Error, userName, message, ct);
+
+    private async Task WriteAsync(string action, string logger, LogLevel level, string? userName, string? message, CancellationToken ct)
     {
         var log = new ActivityLog
         {
-            UserId = userId,
-            UserName = userName,
             Action = action,
-            EntityType = entityType,
-            EntityId = entityId,
-            Details = details,
+            Logger = logger,
             Level = level,
-            IpAddress = ipAddress,
-            UserAgent = userAgent,
-            HttpMethod = httpMethod,
-            Endpoint = endpoint,
-            StatusCode = statusCode,
+            UserName = userName,
+            Message = message,
             Timestamp = DateTime.UtcNow
         };
 
@@ -55,14 +44,8 @@ public class ActivityLogService : IActivityLogService
     {
         var query = _dbContext.Set<ActivityLog>().AsQueryable();
 
-        if (filter.UserId.HasValue)
-            query = query.Where(l => l.UserId == filter.UserId.Value);
-
         if (!string.IsNullOrEmpty(filter.Action))
             query = query.Where(l => l.Action.Contains(filter.Action));
-
-        if (!string.IsNullOrEmpty(filter.EntityType))
-            query = query.Where(l => l.EntityType == filter.EntityType);
 
         if (!string.IsNullOrEmpty(filter.Level))
             query = query.Where(l => l.Level.ToString() == filter.Level);
@@ -82,18 +65,11 @@ public class ActivityLogService : IActivityLogService
             .Select(l => new ActivityLogDto
             {
                 Id = l.Id,
-                UserId = l.UserId,
-                UserName = l.UserName,
                 Action = l.Action,
-                EntityType = l.EntityType,
-                EntityId = l.EntityId,
-                Details = l.Details,
+                Logger = l.Logger,
                 Level = l.Level.ToString(),
-                IpAddress = l.IpAddress,
-                UserAgent = l.UserAgent,
-                HttpMethod = l.HttpMethod,
-                Endpoint = l.Endpoint,
-                StatusCode = l.StatusCode,
+                Message = l.Message,
+                UserName = l.UserName,
                 Timestamp = l.Timestamp
             })
             .ToListAsync(ct);
