@@ -45,12 +45,18 @@ import { MatSnackBar } from '@angular/material/snack-bar';
         </div>
 
         <!-- Empty state -->
-        <div *ngIf="!loading && posts.length === 0" class="empty-state">
+        <div *ngIf="!loading && !loadError && posts.length === 0" class="empty-state">
           <mat-icon class="empty-icon-float">article</mat-icon>
           <h3>No posts yet</h3>
           <p *ngIf="activeFilter === 'feed'">Follow some users or check Trending!</p>
           <p *ngIf="activeFilter !== 'feed'">Be the first to create a post!</p>
         </div>
+
+        <!-- Error state -->
+        <app-error-state *ngIf="loadError && posts.length === 0"
+                         message="Failed to load posts. Please check your connection and try again."
+                         (onRetry)="loadPosts(true)">
+        </app-error-state>
 
         <!-- Posts -->
         <ng-container *ngFor="let post of posts; let i = index">
@@ -269,6 +275,7 @@ export class FeedComponent implements OnInit {
   posts: BlogPost[] = [];
   suggestedUsers: UserProfile[] = [];
   loading = false;
+  loadError = false;
   page = 1;
   hasMore = false;
   activeFilter: 'feed' | 'latest' | 'trending' = 'feed';
@@ -306,22 +313,23 @@ export class FeedComponent implements OnInit {
   loadPosts(reset = false): void {
     if (reset) { this.posts = []; this.page = 1; this.hasMore = false; }
     this.loading = true;
+    this.loadError = false;
     const pagination = { page: this.page, pageSize: 10 };
 
     if (this.activeFilter === 'feed' && this.authService.isLoggedIn) {
       this.feedService.getHomeFeed(pagination).subscribe({
         next: (result: any) => { this.posts = [...this.posts, ...result.items]; this.hasMore = result.hasNextPage; this.loading = false; },
-        error: () => { this.loading = false; this.snackBar.open('Failed to load feed', 'Close', { duration: 3000 }); }
+        error: () => { this.loading = false; this.loadError = true; this.snackBar.open('Failed to load feed', 'Close', { duration: 3000 }); }
       });
     } else if (this.activeFilter === 'trending' || (this.activeFilter === 'feed' && !this.authService.isLoggedIn)) {
       this.feedService.getTrending(pagination).subscribe({
         next: (result: any) => { this.posts = [...this.posts, ...result.items]; this.hasMore = result.hasNextPage; this.loading = false; },
-        error: () => { this.loading = false; }
+        error: () => { this.loading = false; this.loadError = true; }
       });
     } else {
       this.feedService.getLatest(pagination).subscribe({
         next: (result: any) => { this.posts = [...this.posts, ...result.items]; this.hasMore = result.hasNextPage; this.loading = false; },
-        error: () => { this.loading = false; }
+        error: () => { this.loading = false; this.loadError = true; }
       });
     }
   }

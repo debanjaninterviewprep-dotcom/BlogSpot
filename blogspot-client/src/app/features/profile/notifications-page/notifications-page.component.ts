@@ -15,9 +15,22 @@ import { Notification } from '@core/models/notification.model';
         </button>
       </div>
 
-      <app-loading-spinner *ngIf="loading && notifications.length === 0"></app-loading-spinner>
+      <div class="notif-skeleton-list" *ngIf="loading && notifications.length === 0">
+        <div class="notif-skeleton-row" *ngFor="let s of [1,2,3,4]">
+          <div class="skeleton-avatar"></div>
+          <div class="skeleton-lines">
+            <div class="skeleton-text medium"></div>
+            <div class="skeleton-text short"></div>
+          </div>
+        </div>
+      </div>
 
-      <div *ngIf="!loading && notifications.length === 0" class="empty-state">
+      <app-error-state *ngIf="loadError && notifications.length === 0"
+                       message="Failed to load notifications. Please try again."
+                       (onRetry)="retry()">
+      </app-error-state>
+
+      <div *ngIf="!loading && !loadError && notifications.length === 0" class="empty-state">
         <mat-icon>notifications_none</mat-icon>
         <p>No notifications yet</p>
       </div>
@@ -94,11 +107,14 @@ import { Notification } from '@core/models/notification.model';
       display: block; margin: 0 auto 16px; opacity: 0.4;
     }
     .load-more { text-align: center; margin-top: 16px; }
+    .notif-skeleton-row { display: flex; align-items: center; gap: 16px; padding: 12px 16px; }
+    .notif-skeleton-row .skeleton-lines { flex: 1; }
   `]
 })
 export class NotificationsPageComponent implements OnInit {
   notifications: Notification[] = [];
   loading = true;
+  loadError = false;
   page = 1;
   hasMore = false;
 
@@ -118,6 +134,7 @@ export class NotificationsPageComponent implements OnInit {
 
   load(): void {
     this.loading = true;
+    this.loadError = false;
     this.notificationService.getNotifications({ page: this.page, pageSize: 20 }).subscribe({
       next: result => {
         this.notifications = [...this.notifications, ...result.items];
@@ -126,9 +143,14 @@ export class NotificationsPageComponent implements OnInit {
       },
       error: () => {
         this.loading = false;
+        this.loadError = true;
         this.snackBar.open('Failed to load notifications', 'Close', { duration: 3000 });
       }
     });
+  }
+
+  retry(): void {
+    this.load();
   }
 
   loadMore(): void {

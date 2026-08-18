@@ -29,6 +29,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { PostCardComponent } from './components/post-card/post-card.component';
 import { UserCardComponent } from './components/user-card/user-card.component';
 import { LoadingSpinnerComponent } from './components/loading-spinner/loading-spinner.component';
+import { ErrorStateComponent } from './components/error-state/error-state.component';
 import { ImageUrlPipe } from './pipes/image-url.pipe';
 import { FormatContentPipe } from './pipes/format-content.pipe';
 
@@ -61,6 +62,7 @@ const materialModules = [
     PostCardComponent,
     UserCardComponent,
     LoadingSpinnerComponent,
+    ErrorStateComponent,
     ImageUrlPipe,
     FormatContentPipe
   ],
@@ -80,6 +82,7 @@ const materialModules = [
     PostCardComponent,
     UserCardComponent,
     LoadingSpinnerComponent,
+    ErrorStateComponent,
     ImageUrlPipe,
     FormatContentPipe
   ]

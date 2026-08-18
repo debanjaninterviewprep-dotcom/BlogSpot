@@ -86,10 +86,10 @@ import { User } from '../../models/auth.model';
              [routerLinkActiveOptions]="{exact: true}">
             <mat-icon>home</mat-icon>
           </a>
-          <a routerLink="/blog/create" class="nav-btn" matTooltip="New Post" aria-label="New post" routerLinkActive="active">
+          <a routerLink="/blog/create" class="nav-btn hide-mobile" matTooltip="New Post" aria-label="New post" routerLinkActive="active">
             <mat-icon>edit_square</mat-icon>
           </a>
-          <a routerLink="/blog/bookmarks" class="nav-btn" matTooltip="Saved Posts" aria-label="Saved posts" routerLinkActive="active">
+          <a routerLink="/blog/bookmarks" class="nav-btn hide-mobile" matTooltip="Saved Posts" aria-label="Saved posts" routerLinkActive="active">
             <mat-icon>bookmark</mat-icon>
           </a>
 
@@ -129,6 +129,22 @@ import { User } from '../../models/auth.model';
           <a class="nav-btn hide-sm" *ngIf="authService.isAdmin" routerLink="/admin" matTooltip="Admin" aria-label="Admin dashboard" routerLinkActive="active">
             <mat-icon>admin_panel_settings</mat-icon>
           </a>
+
+          <!-- Mobile "more" menu: collapses New Post / Bookmarks / Admin below 600px -->
+          <button class="nav-btn show-mobile-only" [matMenuTriggerFor]="mobileMenu" aria-label="More options" matTooltip="More">
+            <mat-icon>more_horiz</mat-icon>
+          </button>
+          <mat-menu #mobileMenu="matMenu">
+            <button mat-menu-item routerLink="/blog/create">
+              <mat-icon>edit_square</mat-icon><span>New Post</span>
+            </button>
+            <button mat-menu-item routerLink="/blog/bookmarks">
+              <mat-icon>bookmark</mat-icon><span>Saved Posts</span>
+            </button>
+            <button mat-menu-item *ngIf="authService.isAdmin" routerLink="/admin">
+              <mat-icon>admin_panel_settings</mat-icon><span>Admin</span>
+            </button>
+          </mat-menu>
 
           <button class="avatar-btn" [matMenuTriggerFor]="userMenu" aria-label="Account menu">
             <mat-icon class="avatar-icon">account_circle</mat-icon>
@@ -380,6 +396,7 @@ import { User } from '../../models/auth.model';
     .notif-empty { padding: 32px 16px; text-align: center; color: var(--color-text-secondary); font-size: var(--font-size-base); }
     .unread { background-color: var(--color-primary-light); }
     .view-all { text-align: center; width: 100%; color: var(--color-primary); font-weight: var(--font-weight-semibold); font-size: var(--font-size-base); }
+    .show-mobile-only { display: none; }
     @media (max-width: 768px) {
       .search-box { flex: 0 1 240px; margin: 0 8px; }
     }
@@ -391,6 +408,8 @@ import { User } from '../../models/auth.model';
       .logo-text { font-size: 17px; }
       .login-link { font-size: 13px; padding: 6px 12px; white-space: nowrap; }
       .register-btn { font-size: 13px; padding: 6px 12px; white-space: nowrap; }
+      .hide-mobile, .hide-sm { display: none; }
+      .show-mobile-only { display: flex; }
     }
     @media (max-width: 400px) {
       .nav-actions { gap: 0; }

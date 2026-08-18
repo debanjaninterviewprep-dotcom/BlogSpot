@@ -30,6 +30,10 @@ import { ExportService } from '@core/services/export.service';
           <div class="tab-content">
             <div class="tab-toolbar">
               <span class="tab-count">{{ usersTotalCount }} users</span>
+              <div class="tab-search">
+                <mat-icon>search</mat-icon>
+                <input type="text" placeholder="Filter by username or email..." [(ngModel)]="usersFilter">
+              </div>
               <button mat-stroked-button [matMenuTriggerFor]="usersExportMenu" class="export-btn">
                 <mat-icon>download</mat-icon> Export Report
               </button>
@@ -42,7 +46,7 @@ import { ExportService } from '@core/services/export.service';
                 </button>
               </mat-menu>
             </div>
-            <table mat-table [dataSource]="users" class="full-width" multiTemplateDataRows>
+            <table mat-table [dataSource]="filteredUsers" class="full-width" multiTemplateDataRows>
               <ng-container matColumnDef="userName">
                 <th mat-header-cell *matHeaderCellDef>Username</th>
                 <td mat-cell *matCellDef="let user">
@@ -130,6 +134,10 @@ import { ExportService } from '@core/services/export.service';
           <div class="tab-content">
             <div class="tab-toolbar">
               <span class="tab-count">{{ postsTotalCount }} posts</span>
+              <div class="tab-search">
+                <mat-icon>search</mat-icon>
+                <input type="text" placeholder="Filter by title or author..." [(ngModel)]="postsFilter">
+              </div>
               <button mat-stroked-button [matMenuTriggerFor]="postsExportMenu" class="export-btn">
                 <mat-icon>download</mat-icon> Export Report
               </button>
@@ -142,7 +150,7 @@ import { ExportService } from '@core/services/export.service';
                 </button>
               </mat-menu>
             </div>
-            <table mat-table [dataSource]="posts" class="full-width">
+            <table mat-table [dataSource]="filteredPosts" class="full-width">
               <ng-container matColumnDef="title">
                 <th mat-header-cell *matHeaderCellDef>Title</th>
                 <td mat-cell *matCellDef="let post">
@@ -188,6 +196,10 @@ import { ExportService } from '@core/services/export.service';
           <div class="tab-content">
             <div class="tab-toolbar">
               <span class="tab-count">{{ commentsTotalCount }} comments</span>
+              <div class="tab-search">
+                <mat-icon>search</mat-icon>
+                <input type="text" placeholder="Filter by content or user..." [(ngModel)]="commentsFilter">
+              </div>
               <button mat-stroked-button [matMenuTriggerFor]="commentsExportMenu" class="export-btn">
                 <mat-icon>download</mat-icon> Export Report
               </button>
@@ -200,7 +212,7 @@ import { ExportService } from '@core/services/export.service';
                 </button>
               </mat-menu>
             </div>
-            <table mat-table [dataSource]="comments" class="full-width">
+            <table mat-table [dataSource]="filteredComments" class="full-width">
               <ng-container matColumnDef="content">
                 <th mat-header-cell *matHeaderCellDef>Comment</th>
                 <td mat-cell *matCellDef="let c">{{ c.content | slice:0:80 }}</td>
@@ -294,8 +306,33 @@ import { ExportService } from '@core/services/export.service';
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 12px;
       margin-bottom: 12px;
+      flex-wrap: wrap;
     }
+    .tab-search {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+      max-width: 280px;
+      padding: 0 10px;
+      height: 34px;
+      border: 1px solid var(--color-border);
+      border-radius: 20px;
+      background: var(--color-bg-secondary);
+    }
+    .tab-search mat-icon { font-size: 18px; width: 18px; height: 18px; color: var(--color-text-secondary); }
+    .tab-search input {
+      border: none;
+      outline: none;
+      background: transparent;
+      font-size: 13px;
+      width: 100%;
+      color: var(--color-text-primary);
+      font-family: inherit;
+    }
+    .tab-search input::placeholder { color: var(--color-text-secondary); }
     .tab-count {
       font-size: 13px;
       font-weight: 600;
@@ -410,17 +447,20 @@ export class AdminDashboardComponent implements OnInit {
   // Users
   users: AdminUser[] = [];
   usersTotalCount = 0;
+  usersFilter = '';
   editingUserId: string | null = null;
   userColumns = ['userName', 'email', 'role', 'status', 'posts', 'comments', 'joined', 'actions'];
 
   // Posts
   posts: AdminPost[] = [];
   postsTotalCount = 0;
+  postsFilter = '';
   postColumns = ['title', 'author', 'likes', 'comments', 'date', 'actions'];
 
   // Comments
   comments: AdminComment[] = [];
   commentsTotalCount = 0;
+  commentsFilter = '';
   commentColumns = ['content', 'user', 'post', 'date', 'actions'];
 
   // Emails
@@ -430,6 +470,24 @@ export class AdminDashboardComponent implements OnInit {
 
   isSeeding = false;
   isFormatting = false;
+
+  get filteredUsers(): AdminUser[] {
+    const q = this.usersFilter.trim().toLowerCase();
+    if (!q) return this.users;
+    return this.users.filter(u => u.userName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
+  }
+
+  get filteredPosts(): AdminPost[] {
+    const q = this.postsFilter.trim().toLowerCase();
+    if (!q) return this.posts;
+    return this.posts.filter(p => p.title.toLowerCase().includes(q) || p.authorUserName.toLowerCase().includes(q));
+  }
+
+  get filteredComments(): AdminComment[] {
+    const q = this.commentsFilter.trim().toLowerCase();
+    if (!q) return this.comments;
+    return this.comments.filter(c => c.content.toLowerCase().includes(q) || c.userName.toLowerCase().includes(q));
+  }
 
   constructor(
     private adminService: AdminService,

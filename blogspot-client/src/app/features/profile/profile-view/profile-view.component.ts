@@ -12,6 +12,11 @@ import { MatSnackBar } from '@angular/material/snack-bar';
   selector: 'app-profile-view',
   template: `
     <div class="profile-container" *ngIf="profile">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a routerLink="/feed">Feed</a>
+        <mat-icon>chevron_right</mat-icon>
+        <span class="breadcrumb-current">{{ profile.displayName || profile.userName }}</span>
+      </nav>
       <!-- Cover Photo -->
       <div class="cover-photo" [style.backgroundImage]="profile.coverPhotoUrl ? 'url(' + (profile.coverPhotoUrl | imageUrl) + ')' : ''">
         <div class="cover-overlay"></div>
@@ -130,18 +135,42 @@ import { MatSnackBar } from '@angular/material/snack-bar';
         </mat-tab>
         <mat-tab [label]="'Followers (' + profile.followersCount + ')'">
           <div class="tab-content">
+            <div class="user-skeleton-list" *ngIf="loadingFollowers">
+              <div class="user-skeleton-row" *ngFor="let s of [1,2,3]">
+                <div class="skeleton-avatar"></div>
+                <div class="skeleton-lines">
+                  <div class="skeleton-text short"></div>
+                  <div class="skeleton-text medium"></div>
+                </div>
+              </div>
+            </div>
             <app-user-card *ngFor="let user of followers" [user]="user"
                            [showRemove]="isOwnProfile"
                            (onFollow)="toggleFollowUser($event)"
                            (onRemove)="removeFollower($event)">
             </app-user-card>
+            <div *ngIf="!loadingFollowers && followers.length === 0" class="empty-state">
+              <p>No followers yet</p>
+            </div>
           </div>
         </mat-tab>
         <mat-tab [label]="'Following (' + profile.followingCount + ')'">
           <div class="tab-content">
+            <div class="user-skeleton-list" *ngIf="loadingFollowing">
+              <div class="user-skeleton-row" *ngFor="let s of [1,2,3]">
+                <div class="skeleton-avatar"></div>
+                <div class="skeleton-lines">
+                  <div class="skeleton-text short"></div>
+                  <div class="skeleton-text medium"></div>
+                </div>
+              </div>
+            </div>
             <app-user-card *ngFor="let user of following" [user]="user"
                            (onFollow)="toggleFollowUser($event)">
             </app-user-card>
+            <div *ngIf="!loadingFollowing && following.length === 0" class="empty-state">
+              <p>Not following anyone yet</p>
+            </div>
           </div>
         </mat-tab>
       </mat-tab-group>
@@ -151,6 +180,18 @@ import { MatSnackBar } from '@angular/material/snack-bar';
   `,
   styles: [`
     .profile-container { max-width: 900px; margin: 0 auto; border-left: 1px solid var(--color-border); border-right: 1px solid var(--color-border); min-height: 100vh; }
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 12px 16px 0;
+      font-size: var(--font-size-sm);
+      color: var(--color-text-secondary);
+    }
+    .breadcrumb a { color: var(--color-text-secondary); text-decoration: none; }
+    .breadcrumb a:hover { color: var(--color-primary); text-decoration: underline; }
+    .breadcrumb mat-icon { font-size: 16px; width: 16px; height: 16px; }
+    .breadcrumb-current { color: var(--color-text-primary); font-weight: var(--font-weight-medium); }
     .cover-photo {
       height: 200px;
       background: var(--gradient-primary);
@@ -259,7 +300,10 @@ import { MatSnackBar } from '@angular/material/snack-bar';
       top: 2px; left: 2px;
       transition: transform 0.2s;
     }
-    .status-toggle.active .toggle-thumb { transform: translateX(16px); }    .tab-content { padding: 0; }
+    .status-toggle.active .toggle-thumb { transform: translateX(16px); }
+    .tab-content { padding: 0; }
+    .user-skeleton-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; }
+    .user-skeleton-row .skeleton-lines { flex: 1; }
     .empty-state { text-align: center; padding: 48px 24px; color: var(--color-text-secondary); font-size: var(--font-size-base); }
     @media (max-width: 600px) {
       .profile-container { border: none; }
@@ -281,6 +325,8 @@ export class ProfileViewComponent implements OnInit {
   following: UserProfile[] = [];
   loading = true;
   loadingPosts = false;
+  loadingFollowers = false;
+  loadingFollowing = false;
   adminRole = '';
   adminIsActive = true;
   private adminUserId = '';
@@ -380,15 +426,19 @@ export class ProfileViewComponent implements OnInit {
 
   loadFollowers(): void {
     if (!this.profile) return;
+    this.loadingFollowers = true;
     this.userService.getFollowers(this.profile.id, { page: 1, pageSize: 20 }).subscribe({
-      next: (result) => this.followers = result.items
+      next: (result) => { this.followers = result.items; this.loadingFollowers = false; },
+      error: () => this.loadingFollowers = false
     });
   }
 
   loadFollowing(): void {
     if (!this.profile) return;
+    this.loadingFollowing = true;
     this.userService.getFollowing(this.profile.id, { page: 1, pageSize: 20 }).subscribe({
-      next: (result) => this.following = result.items
+      next: (result) => { this.following = result.items; this.loadingFollowing = false; },
+      error: () => this.loadingFollowing = false
     });
   }
 

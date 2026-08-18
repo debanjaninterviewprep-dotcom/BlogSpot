@@ -11,6 +11,11 @@ import { BlogPost, Comment, ReactionType, ReactionSummaryDto } from '@core/model
   template: `
     <div class="read-progress-bar" [style.width.%]="readProgress"></div>
     <div class="detail-container" *ngIf="post">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a routerLink="/feed">Feed</a>
+        <mat-icon>chevron_right</mat-icon>
+        <span class="breadcrumb-current">{{ post.title | slice:0:60 }}{{ post.title.length > 60 ? '...' : '' }}</span>
+      </nav>
       <mat-card class="post-detail">
         <div class="post-header">
           <div class="author-info">
@@ -112,9 +117,17 @@ import { BlogPost, Comment, ReactionType, ReactionSummaryDto } from '@core/model
             </button>
           </form>
 
-          <app-loading-spinner *ngIf="loadingComments"></app-loading-spinner>
+          <div class="comment-skeleton-list" *ngIf="loadingComments && comments.length === 0">
+            <div class="comment-skeleton-row" *ngFor="let s of [1,2,3]">
+              <div class="skeleton-avatar"></div>
+              <div class="skeleton-lines">
+                <div class="skeleton-text short"></div>
+                <div class="skeleton-text medium"></div>
+              </div>
+            </div>
+          </div>
 
-          <div *ngFor="let comment of comments" class="comment">
+          <div *ngFor="let comment of comments; let i = index" class="comment comment-enter" [style.animation-delay.ms]="minAnimDelay(i)">
             <div class="comment-header">
               <img [src]="(comment.userProfilePictureUrl | imageUrl) || 'assets/default-avatar.svg'" 
                    [alt]="comment.userName" class="comment-avatar">
@@ -193,6 +206,25 @@ import { BlogPost, Comment, ReactionType, ReactionSummaryDto } from '@core/model
   `,
   styles: [`
     .detail-container { max-width: 800px; margin: 0 auto; overflow: hidden; }
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 12px 4px;
+      font-size: var(--font-size-sm);
+      color: var(--color-text-secondary);
+    }
+    .breadcrumb a { color: var(--color-text-secondary); text-decoration: none; }
+    .breadcrumb a:hover { color: var(--color-primary); text-decoration: underline; }
+    .breadcrumb mat-icon { font-size: 16px; width: 16px; height: 16px; }
+    .breadcrumb-current {
+      color: var(--color-text-primary);
+      font-weight: var(--font-weight-medium);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 400px;
+    }
     .post-detail { padding: 32px; overflow: hidden; }
     .post-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
     .author-info { display: flex; align-items: center; gap: 12px; }
@@ -260,6 +292,13 @@ import { BlogPost, Comment, ReactionType, ReactionSummaryDto } from '@core/model
     .comments-section { margin-top: 24px; }
     .comment-form { margin-bottom: 24px; }
     .comment { padding: 12px 0; border-bottom: 1px solid var(--color-border); }
+    .comment-enter { animation: commentFadeUp 0.35s ease both; }
+    @keyframes commentFadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .comment-skeleton-row { display: flex; align-items: center; gap: 8px; padding: 12px 0; }
+    .comment-skeleton-row .skeleton-lines { flex: 1; }
     .comment-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
     .comment-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
     .comment-avatar.small { width: 24px; height: 24px; }
@@ -401,6 +440,11 @@ export class BlogDetailComponent implements OnInit {
       },
       error: () => this.loadingComments = false
     });
+  }
+
+  // Cap the stagger so comments further down the list don't wait too long to appear
+  minAnimDelay(index: number): number {
+    return Math.min(index, 8) * 40;
   }
 
   loadReactions(): void {
