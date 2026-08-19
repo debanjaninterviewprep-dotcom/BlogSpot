@@ -312,7 +312,6 @@ import { MatSnackBar } from '@angular/material/snack-bar';
       .feed-sidebar { display: none; }
       .mobile-suggestions { display: block; }
       .feed-main { border-left: none; border-right: none; }
-      .filter-bar { top: 52px; }
     }
   `]
 })
