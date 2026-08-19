@@ -543,24 +543,23 @@ export class NavbarComponent implements OnInit, OnDestroy {
       distinctUntilChanged(),
       takeUntil(this.destroy$),
       switchMap((query: string) => {
-        this.selectedIndex = -1; // Reset keyboard navigation
+        this.selectedIndex = -1;
         if (!query || query.length < 1) {
           this.searchedUsers = [];
           this.searchedPosts = [];
           return of(null);
         }
 
-        // Use cached search results
-        if (this.searchCacheService.isReady()) {
-          const results = this.searchCacheService.search(query, 5);
-          this.searchedUsers = results.bloggers;
-          this.searchedPosts = results.blogs;
-          return of(null);
-        }
-
-        return of(null);
+        this.cacheLoading = true;
+        return this.searchCacheService.searchAll(query, 5);
       })
-    ).subscribe();
+    ).subscribe(results => {
+      this.cacheLoading = false;
+      if (results) {
+        this.searchedUsers = results.bloggers;
+        this.searchedPosts = results.blogs;
+      }
+    });
   }
 
   ngOnDestroy(): void {
