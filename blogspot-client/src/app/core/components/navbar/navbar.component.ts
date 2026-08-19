@@ -84,9 +84,9 @@ import { User } from '../../models/auth.model';
               </a>
             </div>
             <!-- View all -->
-            <a class="search-view-all" *ngIf="searchQuery.length >= 1 && (searchedUsers.length > 0 || searchedPosts.length > 0)"
-               (mousedown)="$event.preventDefault()"
-               (click)="viewAllResults()">
+            <a class="search-view-all" href="javascript:void(0)"
+               *ngIf="searchQuery.length >= 1 && (searchedUsers.length > 0 || searchedPosts.length > 0)"
+               (mousedown)="viewAllResults()">
               See all results for "{{ searchQuery }}"
             </a>
           </div>
