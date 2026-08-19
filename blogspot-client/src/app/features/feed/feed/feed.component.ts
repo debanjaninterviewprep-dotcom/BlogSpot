@@ -131,10 +131,11 @@ import { MatSnackBar } from '@angular/material/snack-bar';
   `,
   styles: [`
     .feed-container {
-      max-width: 1000px;
-      margin: 0 auto;
+      width: 100%;
       display: flex;
       gap: 28px;
+      padding: 0 16px;
+      box-sizing: border-box;
     }
     .feed-main {
       flex: 1;

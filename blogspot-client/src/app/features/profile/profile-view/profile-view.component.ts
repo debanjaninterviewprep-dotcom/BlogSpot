@@ -179,7 +179,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     <app-loading-spinner *ngIf="loading"></app-loading-spinner>
   `,
   styles: [`
-    .profile-container { max-width: 900px; margin: 0 auto; border-left: 1px solid var(--color-border); border-right: 1px solid var(--color-border); min-height: 100vh; }
+    .profile-container { width: 100%; min-height: 100vh; }
     .breadcrumb {
       display: flex;
       align-items: center;

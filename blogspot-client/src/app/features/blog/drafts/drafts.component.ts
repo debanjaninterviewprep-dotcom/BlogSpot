@@ -41,7 +41,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     </div>
   `,
   styles: [`
-    .drafts-container { max-width: 720px; margin: 0 auto; padding: 16px; min-height: calc(100vh - 56px); }
+    .drafts-container { width: 100%; padding: 16px 24px; box-sizing: border-box; min-height: calc(100vh - 56px); }
     .drafts-container h2 {
       font-size: 22px;
       font-weight: 800;

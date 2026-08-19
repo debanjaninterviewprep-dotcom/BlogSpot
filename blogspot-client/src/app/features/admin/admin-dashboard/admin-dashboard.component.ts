@@ -297,7 +297,7 @@ import { ExportService } from '@core/services/export.service';
     </div>
   `,
   styles: [`
-    .admin-container { max-width: 1100px; margin: 0 auto; padding-top: 16px; min-height: calc(100vh - 56px); }
+    .admin-container { width: 100%; padding: 16px 24px 0; box-sizing: border-box; min-height: calc(100vh - 56px); }
     .admin-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 8px; }
     .header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
     h1 { display: flex; align-items: center; gap: 8px; margin: 0; }

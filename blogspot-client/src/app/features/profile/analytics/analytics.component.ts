@@ -65,7 +65,7 @@ import { CreatorAnalytics } from '@core/models/user.model';
     </div>
   `,
   styles: [`
-    .analytics-container { max-width: 900px; margin: 0 auto; min-height: calc(100vh - 56px); }
+    .analytics-container { width: 100%; padding: 0 24px; box-sizing: border-box; min-height: calc(100vh - 56px); }
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));

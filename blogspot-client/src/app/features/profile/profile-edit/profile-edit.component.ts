@@ -140,7 +140,7 @@ import { NotificationPreferences } from '@core/models/user.model';
     </div>
   `,
   styles: [`
-    .edit-container { max-width: 600px; margin: 0 auto; min-height: calc(100vh - 56px); }
+    .edit-container { width: 100%; padding: 0 24px; box-sizing: border-box; min-height: calc(100vh - 56px); }
     mat-card { padding: 24px; }
     .cover-section { margin-bottom: 16px; }
     .cover-preview {
