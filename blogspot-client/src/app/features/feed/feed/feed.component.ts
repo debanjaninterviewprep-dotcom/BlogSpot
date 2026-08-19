@@ -196,7 +196,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
       background: var(--sidebar-bg);
       border-radius: 16px;
       padding: 16px 0;
-      overflow: hidden;
+      overflow-y: auto;
+      max-height: calc(100vh - 140px);
     }
     .sidebar-title {
       font-size: 19px;
