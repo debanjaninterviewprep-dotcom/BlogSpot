@@ -166,7 +166,8 @@ export class SearchCacheService {
     const blogs = this.allBlogs
       .filter(blog =>
         (blog.title && blog.title.toLowerCase().includes(lowerQuery)) ||
-        (blog.description && blog.description.toLowerCase().includes(lowerQuery))
+        (blog.summary && blog.summary.toLowerCase().includes(lowerQuery)) ||
+        (blog.content && blog.content.toLowerCase().includes(lowerQuery))
       )
       .slice(0, limit)
       .map(blog => ({
