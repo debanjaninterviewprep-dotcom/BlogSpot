@@ -85,7 +85,8 @@ import { User } from '../../models/auth.model';
             </div>
             <!-- View all -->
             <a class="search-view-all" *ngIf="searchQuery.length >= 1 && (searchedUsers.length > 0 || searchedPosts.length > 0)"
-               [routerLink]="['/blog/search']" [queryParams]="{q: searchQuery}" (click)="onSearchItemClick()">
+               (mousedown)="$event.preventDefault()"
+               (click)="viewAllResults()">
               See all results for "{{ searchQuery }}"
             </a>
           </div>
@@ -631,6 +632,12 @@ export class NavbarComponent implements OnInit, OnDestroy {
    */
   onSearchItemClick(): void {
     this.clearSearch();
+  }
+
+  viewAllResults(): void {
+    const q = this.searchQuery;
+    this.clearSearch();
+    this.router.navigate(['/blog/search'], { queryParams: { q } });
   }
 
   clearSearch(): void {
