@@ -1,5 +1,6 @@
-﻿import { Component, OnInit, OnDestroy, ElementRef, ViewChild, HostListener } from '@angular/core';
+﻿import { Component, OnInit, OnDestroy, ElementRef, ViewChild, HostListener, SecurityContext } from '@angular/core';
 import { Router } from '@angular/router';
+import { DomSanitizer } from '@angular/platform-browser';
 import { Subject, takeUntil, debounceTime, distinctUntilChanged, switchMap, of } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
@@ -7,6 +8,7 @@ import { ThemeService } from '../../services/theme.service';
 import { SignalRService } from '../../services/signalr.service';
 import { BlogService } from '../../services/blog.service';
 import { UserService } from '../../services/user.service';
+import { SearchCacheService } from '../../services/search-cache.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { User } from '../../models/auth.model';
 
@@ -31,6 +33,7 @@ import { User } from '../../models/auth.model';
                    (input)="onSearchInput($event)"
                    (focus)="searchActive = true"
                    (blur)="onSearchBlur()"
+                   (keydown)="onSearchKeydown($event)"
                    (keyup.enter)="onSearch($event)">
             <button *ngIf="searchQuery" class="search-clear" aria-label="Clear search" (mousedown)="$event.preventDefault()" (click)="clearSearch()">
               <mat-icon>close</mat-icon>
@@ -39,44 +42,50 @@ import { User } from '../../models/auth.model';
           <!-- Autocomplete dropdown: updates live as you type, no need to press Enter -->
           <div class="search-dropdown" *ngIf="searchActive && searchQuery.length >= 1">
             <!-- Loading -->
-            <div class="search-loading" *ngIf="searchLoading">
-              <mat-icon>autorenew</mat-icon> Searching...
+            <div class="search-loading" *ngIf="cacheLoading">
+              <mat-icon>autorenew</mat-icon> Loading suggestions...
             </div>
             <!-- No results -->
-            <div class="search-empty" *ngIf="!searchLoading && searchQuery.length >= 2 && searchedUsers.length === 0 && searchedPosts.length === 0">
+            <div class="search-empty" *ngIf="!cacheLoading && searchQuery.length >= 1 && searchedUsers.length === 0 && searchedPosts.length === 0">
               No results for "{{ searchQuery }}"
             </div>
-            <!-- Posts -->
+            <!-- Bloggers FIRST -->
+            <div class="search-section" *ngIf="searchedUsers.length > 0">
+              <div class="search-section-header"><mat-icon>person</mat-icon> Bloggers</div>
+              <a *ngFor="let user of searchedUsers; let i = index" 
+                 class="search-item user-item"
+                 [class.highlighted]="selectedIndex === i"
+                 [routerLink]="['/profile', user.userName]"
+                 (mousedown)="$event.preventDefault()"
+                 (click)="onSearchItemClick()"
+                 (mouseenter)="selectedIndex = i">
+                <img [src]="user.profilePictureUrl || 'assets/default-avatar.svg'" class="search-avatar" [alt]="user.userName">
+                <div class="search-item-info">
+                  <span class="search-item-name" [innerHTML]="user.highlightedName || user.displayName || user.userName"></span>
+                  <span class="search-item-sub">{{'@'}}<span [innerHTML]="user.highlightedHandle || user.userName"></span></span>
+                </div>
+              </a>
+            </div>
+            <!-- Blogs/Posts SECOND -->
             <div class="search-section" *ngIf="searchedPosts.length > 0">
-              <div class="search-section-header"><mat-icon>article</mat-icon> Posts</div>
-              <a *ngFor="let post of searchedPosts" class="search-item post-item"
+              <div class="search-section-header"><mat-icon>article</mat-icon> Blogs</div>
+              <a *ngFor="let post of searchedPosts; let i = index" 
+                 class="search-item post-item"
+                 [class.highlighted]="selectedIndex === (searchedUsers.length + i)"
                  [routerLink]="['/blog', post.slug]"
                  (mousedown)="$event.preventDefault()"
-                 (click)="clearSearch()">
+                 (click)="onSearchItemClick()"
+                 (mouseenter)="selectedIndex = searchedUsers.length + i">
                 <span class="search-post-icon-wrap"><mat-icon class="search-post-icon">article</mat-icon></span>
                 <div class="search-item-info">
-                  <span class="search-item-name">{{ post.title }}</span>
+                  <span class="search-item-name" [innerHTML]="post.highlightedTitle || post.title"></span>
                   <span class="search-item-sub">by {{ post.authorDisplayName || post.authorUserName }}</span>
                 </div>
               </a>
             </div>
-            <!-- Bloggers -->
-            <div class="search-section" *ngIf="searchedUsers.length > 0">
-              <div class="search-section-header"><mat-icon>person</mat-icon> Bloggers</div>
-              <a *ngFor="let user of searchedUsers" class="search-item user-item"
-                 [routerLink]="['/profile', user.userName]"
-                 (mousedown)="$event.preventDefault()"
-                 (click)="clearSearch()">
-                <img [src]="user.profilePictureUrl || 'assets/default-avatar.svg'" class="search-avatar" [alt]="user.userName">
-                <div class="search-item-info">
-                  <span class="search-item-name">{{ user.displayName || user.userName }}</span>
-                  <span class="search-item-sub">{{'@'}}{{ user.userName }}</span>
-                </div>
-              </a>
-            </div>
             <!-- View all -->
-            <a class="search-view-all" *ngIf="searchQuery.length >= 2 && (searchedUsers.length > 0 || searchedPosts.length > 0)"
-               [routerLink]="['/blog/search']" [queryParams]="{q: searchQuery}" (click)="clearSearch()">
+            <a class="search-view-all" *ngIf="searchQuery.length >= 1 && (searchedUsers.length > 0 || searchedPosts.length > 0)"
+               [routerLink]="['/blog/search']" [queryParams]="{q: searchQuery}" (click)="onSearchItemClick()">
               See all results for "{{ searchQuery }}"
             </a>
           </div>
@@ -323,6 +332,7 @@ import { User } from '../../models/auth.model';
       cursor: pointer;
     }
     .search-item:hover { background: var(--color-bg-hover); }
+    .search-item.highlighted { background: var(--color-primary-light); }
     .search-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
     .search-post-icon-wrap {
       display: flex; align-items: center; justify-content: center;
@@ -333,7 +343,9 @@ import { User } from '../../models/auth.model';
     .search-post-icon { color: var(--color-primary); font-size: 18px; width: 18px; height: 18px; }
     .search-item-info { display: flex; flex-direction: column; min-width: 0; }
     .search-item-name { font-size: var(--font-size-base); font-weight: var(--font-weight-semibold); color: var(--color-text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .search-item-name mark { background-color: #ffeb3b; color: var(--color-text-primary); font-weight: var(--font-weight-bold); padding: 0 2px; }
     .search-item-sub { font-size: var(--font-size-xs); color: var(--color-text-secondary); }
+    .search-item-sub mark { background-color: #ffeb3b; color: var(--color-text-primary); font-weight: var(--font-weight-bold); padding: 0 2px; }
     .search-view-all {
       display: block;
       text-align: center;
@@ -460,9 +472,10 @@ export class NavbarComponent implements OnInit, OnDestroy {
   searchQuery = '';
   searchActive = false;
   mobileSearchOpen = false;
-  searchLoading = false;
   searchedUsers: any[] = [];
   searchedPosts: any[] = [];
+  selectedIndex = -1; // For keyboard navigation
+  cacheLoading = false;
   private destroy$ = new Subject<void>();
   private searchSubject$ = new Subject<string>();
   @ViewChild('searchContainer') searchContainer!: ElementRef;
@@ -474,8 +487,10 @@ export class NavbarComponent implements OnInit, OnDestroy {
     private signalRService: SignalRService,
     private blogService: BlogService,
     private userService: UserService,
+    private searchCacheService: SearchCacheService,
     private router: Router,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private sanitizer: DomSanitizer
   ) {}
 
   ngOnInit(): void {
@@ -500,33 +515,49 @@ export class NavbarComponent implements OnInit, OnDestroy {
             snackRef.onAction().subscribe(() => this.onNotifClick(notif));
           }
         });
+
+      // Initialize search cache
+      this.searchCacheService.getCacheState()
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(state => {
+          this.cacheLoading = state.loading;
+        });
+
+      if (!this.searchCacheService.isReady()) {
+        this.searchCacheService.initialize()
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: () => console.log('Search cache initialized'),
+            error: (err) => console.error('Failed to initialize search cache:', err)
+          });
+      }
     }
 
     this.notificationService.unreadCount$
       .pipe(takeUntil(this.destroy$))
       .subscribe(count => this.unreadCount = count);
 
-    // Search autocomplete
+    // Search autocomplete with debouncing
     this.searchSubject$.pipe(
       debounceTime(250),
       distinctUntilChanged(),
       takeUntil(this.destroy$),
       switchMap((query: string) => {
+        this.selectedIndex = -1; // Reset keyboard navigation
         if (!query || query.length < 1) {
           this.searchedUsers = [];
           this.searchedPosts = [];
-          this.searchLoading = false;
           return of(null);
         }
-        this.searchLoading = true;
-        this.userService.searchUsers(query, { page: 1, pageSize: 5 }).subscribe({
-          next: (res: any) => this.searchedUsers = res.items || [],
-          error: () => this.searchedUsers = []
-        });
-        this.blogService.searchPosts(query, { page: 1, pageSize: 5 }).subscribe({
-          next: (res: any) => { this.searchedPosts = res.items || []; this.searchLoading = false; },
-          error: () => { this.searchedPosts = []; this.searchLoading = false; }
-        });
+
+        // Use cached search results
+        if (this.searchCacheService.isReady()) {
+          const results = this.searchCacheService.search(query, 5);
+          this.searchedUsers = results.bloggers;
+          this.searchedPosts = results.blogs;
+          return of(null);
+        }
+
         return of(null);
       })
     ).subscribe();
@@ -547,7 +578,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   onSearch(event: Event): void {
     const query = (event.target as HTMLInputElement).value;
     if (query.trim()) {
-      this.clearSearch();
+      this.onSearchItemClick();
       this.router.navigate(['/blog/search'], { queryParams: { q: query } });
     }
   }
@@ -557,11 +588,58 @@ export class NavbarComponent implements OnInit, OnDestroy {
     this.searchSubject$.next(val);
   }
 
+  /**
+   * Handle keyboard navigation in search dropdown
+   */
+  onSearchKeydown(event: KeyboardEvent): void {
+    const totalResults = this.searchedUsers.length + this.searchedPosts.length;
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      this.selectedIndex = Math.min(this.selectedIndex + 1, totalResults - 1);
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      this.selectedIndex = Math.max(this.selectedIndex - 1, -1);
+    } else if (event.key === 'Enter' && this.selectedIndex >= 0) {
+      event.preventDefault();
+      this.navigateToSelectedItem();
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      this.searchActive = false;
+    }
+  }
+
+  /**
+   * Navigate to the selected search result
+   */
+  private navigateToSelectedItem(): void {
+    if (this.selectedIndex < this.searchedUsers.length) {
+      // Selected item is in bloggers section
+      const user = this.searchedUsers[this.selectedIndex];
+      this.onSearchItemClick();
+      this.router.navigate(['/profile', user.userName]);
+    } else {
+      // Selected item is in blogs section
+      const blogIndex = this.selectedIndex - this.searchedUsers.length;
+      const blog = this.searchedPosts[blogIndex];
+      this.onSearchItemClick();
+      this.router.navigate(['/blog', blog.slug]);
+    }
+  }
+
+  /**
+   * Called when a search item is clicked or navigated to
+   */
+  onSearchItemClick(): void {
+    this.clearSearch();
+  }
+
   clearSearch(): void {
     this.searchQuery = '';
     this.searchActive = false;
     this.searchedUsers = [];
     this.searchedPosts = [];
+    this.selectedIndex = -1;
   }
 
   openMobileSearch(): void {

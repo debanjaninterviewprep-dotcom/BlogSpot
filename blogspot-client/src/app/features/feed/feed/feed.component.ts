@@ -3,6 +3,7 @@ import { FeedService } from '@core/services/feed.service';
 import { BlogService } from '@core/services/blog.service';
 import { AuthService } from '@core/services/auth.service';
 import { UserService } from '@core/services/user.service';
+import { SearchCacheService } from '@core/services/search-cache.service';
 import { BlogPost, ReactionType } from '@core/models/blog.model';
 import { UserProfile } from '@core/models/user.model';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -329,7 +330,8 @@ export class FeedComponent implements OnInit {
     private blogService: BlogService,
     private userService: UserService,
     public authService: AuthService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private searchCacheService: SearchCacheService
   ) {}
 
   ngOnInit(): void {
@@ -338,6 +340,13 @@ export class FeedComponent implements OnInit {
     }
     if (this.authService.isLoggedIn) {
       this.loadSuggestedUsers();
+      // Initialize search cache in the background for better search performance
+      if (!this.searchCacheService.isReady()) {
+        this.searchCacheService.initialize().subscribe({
+          next: () => console.log('Search cache initialized for feed'),
+          error: (err) => console.error('Failed to initialize search cache:', err)
+        });
+      }
     }
     this.loadPosts(true);
   }
