@@ -216,7 +216,7 @@ import { User } from '../../models/auth.model';
       width: 100%;
       gap: 8px;
       height: 100%;
-      overflow: hidden;
+      overflow: visible;
     }
     .logo {
       display: flex;
