@@ -10,6 +10,8 @@ public class BookmarkConfiguration : IEntityTypeConfiguration<Bookmark>
     {
         builder.HasKey(b => b.Id);
 
+        builder.HasQueryFilter(b => !b.BlogPost.IsDeleted);
+
         // One bookmark per user per post
         builder.HasIndex(b => new { b.UserId, b.BlogPostId }).IsUnique();
 

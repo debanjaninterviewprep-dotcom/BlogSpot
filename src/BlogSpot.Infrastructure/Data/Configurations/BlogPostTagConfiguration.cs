@@ -10,6 +10,8 @@ public class BlogPostTagConfiguration : IEntityTypeConfiguration<BlogPostTag>
     {
         builder.HasKey(bt => new { bt.BlogPostId, bt.TagId });
 
+        builder.HasQueryFilter(bt => !bt.BlogPost.IsDeleted);
+
         builder.HasOne(bt => bt.BlogPost)
             .WithMany(p => p.BlogPostTags)
             .HasForeignKey(bt => bt.BlogPostId)

@@ -10,6 +10,8 @@ public class LikeConfiguration : IEntityTypeConfiguration<Like>
     {
         builder.HasKey(l => l.Id);
 
+        builder.HasQueryFilter(l => !l.BlogPost.IsDeleted);
+
         // Unique constraint: one like per user per post
         builder.HasIndex(l => new { l.UserId, l.BlogPostId }).IsUnique();
     }

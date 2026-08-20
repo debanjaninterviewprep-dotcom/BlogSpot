@@ -137,7 +137,9 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// Auto-apply migrations on startup (for deployment)
+// Auto-apply migrations and seed admin on startup (non-fatal if DB is unavailable)
+try
+{
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<BlogSpot.Infrastructure.Data.AppDbContext>();
@@ -186,6 +188,11 @@ using (var scope = app.Services.CreateScope())
             Log.Information("Admin account seeded: {Username}", adminUser.UserName);
         }
     }
+}
+}
+catch (Exception ex)
+{
+    Log.Error(ex, "Database migration/seeding failed — app will start without DB initialization");
 }
 
 // Middleware pipeline

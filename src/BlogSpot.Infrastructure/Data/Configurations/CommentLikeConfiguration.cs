@@ -10,6 +10,8 @@ public class CommentLikeConfiguration : IEntityTypeConfiguration<CommentLike>
     {
         builder.HasKey(cl => cl.Id);
 
+        builder.HasQueryFilter(cl => !cl.Comment.IsDeleted);
+
         // Unique constraint: one like per user per comment
         builder.HasIndex(cl => new { cl.UserId, cl.CommentId }).IsUnique();
 

@@ -10,6 +10,8 @@ public class ReactionConfiguration : IEntityTypeConfiguration<Reaction>
     {
         builder.HasKey(r => r.Id);
 
+        builder.HasQueryFilter(r => !r.BlogPost.IsDeleted);
+
         builder.Property(r => r.Type)
             .HasConversion<string>()
             .HasMaxLength(20);

@@ -10,6 +10,8 @@ public class PostImageConfiguration : IEntityTypeConfiguration<PostImage>
     {
         builder.HasKey(i => i.Id);
 
+        builder.HasQueryFilter(i => !i.BlogPost.IsDeleted);
+
         builder.Property(i => i.ImageUrl)
             .IsRequired()
             .HasMaxLength(500);
