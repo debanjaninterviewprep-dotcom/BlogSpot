@@ -54,3 +54,5 @@ services:
         sync: false  # Your Cloudinary API key
       - key: Cloudinary__ApiSecret
         sync: false  # Your Cloudinary API secret
+      - key: Email__JobIntervalMinutes
+        value: "5"
