@@ -42,7 +42,7 @@ services:
       - key: AdminSeed__UserName
         value: admin
       - key: AdminSeed__Email
-        value: admin@blogspot.com
+        value: blogspotadmin2@gmail.com
       - key: AdminSeed__Password
         sync: false  # Set a strong password in the Render dashboard
       - key: AdminSeed__DisplayName
