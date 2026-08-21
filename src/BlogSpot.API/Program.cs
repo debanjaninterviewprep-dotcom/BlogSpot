@@ -192,7 +192,9 @@ using (var scope = app.Services.CreateScope())
 }
 catch (Exception ex)
 {
-    Log.Error(ex, "Database migration/seeding failed — app will start without DB initialization");
+    Log.Error(ex, "Database migration/seeding failed — {Message}", ex.Message);
+    if (ex.InnerException != null)
+        Log.Error("Inner exception: {Inner}", ex.InnerException.Message);
 }
 
 // Middleware pipeline
