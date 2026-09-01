@@ -144,6 +144,7 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<BlogSpot.Infrastructure.Data.AppDbContext>();
     db.Database.Migrate();
+    Log.Information("Database migration completed successfully");
 
     // Auto-seed admin account if none exists
     var adminExists = await db.Set<BlogSpot.Domain.Entities.User>()
