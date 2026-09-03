@@ -607,7 +607,7 @@ public class BlogService : IBlogService
             draft.Content = dto.Content;
             draft.Summary = dto.Summary;
             draft.Category = dto.Category;
-            draft.Tags = dto.Tags.Count > 0 ? string.Join(",", dto.Tags) : null;
+            draft.Tags = dto.Tags?.Count > 0 ? string.Join(",", dto.Tags) : null;
             draft.BlogPostId = dto.BlogPostId;
             draft.UpdatedAt = DateTime.UtcNow;
 
@@ -621,7 +621,7 @@ public class BlogService : IBlogService
                 Content = dto.Content,
                 Summary = dto.Summary,
                 Category = dto.Category,
-                Tags = dto.Tags.Count > 0 ? string.Join(",", dto.Tags) : null,
+                Tags = dto.Tags?.Count > 0 ? string.Join(",", dto.Tags) : null,
                 BlogPostId = dto.BlogPostId,
                 AuthorId = userId
             };
