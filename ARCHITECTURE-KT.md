@@ -468,7 +468,7 @@ Response → Post removed from admin table
 ```
 Author sets a future publish date/time in editor (Material calendar + time)
        ↓
-Frontend validates: scheduled ≥ now + 30 minutes
+Frontend validates: scheduled ≥ now + 1 hour
        ↓
 BlogService.createPost → POST /api/v1/blog (with scheduledPublishAt)
        ↓
