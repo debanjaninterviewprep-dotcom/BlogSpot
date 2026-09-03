@@ -97,9 +97,11 @@ BEGIN
         [Summary]            NVARCHAR(500)    NULL,
         [Category]           NVARCHAR(100)    NULL,
         [FeaturedImageUrl]   NVARCHAR(500)    NULL,
+        [Status]             INT              NOT NULL DEFAULT 0, -- PostStatus: 0=Draft,1=Scheduled,2=Published,3=Archived
         [IsPublished]        BIT              NOT NULL DEFAULT 1,
         [IsDraft]            BIT              NOT NULL DEFAULT 0,
         [IsDeleted]          BIT              NOT NULL DEFAULT 0,
+        [ScheduledPublishAt] DATETIME2        NULL, -- set when Status = Scheduled (auto-publish time, UTC)
         [ViewCount]          INT              NOT NULL DEFAULT 0,
         [ReadingTimeMinutes] INT              NOT NULL DEFAULT 0,
         [CreatedAt]          DATETIME2        NOT NULL DEFAULT SYSUTCDATETIME(),

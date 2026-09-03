@@ -480,6 +480,8 @@ Status = Scheduled, ScheduledPublishAt = UTC time, IsPublished = false
        ↓
 Confirmation email queued (publish time formatted in IST)
        ↓
+ActivityLogService.Info("PostScheduled", ...) → ActivityLogs table
+       ↓
 [time passes] PostSchedulerService polls every 30 min (configurable)
        ↓
 Finds due posts: Status=Scheduled AND ScheduledPublishAt ≤ UtcNow AND !IsDeleted
@@ -837,7 +839,7 @@ Two long-running `BackgroundService` workers run inside the API process:
 ### Post Scheduling Flow
 
 1. Author picks a future date/time in the editor (Material calendar + separate time field). The frontend enforces a **30-minute minimum lead time**; the backend re-validates (`ScheduledPublishAt >= UtcNow + 30 min`) as a safety net for direct API calls.
-2. `BlogService.CreatePostAsync` sets `Status = Scheduled`, stores `ScheduledPublishAt` (UTC), keeps `IsPublished = false`, and queues a **confirmation email** showing the publish time converted to **IST** (`India Standard Time`).
+2. `BlogService.CreatePostAsync` sets `Status = Scheduled`, stores `ScheduledPublishAt` (UTC), keeps `IsPublished = false`, queues a **confirmation email** showing the publish time converted to **IST** (`India Standard Time`), and writes a `PostScheduled` entry to `ActivityLogs`.
 3. `PostSchedulerService` polls every N minutes for `Status == Scheduled && ScheduledPublishAt <= UtcNow && !IsDeleted`, flips them to `Published` (`IsPublished = true`, `ScheduledPublishAt = null`), and queues a **"your post is now live"** email to each author (query eager-loads `Author` for the address).
 4. Authors review upcoming posts at `/blog/scheduled` (`GET /api/v1/blog/scheduled` → `GetScheduledPostsAsync`, ordered by publish time) and can edit/reschedule through the normal edit route.
 

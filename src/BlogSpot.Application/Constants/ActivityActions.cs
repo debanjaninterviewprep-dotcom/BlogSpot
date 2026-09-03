@@ -7,6 +7,7 @@ public static class ActivityActions
     public const string Logout = "Logout";
     public const string Register = "Register";
     public const string PostBlog = "PostBlog";
+    public const string PostScheduled = "PostScheduled";
     public const string Comment = "Comment";
     public const string LikeComment = "LikeComment";
     public const string DraftSaved = "DraftSaved";

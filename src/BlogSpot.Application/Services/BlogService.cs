@@ -96,6 +96,9 @@ public class BlogService : IBlogService
         if (post.IsPublished)
             await _log.Info(ActivityActions.PostBlog, nameof(BlogService), author?.UserName, post.Title, ct);
 
+        if (post.Status == PostStatus.Scheduled)
+            await _log.Info(ActivityActions.PostScheduled, nameof(BlogService), author?.UserName, $"{post.Title} → {post.ScheduledPublishAt:yyyy-MM-dd HH:mm} UTC", ct);
+
         // Notify the author when their post is scheduled for future publishing
         if (post.Status == PostStatus.Scheduled && post.ScheduledPublishAt.HasValue
             && !string.IsNullOrWhiteSpace(author?.Email))

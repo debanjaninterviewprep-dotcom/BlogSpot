@@ -75,9 +75,11 @@ CREATE TABLE IF NOT EXISTS "BlogPosts"
     "Summary"            varchar(500) NULL,
     "Category"           varchar(100) NULL,
     "FeaturedImageUrl"   varchar(500) NULL,
+    "Status"             integer      NOT NULL DEFAULT 0, -- PostStatus: 0=Draft,1=Scheduled,2=Published,3=Archived
     "IsPublished"        boolean      NOT NULL DEFAULT true,
     "IsDraft"            boolean      NOT NULL DEFAULT false,
     "IsDeleted"          boolean      NOT NULL DEFAULT false,
+    "ScheduledPublishAt" timestamp    NULL, -- set when Status = Scheduled (auto-publish time, UTC)
     "ViewCount"          integer      NOT NULL DEFAULT 0,
     "ReadingTimeMinutes" integer      NOT NULL DEFAULT 0,
     "CreatedAt"          timestamp    NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
