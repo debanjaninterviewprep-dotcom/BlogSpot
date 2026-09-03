@@ -6,6 +6,8 @@ export interface BlogPost {
   slug: string;
   isPublished: boolean;
   isDraft: boolean;
+  status?: number; // 0=Draft, 1=Scheduled, 2=Published, 3=Archived
+  scheduledPublishAt?: string; // ISO datetime string
   readingTimeMinutes: number;
   category?: string;
   featuredImageUrl?: string;

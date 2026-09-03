@@ -360,7 +360,7 @@ export class BlogCreateComponent implements OnInit, OnDestroy {
     this.setMinScheduleDate();
   }
 
-  private setMinScheduleDate(): void {
+  setMinScheduleDate(): void {
     const now = new Date();
     // Add 1 minute to current time for scheduling
     now.setMinutes(now.getMinutes() + 1);
