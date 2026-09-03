@@ -100,7 +100,10 @@ public class BlogService : IBlogService
         if (post.Status == PostStatus.Scheduled && post.ScheduledPublishAt.HasValue
             && !string.IsNullOrWhiteSpace(author?.Email))
         {
-            var scheduledUtc = post.ScheduledPublishAt.Value.ToString("dddd, dd MMM yyyy 'at' HH:mm 'UTC'");
+            var istTimeZone = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
+            var scheduledIst = TimeZoneInfo.ConvertTime(post.ScheduledPublishAt.Value, TimeZoneInfo.Utc, istTimeZone);
+            var scheduledIstFormatted = scheduledIst.ToString("dddd, dd MMM yyyy 'at' HH:mm 'IST'");
+            
             await _emailQueueService.EnqueueAsync(
                 author!.Email,
                 $"Your post is scheduled: {post.Title}",
@@ -108,7 +111,7 @@ public class BlogService : IBlogService
                     <h2 style='color:#1d9bf0'>Post Scheduled</h2>
                     <h3>{post.Title}</h3>
                     <p style='color:#536471'>Your post has been scheduled and will be published automatically at:</p>
-                    <p style='font-size:16px;font-weight:bold;color:#0f1419'>{scheduledUtc}</p>
+                    <p style='font-size:16px;font-weight:bold;color:#0f1419'>{scheduledIstFormatted}</p>
                     <p style='color:#536471;font-size:13px'>We'll email you again once it goes live.</p>
                 </div>",
                 ct);
