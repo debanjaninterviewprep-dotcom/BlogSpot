@@ -24,6 +24,7 @@ Provides a modern content publishing and discovery experience with social engage
 - OTP-based registration with email verification
 - JWT authentication with refresh tokens
 - Rich text blog editor (Quill) with grammar checking (LanguageTool API)
+- Draft auto-save and post scheduling (future auto-publish with IST email confirmation + "now live" alert)
 - Emoji reactions (Like, Love, Fire, Clap), bookmarks, threaded comments
 - Personalized home feed, trending, latest feeds
 - Follow/unfollow with suggested users
@@ -45,6 +46,7 @@ Clean Architecture (.NET 8 backend) + Angular 17 SPA frontend, communicating ove
 | Database | SQL Server (dev) / PostgreSQL (prod, Neon) |
 | Auth | JWT Bearer + Refresh Tokens, BCrypt password hashing |
 | Real-time | ASP.NET Core SignalR |
+| Background Jobs | EmailProcessorJob (email queue), PostSchedulerService (scheduled-post publishing) |
 | Email | Brevo (Sendinblue) API, background EmailProcessorJob |
 | File Storage | Cloudinary (prod) / local wwwroot (dev) |
 | Logging | Serilog (console + file) + custom ActivityLog table |
@@ -197,7 +199,7 @@ src/BlogSpot.Domain/                     ← No external dependencies
 │   ├── EmailQueue.cs                    ← Outbound email queue
 │   ├── OtpVerification.cs              ← OTP codes for registration
 │   └── ActivityLog.cs                   ← Structured activity logging
-├── Enums/                               ← UserRole, ReactionType, NotificationType, etc.
+├── Enums/                               ← UserRole, ReactionType, NotificationType, PostStatus, etc.
 ├── Interfaces/                          ← IRepository<T>, IUnitOfWork
 └── Common/                              ← Base abstractions
 ```
@@ -205,13 +207,14 @@ src/BlogSpot.Domain/                     ← No external dependencies
 ```
 src/BlogSpot.Application/               ← References Domain only
 ├── Interfaces/                          ← 9 service interfaces (IBlogService, etc.)
-├── Services/                            ← 6 service implementations
-│   ├── BlogService.cs                   ← CRUD, reactions, comments, drafts, search
+├── Services/                            ← 7 service implementations
+│   ├── BlogService.cs                   ← CRUD, reactions, comments, drafts, scheduling, search
 │   ├── UserService.cs                   ← Profiles, follows, analytics
 │   ├── FeedService.cs                   ← Home/trending/latest feeds
 │   ├── AdminService.cs                  ← User mgmt, moderation, seeding
 │   ├── NotificationService.cs           ← Create/read/mark notifications
-│   └── ActivityLogService.cs            ← Info/Warn/Error logging
+│   ├── ActivityLogService.cs            ← Info/Warn/Error logging
+│   └── PostSchedulerService.cs          ← BackgroundService: auto-publishes scheduled posts
 ├── DTOs/                                ← Data transfer objects
 │   ├── Auth/                            ← LoginDto, RegisterDto, AuthResponseDto
 │   ├── Blog/                            ← CreateBlogPostDto, CommentDto, ReactionDto, etc.
@@ -234,7 +237,7 @@ src/BlogSpot.Infrastructure/            ← References Application + Domain
 │   ├── EmailQueueService.cs             ← Brevo API integration, OTP
 │   ├── FileStorageService.cs            ← Cloudinary / local file storage
 │   └── EmailProcessorJob.cs             ← BackgroundService (1-min interval)
-├── Migrations/                          ← 5 EF Core migrations
+├── Migrations/                          ← 6 EF Core migrations
 └── DependencyInjection.cs              ← AddInfrastructure() extension
 ```
 
@@ -292,7 +295,7 @@ blogspot-client/src/app/
 ├── features/                            ← All lazy-loaded
 │   ├── auth/                            ← Login + Register with OTP
 │   ├── feed/                            ← Home feed (For You/Latest/Trending tabs)
-│   ├── blog/                            ← Create/Edit, Detail, Search, Bookmarks, Drafts
+│   ├── blog/                            ← Create/Edit, Detail, Search, Bookmarks, Drafts, Scheduled
 │   ├── profile/                         ← View, Edit, Analytics, Notifications page
 │   └── admin/                           ← Dashboard with Users/Posts/Comments/Emails tabs
 │
@@ -460,6 +463,34 @@ ActivityLogService.Info("AdminAction", ...)
 Response → Post removed from admin table
 ```
 
+### Workflow 6: Scheduled Post Auto-Publish
+
+```
+Author sets a future publish date/time in editor (Material calendar + time)
+       ↓
+Frontend validates: scheduled ≥ now + 30 minutes
+       ↓
+BlogService.createPost → POST /api/v1/blog (with scheduledPublishAt)
+       ↓
+BlogController.Create → BlogService.CreatePostAsync
+       ↓
+Backend re-validates 30-min minimum lead time
+       ↓
+Status = Scheduled, ScheduledPublishAt = UTC time, IsPublished = false
+       ↓
+Confirmation email queued (publish time formatted in IST)
+       ↓
+[time passes] PostSchedulerService polls every 30 min (configurable)
+       ↓
+Finds due posts: Status=Scheduled AND ScheduledPublishAt ≤ UtcNow AND !IsDeleted
+       ↓
+Sets Status = Published, IsPublished = true, ScheduledPublishAt = null
+       ↓
+"Your post is now live" email queued to each author
+       ↓
+Author can review upcoming posts anytime at /blog/scheduled
+```
+
 ---
 
 # PHASE 4 — BACKEND DEEP DIVE (.NET)
@@ -500,6 +531,8 @@ AddApplication()          ← BlogService, UserService, FeedService, etc. (Scope
     ↓
 AddInfrastructure(config) ← DbContext, Repository<T>, UnitOfWork, AuthService,
                              EmailQueue, FileStorage, EmailProcessorJob (Scoped/Hosted)
+    ↓
+AddHostedService<PostSchedulerService> ← polls & auto-publishes scheduled posts
     ↓
 JWT Bearer Authentication (HS256, 24hr expiry)
     ↓
@@ -570,6 +603,7 @@ app.Run()
 | GET | `/drafts` | Yes | — | `List<DraftBlogDto>` | List drafts |
 | GET | `/drafts/{id}` | Yes | — | `DraftBlogDto` | Get draft |
 | DELETE | `/drafts/{id}` | Yes | — | message | Delete draft |
+| GET | `/scheduled` | Yes | — | `List<BlogPostDto>` | Current user's scheduled posts |
 
 ### UserController (`api/user`)
 
@@ -628,7 +662,7 @@ app.Run()
 
 | Service | Key Responsibilities |
 |---------|---------------------|
-| **BlogService** | Post CRUD, slug generation, HTML sanitization (Ganss.XSS), reading time calc (~200 wpm), tag sync, reactions (add/change/remove), bookmarks, threaded comments, comment likes, image management, draft CRUD, full-text search (posts + users + tags) |
+| **BlogService** | Post CRUD, slug generation, HTML sanitization (Ganss.XSS), reading time calc (~200 wpm), tag sync, reactions (add/change/remove), bookmarks, threaded comments, comment likes, image management, draft CRUD, full-text search (posts + users + tags), post scheduling (30-min min lead time, IST confirmation email, list scheduled posts) |
 | **UserService** | Profile CRUD, picture/cover upload, follow toggle with notification, follower removal, paginated followers/following, suggested users (top-5 by follower count), user search, creator analytics (views, reactions, comments, followers growth 30d, daily stats, top posts), notification preference management |
 | **FeedService** | Home feed (followed + trending fill), trending (MemoryCache 5 min, score = Views + Reactions×3 + Comments×5, 7-day window), latest (newest first) |
 | **AdminService** | Paginated admin views, toggle user status (email notification), change role (email notification), admin delete post/comment (soft delete + email), seed 30 Indian demo users + 40 posts + follows + likes + comments, format plain text posts to HTML |
@@ -637,7 +671,8 @@ app.Run()
 | **AuthService** (Infra) | Register (BCrypt hash, create user+profile, welcome email), login (email or username lookup, verify BCrypt), JWT token generation (HS256, claims: UserId/Name/Email/Role/Jti), refresh token (7-day, validates expired JWT), logout logging |
 | **EmailQueueService** (Infra) | Enqueue single/bulk emails, process queue (Brevo API, 50/batch, 3 retries), send OTP (6-digit, 10-min expiry), verify OTP |
 | **FileStorageService** (Infra) | Upload to Cloudinary (if configured) or local wwwroot/uploads, delete from Cloudinary or local |
-| **EmailProcessorJob** (Infra) | BackgroundService, runs every 1 minute, calls ProcessQueueAsync() |
+| **EmailProcessorJob** (Infra) | BackgroundService, configurable interval via `Email:JobIntervalMinutes` (15 min in prod), batches queued emails (50/batch, 3 retries), calls ProcessQueueAsync() |
+| **PostSchedulerService** (App) | BackgroundService, configurable interval via `PostScheduler:JobIntervalMinutes` (default 30 min), publishes due scheduled posts (Status=Scheduled, ScheduledPublishAt ≤ now) and emails authors "now live" |
 
 ## 5. Repositories
 
@@ -663,7 +698,7 @@ Plus `SaveChangesAsync()`.
 | **BaseEntity** | Id (Guid), CreatedAt, UpdatedAt |
 | **User** | UserName (50, unique), Email (256, unique), PasswordHash, Role (enum), IsActive, RefreshToken, RefreshTokenExpiry. Nav: Profile (1:1), BlogPosts, Comments, Likes, Reactions, Bookmarks, Notifications, Drafts, Followers, Following |
 | **Profile** | DisplayName, Bio, ProfilePictureUrl, CoverPhotoUrl, Website, Location, SocialLinks (JSON), Skills (CSV), NotificationPreferences (JSON), UserId (FK, cascade) |
-| **BlogPost** | Title (200), Content, Summary (500), Slug (250, unique), IsPublished, IsDraft, IsDeleted (query filter), ViewCount, ReadingTimeMinutes, Category (100), FeaturedImageUrl, AuthorId (FK). Nav: Images, Comments, Likes, Reactions, Bookmarks, BlogPostTags |
+| **BlogPost** | Title (200), Content, Summary (500), Slug (250, unique), Status (PostStatus enum), ScheduledPublishAt (nullable — auto-publish time), IsPublished, IsDraft, IsDeleted (query filter), ViewCount, ReadingTimeMinutes, Category (100), FeaturedImageUrl, AuthorId (FK). Nav: Images, Comments, Likes, Reactions, Bookmarks, BlogPostTags |
 | **Comment** | Content, IsEdited, IsDeleted, ParentCommentId (self-ref for nesting), UserId (FK, restrict), BlogPostId (FK, cascade). Nav: Replies, CommentLikes |
 | **Reaction** | Type (enum: Like/Love/Fire/Clap), UserId (FK), BlogPostId (FK) |
 | **Bookmark** | UserId (FK), BlogPostId (FK) |
@@ -683,6 +718,7 @@ ReactionType:     Like = 0, Love = 1, Fire = 2, Clap = 3
 NotificationType: Follow = 0, Reaction = 1, Comment = 2, PostPublished = 3, CommentLike = 4
 EmailStatus:      Queued = 0, Sent = 1, Failed = 2
 LogLevel:         Info = 0, Error = 1, Warning = 2
+PostStatus:       Draft = 0, Scheduled = 1, Published = 2, Archived = 3
 ```
 
 ### Key DTOs
@@ -707,7 +743,8 @@ Program.cs
 │   ├── IFeedService          → FeedService          (Scoped)
 │   ├── IAdminService         → AdminService         (Scoped)
 │   ├── INotificationService  → NotificationService  (Scoped)
-│   └── IActivityLogService   → ActivityLogService   (Scoped)
+│   ├── IActivityLogService   → ActivityLogService   (Scoped)
+│   └── PostSchedulerService                          (HostedService — registered in Program.cs)
 │
 └── AddInfrastructure(config)
     ├── AppDbContext                                  (Scoped)
@@ -741,6 +778,7 @@ IBlogService:
   - AddCommentAsync, DeleteCommentAsync, GetCommentsAsync, ToggleCommentLikeAsync
   - AddImageToPostAsync, RemoveImageFromPostAsync
   - SaveDraftAsync, GetDraftsAsync, GetDraftByIdAsync, DeleteDraftAsync
+  - GetScheduledPostsAsync
 
 IUserService:
   - GetProfileAsync, GetProfileByUserNameAsync, UpdateProfileAsync
@@ -787,6 +825,24 @@ IUnitOfWork:
   - SaveChangesAsync() → int
 ```
 
+## 9. Background Jobs
+
+Two long-running `BackgroundService` workers run inside the API process:
+
+| Job | Layer | Registration | Interval | Responsibility |
+|-----|-------|-------------|----------|----------------|
+| **EmailProcessorJob** | Infrastructure | `AddHostedService` in `AddInfrastructure()` | `Email:JobIntervalMinutes` (15 min prod) | Dequeues `EmailQueue` rows (50/batch, 3 retries), sends via Brevo API |
+| **PostSchedulerService** | Application | `AddHostedService` in `Program.cs` | `PostScheduler:JobIntervalMinutes` (30 min default) | Publishes due scheduled posts and emails authors |
+
+### Post Scheduling Flow
+
+1. Author picks a future date/time in the editor (Material calendar + separate time field). The frontend enforces a **30-minute minimum lead time**; the backend re-validates (`ScheduledPublishAt >= UtcNow + 30 min`) as a safety net for direct API calls.
+2. `BlogService.CreatePostAsync` sets `Status = Scheduled`, stores `ScheduledPublishAt` (UTC), keeps `IsPublished = false`, and queues a **confirmation email** showing the publish time converted to **IST** (`India Standard Time`).
+3. `PostSchedulerService` polls every N minutes for `Status == Scheduled && ScheduledPublishAt <= UtcNow && !IsDeleted`, flips them to `Published` (`IsPublished = true`, `ScheduledPublishAt = null`), and queues a **"your post is now live"** email to each author (query eager-loads `Author` for the address).
+4. Authors review upcoming posts at `/blog/scheduled` (`GET /api/v1/blog/scheduled` → `GetScheduledPostsAsync`, ordered by publish time) and can edit/reschedule through the normal edit route.
+
+> **Trade-off:** a 30-minute poll keeps the Neon free-tier DB awake more than a longer interval would; the interval is configurable to balance publish latency against compute-hour usage.
+
 ---
 
 # PHASE 5 — FRONTEND DEEP DIVE (ANGULAR)
@@ -817,7 +873,7 @@ AppComponent template: <app-navbar> + <router-outlet> with @routeFade animation
 | **SharedModule** | Shared | Eager | PostCard, UserCard, LoadingSpinner, ErrorState, Pipes, all Material modules |
 | **AuthModule** | Feature | Lazy | Login + Register with OTP |
 | **FeedModule** | Feature | Lazy | Home feed with tabs (For You/Latest/Trending) |
-| **BlogModule** | Feature | Lazy | Create/Edit, Detail, Search, Bookmarks, Drafts |
+| **BlogModule** | Feature | Lazy | Create/Edit, Detail, Search, Bookmarks, Drafts, Scheduled |
 | **ProfileModule** | Feature | Lazy | View, Edit, Analytics, Notifications page |
 | **AdminModule** | Feature | Lazy | Dashboard with Users/Posts/Comments/Emails tabs |
 
@@ -832,6 +888,7 @@ AppComponent template: <app-navbar> + <router-outlet> with @routeFade animation
 /blog/edit/:id                 → BlogCreateComponent (edit mode) [AuthGuard]
 /blog/bookmarks                → BookmarksComponent [AuthGuard]
 /blog/drafts                   → DraftsComponent [AuthGuard]
+/blog/scheduled                → ScheduledPostsComponent [AuthGuard]
 /blog/search?q=               → BlogSearchComponent
 /blog/:slug                    → BlogDetailComponent
 /profile/me                    → ProfileViewComponent [AuthGuard]
@@ -864,11 +921,12 @@ AppComponent template: <app-navbar> + <router-outlet> with @routeFade animation
 | **LoginComponent** | Auth | Login form | Email/username + password, validation, redirect to returnUrl |
 | **RegisterComponent** | Auth | Registration form | 3-step OTP flow, password strength validator (8+ chars, upper/lower/digit/special), real-time validation checkmarks |
 | **FeedComponent** | Feed | Content feed | 3 tabs, infinite scroll (load more), post cards with engagement, sidebar with suggested users (logged in) or guest promo card |
-| **BlogCreateComponent** | Blog | Rich text editor | Quill editor (ngx-quill), grammar check (LanguageTool), tags input (Enter/comma), category dropdown, save-as-draft / publish |
+| **BlogCreateComponent** | Blog | Rich text editor | Quill editor (ngx-quill), grammar check (LanguageTool), tags input (Enter/comma), category dropdown, save-as-draft, publish now / schedule (Material calendar + time, 30-min min lead time) |
 | **BlogDetailComponent** | Blog | Post viewer | Read progress bar, author info, engagement bar (like burst animation, emoji reactions, bookmark), threaded comments with replies |
 | **BlogSearchComponent** | Blog | Search results | Two tabs (Posts + People), full-text search, pagination |
 | **BookmarksComponent** | Blog | Saved posts | Paginated bookmarked posts |
 | **DraftsComponent** | Blog | Draft management | Cards with preview, continue editing, delete |
+| **ScheduledPostsComponent** | Blog | Scheduled posts list | Cards showing publish time (`date:'medium'`), edit/reschedule button, empty state |
 | **ProfileViewComponent** | Profile | User profile | Cover photo, avatar, stats, social links, tabs (Posts/Followers/Following), admin controls on others |
 | **ProfileEditComponent** | Profile | Edit profile | Upload avatar/cover, bio/skills/social links, notification preference toggles |
 | **AnalyticsComponent** | Profile | Creator analytics | Stat cards (views/reactions/comments/followers), top posts table |
@@ -880,7 +938,7 @@ AppComponent template: <app-navbar> + <router-outlet> with @routeFade animation
 | Angular Service | Backend Controller | Key Methods |
 |----------------|-------------------|-------------|
 | `AuthService` | AuthController | register, login, sendOtp, verifyOtp, refreshToken, logout |
-| `BlogService` | BlogController | createPost, updatePost, deletePost, getBySlug, toggleReaction, addComment, saveDraft, uploadImage, fullTextSearch |
+| `BlogService` | BlogController | createPost, updatePost, deletePost, getBySlug, toggleReaction, addComment, saveDraft, getScheduledPosts, uploadImage, fullTextSearch |
 | `UserService` | UserController | getProfile, updateProfile, toggleFollow, getFollowers, getSuggestedUsers, getCreatorAnalytics, notification prefs |
 | `FeedService` | FeedController | getHomeFeed, getTrending, getLatest |
 | `NotificationService` | NotificationController | getNotifications, getUnreadCount, markAsRead, markAllAsRead |
@@ -1035,7 +1093,8 @@ Components use optimistic updates for likes/follows/bookmarks.
 | Content | NVARCHAR(MAX) | NOT NULL |
 | Excerpt | NVARCHAR(500) | NULL |
 | FeaturedImageUrl | NVARCHAR(500) | NULL |
-| Status | NVARCHAR(20) | CHECK IN ('Draft','Published','Archived','Removed') |
+| Status | INT | PostStatus enum: 0=Draft, 1=Scheduled, 2=Published, 3=Archived. DEFAULT 0 |
+| ScheduledPublishAt | DATETIME2 / timestamptz | NULL — set when Status = Scheduled |
 | LikeCount | INT | DEFAULT 0 |
 | CommentCount | INT | DEFAULT 0 |
 | ViewCount | BIGINT | DEFAULT 0 |
@@ -1297,7 +1356,8 @@ If 401 → Angular interceptor → attempt refresh → retry or logout
 | `Cloudinary:CloudName/ApiKey/ApiSecret` | Empty = local storage | Image CDN config |
 | `Email:BrevoApiKey` | API key | Transactional email provider |
 | `Email:FromEmail/FromName` | Sender identity | Email from address |
-| `Email:JobIntervalMinutes` | `"1"` | Background email processor interval |
+| `Email:JobIntervalMinutes` | `"15"` | Background email processor interval (minutes) |
+| `PostScheduler:JobIntervalMinutes` | `"30"` | Scheduled-post publisher poll interval (minutes) |
 | `Cors:AllowedOrigins` | Array of URLs | Whitelisted frontend origins |
 
 ## Frontend Environments
@@ -1437,7 +1497,7 @@ AuthController.cs → EmailQueueService.cs → SendOtpAsync
     ↓
 Generate 6-digit OTP → save OtpVerification (10-min expiry) → queue email
     ↓
-EmailProcessorJob.cs (1-min cycle) → Brevo API sends OTP email
+EmailProcessorJob.cs (configurable cycle, 15 min in prod) → Brevo API sends OTP email
     ↓
 Step 2: Enter OTP → auth.service.ts → verifyOtp(email, code)
     ↓
@@ -1542,7 +1602,7 @@ Table row updates in-place
 | **SearchCacheService** | Pre-loads 150 posts into browser memory on every page load | Memory on client, startup delay | Lazy-load cache on first search interaction, not on init |
 | **Trending cache** | 5-minute MemoryCache with time-decay score | Acceptable | Good. Consider Redis for multi-instance deployments |
 | **Image upload** | Synchronous upload to Cloudinary in request thread | Slow API response | Acceptable for now; consider background processing for bulk |
-| **Email processing** | 50 emails/batch, 1-minute interval | Acceptable | Good batching strategy |
+| **Email processing** | 50 emails/batch, configurable interval (15 min prod) | Acceptable | Good batching strategy |
 | **Bundle size** | Angular budget: 5MB warning, 7MB error | Moderate | Monitor; Material + Quill are heavy. Tree-shake unused Material modules |
 
 ---
@@ -1820,11 +1880,11 @@ Angular:
 | **Projects** | BlogSpot.Domain, BlogSpot.Application, BlogSpot.Infrastructure, BlogSpot.API, blogspot-client |
 | **Angular Modules** | App, Core, Shared, Auth, Feed, Blog, Profile, Admin (8) |
 | **Controllers** | Auth, Blog, User, Feed, Notification, Admin (6, 60+ endpoints) |
-| **Backend Services** | Blog, User, Feed, Admin, Notification, ActivityLog, Auth, Email, File (9) |
+| **Backend Services** | Blog, User, Feed, Admin, Notification, ActivityLog, PostScheduler, Auth, Email, File (10) |
 | **Angular Services** | Auth, Blog, User, Feed, Notification, SignalR, Admin, Theme, Grammar, SearchCache, Export (11) |
 | **Database Tables** | 17 |
 | **Stored Procedures** | 7 |
-| **EF Migrations** | 5 |
+| **EF Migrations** | 6 |
 | **Entities** | 16 |
 | **DTOs** | 25+ |
 | **Angular Components** | ~15 feature + 4 shared + 1 navbar |
