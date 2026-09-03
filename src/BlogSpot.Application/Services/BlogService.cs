@@ -52,8 +52,12 @@ public class BlogService : IBlogService
 
         if (!dto.IsDraft)
         {
-            if (dto.ScheduledPublishAt.HasValue && dto.ScheduledPublishAt > DateTime.UtcNow)
+            if (dto.ScheduledPublishAt.HasValue)
             {
+                // Safety net for direct API calls: scheduled time must be at least 30 minutes ahead.
+                if (dto.ScheduledPublishAt.Value < DateTime.UtcNow.AddMinutes(29))
+                    throw new ArgumentException("Scheduled publish time must be at least 30 minutes in the future.");
+
                 status = PostStatus.Scheduled;
                 isPublished = false;
             }
@@ -91,6 +95,24 @@ public class BlogService : IBlogService
 
         if (post.IsPublished)
             await _log.Info(ActivityActions.PostBlog, nameof(BlogService), author?.UserName, post.Title, ct);
+
+        // Notify the author when their post is scheduled for future publishing
+        if (post.Status == PostStatus.Scheduled && post.ScheduledPublishAt.HasValue
+            && !string.IsNullOrWhiteSpace(author?.Email))
+        {
+            var scheduledUtc = post.ScheduledPublishAt.Value.ToString("dddd, dd MMM yyyy 'at' HH:mm 'UTC'");
+            await _emailQueueService.EnqueueAsync(
+                author!.Email,
+                $"Your post is scheduled: {post.Title}",
+                $@"<div style='font-family:sans-serif;max-width:600px;margin:0 auto;padding:32px'>
+                    <h2 style='color:#1d9bf0'>Post Scheduled</h2>
+                    <h3>{post.Title}</h3>
+                    <p style='color:#536471'>Your post has been scheduled and will be published automatically at:</p>
+                    <p style='font-size:16px;font-weight:bold;color:#0f1419'>{scheduledUtc}</p>
+                    <p style='color:#536471;font-size:13px'>We'll email you again once it goes live.</p>
+                </div>",
+                ct);
+        }
 
         if (author?.Role == Domain.Enums.UserRole.Admin && post.IsPublished)
         {
@@ -139,8 +161,12 @@ public class BlogService : IBlogService
         // Handle scheduling updates
         if (!dto.IsDraft)
         {
-            if (dto.ScheduledPublishAt.HasValue && dto.ScheduledPublishAt > DateTime.UtcNow)
+            if (dto.ScheduledPublishAt.HasValue)
             {
+                // Safety net for direct API calls: scheduled time must be at least 30 minutes ahead.
+                if (dto.ScheduledPublishAt.Value < DateTime.UtcNow.AddMinutes(29))
+                    throw new ArgumentException("Scheduled publish time must be at least 30 minutes in the future.");
+
                 post.Status = PostStatus.Scheduled;
                 post.ScheduledPublishAt = dto.ScheduledPublishAt;
                 post.IsPublished = false;
@@ -671,11 +697,20 @@ public class BlogService : IBlogService
         }).ToList();
     }
 
+    public async Task<List<BlogPostDto>> GetScheduledPostsAsync(Guid userId, CancellationToken ct = default)
+    {
+        var posts = await GetFullPostQuery()
+            .Where(p => p.AuthorId == userId && p.Status == PostStatus.Scheduled)
+            .OrderBy(p => p.ScheduledPublishAt)
+            .ToListAsync(ct);
+
+        return posts.Select(p => MapToDto(p, userId)).ToList();
+    }
+
     public async Task DeleteDraftAsync(Guid userId, Guid draftId, CancellationToken ct = default)
     {
         var draft = await _uow.Drafts.GetByIdAsync(draftId, ct)
             ?? throw new KeyNotFoundException("Draft not found.");
-
         if (draft.AuthorId != userId)
             throw new UnauthorizedAccessException("Not your draft.");
 

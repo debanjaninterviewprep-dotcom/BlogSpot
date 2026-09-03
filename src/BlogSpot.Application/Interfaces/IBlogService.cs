@@ -11,8 +11,7 @@ public interface IBlogService
     Task DeletePostAsync(Guid userId, Guid postId, bool isAdmin = false, CancellationToken ct = default);
     Task<BlogPostDto?> GetPostByIdAsync(Guid postId, Guid? currentUserId = null, CancellationToken ct = default);
     Task<BlogPostDto?> GetPostBySlugAsync(string slug, Guid? currentUserId = null, CancellationToken ct = default);
-    Task<PagedResult<BlogPostDto>> GetPostsByUserAsync(Guid userId, PaginationParams pagination, Guid? currentUserId = null, CancellationToken ct = default);
-    Task<PagedResult<BlogPostDto>> SearchPostsAsync(string query, PaginationParams pagination, Guid? currentUserId = null, CancellationToken ct = default);
+    Task<PagedResult<BlogPostDto>> GetPostsByUserAsync(Guid userId, PaginationParams pagination, Guid? currentUserId = null, CancellationToken ct = default);    Task<PagedResult<BlogPostDto>> SearchPostsAsync(string query, PaginationParams pagination, Guid? currentUserId = null, CancellationToken ct = default);
 
     // Likes (legacy)
     Task<bool> ToggleLikeAsync(Guid userId, Guid postId, CancellationToken ct = default);
@@ -40,6 +39,9 @@ public interface IBlogService
     Task<List<DraftBlogDto>> GetDraftsAsync(Guid userId, CancellationToken ct = default);
     Task DeleteDraftAsync(Guid userId, Guid draftId, CancellationToken ct = default);
     Task<DraftBlogDto?> GetDraftByIdAsync(Guid userId, Guid draftId, CancellationToken ct = default);
+
+    // Scheduled posts
+    Task<List<BlogPostDto>> GetScheduledPostsAsync(Guid userId, CancellationToken ct = default);
 
     // Search
     Task<SearchResultDto> FullTextSearchAsync(string query, PaginationParams pagination, CancellationToken ct = default);

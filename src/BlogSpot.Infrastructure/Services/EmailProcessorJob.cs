@@ -16,7 +16,7 @@ public class EmailProcessorJob : BackgroundService
     {
         _scopeFactory = scopeFactory;
         _logger = logger;
-        var minutes = double.Parse(configuration["Email:JobIntervalMinutes"] ?? "1");
+        var minutes = double.Parse(configuration["Email:JobIntervalMinutes"] ?? "15");
         _interval = TimeSpan.FromMinutes(minutes);
     }
 

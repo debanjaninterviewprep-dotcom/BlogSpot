@@ -90,6 +90,10 @@ export class BlogService {
     return this.http.get<DraftBlog[]>(`${this.apiUrl}/drafts`);
   }
 
+  getScheduledPosts(): Observable<BlogPost[]> {
+    return this.http.get<BlogPost[]>(`${this.apiUrl}/scheduled`);
+  }
+
   getDraftById(id: string): Observable<DraftBlog> {
     return this.http.get<DraftBlog>(`${this.apiUrl}/drafts/${id}`);
   }

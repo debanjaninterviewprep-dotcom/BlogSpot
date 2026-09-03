@@ -174,6 +174,9 @@ import { User } from '../../models/auth.model';
             <button mat-menu-item routerLink="/blog/drafts">
               <mat-icon>drafts</mat-icon><span>My Drafts</span>
             </button>
+            <button mat-menu-item routerLink="/blog/scheduled">
+              <mat-icon>schedule</mat-icon><span>My Scheduled Posts</span>
+            </button>
             <button mat-menu-item routerLink="/profile/analytics">
               <mat-icon>analytics</mat-icon><span>Analytics</span>
             </button>

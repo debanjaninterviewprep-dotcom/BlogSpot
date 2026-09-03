@@ -1,6 +1,8 @@
+using BlogSpot.Application.Interfaces;
 using BlogSpot.Domain.Enums;
 using BlogSpot.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -14,12 +16,14 @@ public class PostSchedulerService : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<PostSchedulerService> _logger;
-    private readonly TimeSpan _interval = TimeSpan.FromMinutes(30); // Check every 30 minutes
+    private readonly TimeSpan _interval;
 
-    public PostSchedulerService(IServiceProvider serviceProvider, ILogger<PostSchedulerService> logger)
+    public PostSchedulerService(IServiceProvider serviceProvider, ILogger<PostSchedulerService> logger, IConfiguration configuration)
     {
         _serviceProvider = serviceProvider;
         _logger = logger;
+        var minutes = double.Parse(configuration["PostScheduler:JobIntervalMinutes"] ?? "30");
+        _interval = TimeSpan.FromMinutes(minutes);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -48,10 +52,12 @@ public class PostSchedulerService : BackgroundService
         using (var scope = _serviceProvider.CreateScope())
         {
             var uow = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+            var emailService = scope.ServiceProvider.GetRequiredService<IEmailQueueService>();
 
             // Find all posts scheduled for publishing that are now due
             var now = DateTime.UtcNow;
             var duePostsQuery = uow.BlogPosts.Query()
+                .Include(p => p.Author)
                 .Where(p => p.Status == PostStatus.Scheduled && p.ScheduledPublishAt <= now && !p.IsDeleted);
 
             var duePosts = await duePostsQuery.ToListAsync(cancellationToken);
@@ -72,6 +78,23 @@ public class PostSchedulerService : BackgroundService
 
             await uow.SaveChangesAsync(cancellationToken);
             _logger.LogInformation("Published {Count} scheduled posts.", duePosts.Count);
+
+            // Notify each author that their scheduled post is now live
+            foreach (var post in duePosts)
+            {
+                if (!string.IsNullOrWhiteSpace(post.Author?.Email))
+                {
+                    await emailService.EnqueueAsync(
+                        post.Author.Email,
+                        $"Your post is now live: {post.Title}",
+                        $@"<div style='font-family:sans-serif;max-width:600px;margin:0 auto;padding:32px'>
+                            <h2 style='color:#1d9bf0'>Post Published</h2>
+                            <h3>{post.Title}</h3>
+                            <p style='color:#536471'>Your scheduled post has just been published and is now live on BlogSpot.</p>
+                        </div>",
+                        cancellationToken);
+                }
+            }
         }
     }
 }

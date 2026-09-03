@@ -173,6 +173,15 @@ public class BlogController : ControllerBase
     }
 
     [Authorize]
+    [HttpGet("scheduled")]
+    public async Task<ActionResult<List<BlogPostDto>>> GetScheduledPosts(CancellationToken ct)
+    {
+        var userId = GetCurrentUserId()!.Value;
+        var result = await _blogService.GetScheduledPostsAsync(userId, ct);
+        return Ok(result);
+    }
+
+    [Authorize]
     [HttpGet("drafts/{id:guid}")]
     public async Task<ActionResult<DraftBlogDto>> GetDraftById(Guid id, CancellationToken ct)
     {
