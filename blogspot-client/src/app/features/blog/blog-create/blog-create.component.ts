@@ -116,11 +116,7 @@ import { MatChipInputEvent } from '@angular/material/chips';
             <!-- Publishing Options -->
             <div class="publish-section">
               <label class="section-label">Publishing Options</label>
-              <mat-radio-group [(ngModel)]="publishMode" (change)="setMinScheduleDate()">
-                <mat-radio-button value="draft" *ngIf="!isEditing">
-                  <mat-icon>draft</mat-icon>
-                  <span>Save as Draft</span>
-                </mat-radio-button>
+              <mat-radio-group [(ngModel)]="publishMode" [ngModelOptions]="{ standalone: true }" (change)="setMinScheduleDate()">
                 <mat-radio-button value="now">
                   <mat-icon>publish</mat-icon>
                   <span>{{ isEditing ? 'Update Post' : 'Publish Now' }}</span>
@@ -150,10 +146,15 @@ import { MatChipInputEvent } from '@angular/material/chips';
 
             <div class="actions">
               <button mat-button type="button" (click)="cancel()">Cancel</button>
+              <button mat-stroked-button type="button" color="accent"
+                      *ngIf="!isEditing" (click)="saveDraft()" [disabled]="isLoading">
+                <mat-icon>save</mat-icon>
+                Save Draft
+              </button>
               <button mat-raised-button color="primary" type="submit" 
                       [disabled]="postForm.invalid || isLoading">
                 <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
-                {{ isEditing ? 'Update Post' : (publishMode === 'draft' ? 'Save Draft' : publishMode === 'later' ? 'Schedule Post' : 'Publish Post') }}
+                {{ isEditing ? 'Update Post' : (publishMode === 'later' ? 'Schedule Post' : 'Publish Post') }}
               </button>
             </div>
           </form>
@@ -338,7 +339,7 @@ export class BlogCreateComponent implements OnInit, OnDestroy {
   ];
 
   // Scheduling
-  publishMode: 'draft' | 'now' | 'later' = 'now';
+  publishMode: 'now' | 'later' = 'now';
   minScheduleDate: string = '';
 
   constructor(
@@ -401,8 +402,7 @@ export class BlogCreateComponent implements OnInit, OnDestroy {
         });
         this.tags = post.tags || [];
         // Set publish mode based on post status
-        if (post.status === 0) this.publishMode = 'draft';
-        else if (post.status === 1) this.publishMode = 'later';
+        if (post.status === 1) this.publishMode = 'later';
         else this.publishMode = 'now';
       },
       error: () => {
@@ -449,6 +449,7 @@ export class BlogCreateComponent implements OnInit, OnDestroy {
 
   saveDraft(): void {
     const val = this.postForm.value;
+    this.isLoading = true;
     this.blogService.saveDraft({
       id: this.draftId || undefined,
       title: val.title || 'Untitled Draft',
@@ -459,9 +460,14 @@ export class BlogCreateComponent implements OnInit, OnDestroy {
     }).subscribe({
       next: (draft) => {
         this.draftId = draft.id;
+        this.isLoading = false;
         this.snackBar.open('Draft saved!', 'Close', { duration: 2000 });
+        this.router.navigate(['/blog/drafts']);
       },
-      error: () => this.snackBar.open('Failed to save draft', 'Close', { duration: 3000 })
+      error: () => {
+        this.isLoading = false;
+        this.snackBar.open('Failed to save draft', 'Close', { duration: 3000 });
+      }
     });
   }
 
@@ -508,7 +514,7 @@ export class BlogCreateComponent implements OnInit, OnDestroy {
       summary: formVal.summary,
       category: formVal.category,
       tags: this.tags,
-      isDraft: this.publishMode === 'draft'
+      isDraft: false
     };
 
     // Add scheduling if selected
@@ -528,11 +534,9 @@ export class BlogCreateComponent implements OnInit, OnDestroy {
         }
         const message = this.isEditing 
           ? 'Post updated!' 
-          : this.publishMode === 'draft' 
-            ? 'Draft saved!'
-            : this.publishMode === 'later'
-              ? 'Post scheduled!'
-              : 'Post published!';
+          : this.publishMode === 'later'
+            ? 'Post scheduled!'
+            : 'Post published!';
         
         this.snackBar.open(message, 'Close', { duration: 3000 });
         this.router.navigate(['/blog', post.slug]);
