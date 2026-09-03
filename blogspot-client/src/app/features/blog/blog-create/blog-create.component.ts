@@ -129,18 +129,30 @@ import { MatChipInputEvent } from '@angular/material/chips';
 
               <!-- Scheduled Publish Date/Time -->
               <div class="schedule-datetime" *ngIf="publishMode === 'later'">
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Schedule publish date & time</mat-label>
-                  <input matInput type="datetime-local" 
-                         formControlName="scheduledPublishAt"
-                         [min]="minScheduleDate"
-                         required>
-                  <mat-icon matPrefix>event</mat-icon>
-                  <mat-hint>Post will be automatically published at this time</mat-hint>
-                  <mat-error *ngIf="postForm.get('scheduledPublishAt')?.hasError('required')">
-                    Please select a date and time
+                <mat-form-field appearance="outline" class="schedule-field">
+                  <mat-label>Publish date</mat-label>
+                  <input matInput readonly [matDatepicker]="picker" [min]="minDate"
+                         formControlName="scheduleDate" (click)="picker.open()" required>
+                  <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                  <mat-datepicker #picker></mat-datepicker>
+                  <mat-error *ngIf="postForm.get('scheduleDate')?.hasError('required')">
+                    Please select a date
                   </mat-error>
                 </mat-form-field>
+
+                <mat-form-field appearance="outline" class="schedule-field">
+                  <mat-label>Publish time</mat-label>
+                  <input matInput type="time" formControlName="scheduleTime" required>
+                  <mat-icon matSuffix>schedule</mat-icon>
+                  <mat-error *ngIf="postForm.get('scheduleTime')?.hasError('required')">
+                    Please select a time
+                  </mat-error>
+                </mat-form-field>
+
+                <p class="schedule-hint">
+                  <mat-icon>info</mat-icon>
+                  Post will be automatically published at the selected date and time.
+                </p>
               </div>
             </div>
 
@@ -291,6 +303,28 @@ import { MatChipInputEvent } from '@angular/material/chips';
       margin-top: 16px;
       padding-top: 16px;
       border-top: 1px solid var(--color-border);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .schedule-field {
+      flex: 1 1 200px;
+      min-width: 180px;
+    }
+    .schedule-hint {
+      flex-basis: 100%;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 0;
+      font-size: var(--font-size-xs);
+      color: var(--color-text-secondary);
+    }
+    .schedule-hint mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
     }
     .actions {
       display: flex;
@@ -340,7 +374,7 @@ export class BlogCreateComponent implements OnInit, OnDestroy {
 
   // Scheduling
   publishMode: 'now' | 'later' = 'now';
-  minScheduleDate: string = '';
+  minDate: Date = new Date();
 
   constructor(
     private fb: FormBuilder,
@@ -355,17 +389,15 @@ export class BlogCreateComponent implements OnInit, OnDestroy {
       summary: ['', Validators.maxLength(500)],
       content: ['', [Validators.required, Validators.minLength(20)]],
       category: [''],
-      scheduledPublishAt: [null] // For scheduling posts
+      scheduleDate: [null], // Calendar date for scheduled posts
+      scheduleTime: ['']    // Time of day for scheduled posts
     });
-    // Set minimum schedule date to now
+    // Set minimum schedule date to today
     this.setMinScheduleDate();
   }
 
   setMinScheduleDate(): void {
-    const now = new Date();
-    // Add 1 minute to current time for scheduling
-    now.setMinutes(now.getMinutes() + 1);
-    this.minScheduleDate = now.toISOString().slice(0, 16);
+    this.minDate = new Date();
   }
 
   ngOnInit(): void {
@@ -397,9 +429,15 @@ export class BlogCreateComponent implements OnInit, OnDestroy {
           title: post.title,
           summary: post.summary,
           content: post.content,
-          category: post.category || '',
-          scheduledPublishAt: post.scheduledPublishAt ? new Date(post.scheduledPublishAt).toISOString().slice(0, 16) : null
+          category: post.category || ''
         });
+        if (post.scheduledPublishAt) {
+          const dt = new Date(post.scheduledPublishAt);
+          this.postForm.patchValue({
+            scheduleDate: dt,
+            scheduleTime: this.toTimeString(dt)
+          });
+        }
         this.tags = post.tags || [];
         // Set publish mode based on post status
         if (post.status === 1) this.publishMode = 'later';
@@ -445,6 +483,11 @@ export class BlogCreateComponent implements OnInit, OnDestroy {
 
   removeTag(tag: string): void {
     this.tags = this.tags.filter(t => t !== tag);
+  }
+
+  private toTimeString(d: Date): string {
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }
 
   saveDraft(): void {
@@ -499,10 +542,24 @@ export class BlogCreateComponent implements OnInit, OnDestroy {
   onSubmit(): void {
     if (this.postForm.invalid) return;
 
-    // Validate scheduling
-    if (this.publishMode === 'later' && !this.postForm.get('scheduledPublishAt')?.value) {
-      this.snackBar.open('Please select a date and time to schedule the post', 'Close', { duration: 3000 });
-      return;
+    let scheduledIso: string | null = null;
+
+    // Validate and build scheduled datetime
+    if (this.publishMode === 'later') {
+      const dateVal = this.postForm.get('scheduleDate')?.value;
+      const timeVal = this.postForm.get('scheduleTime')?.value;
+      if (!dateVal || !timeVal) {
+        this.snackBar.open('Please select both a date and time to schedule the post', 'Close', { duration: 3000 });
+        return;
+      }
+      const scheduled = new Date(dateVal);
+      const [hours, minutes] = timeVal.split(':').map(Number);
+      scheduled.setHours(hours, minutes, 0, 0);
+      if (scheduled <= new Date()) {
+        this.snackBar.open('Scheduled time must be in the future', 'Close', { duration: 3000 });
+        return;
+      }
+      scheduledIso = scheduled.toISOString();
     }
 
     this.isLoading = true;
@@ -518,8 +575,8 @@ export class BlogCreateComponent implements OnInit, OnDestroy {
     };
 
     // Add scheduling if selected
-    if (this.publishMode === 'later' && formVal.scheduledPublishAt) {
-      payload.scheduledPublishAt = new Date(formVal.scheduledPublishAt).toISOString();
+    if (scheduledIso) {
+      payload.scheduledPublishAt = scheduledIso;
     }
 
     const request = this.isEditing
