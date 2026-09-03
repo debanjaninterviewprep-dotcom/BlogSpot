@@ -37,7 +37,10 @@ public class BlogService : IBlogService
     public async Task<BlogPostDto> CreatePostAsync(Guid userId, CreateBlogPostDto dto, CancellationToken ct = default)
     {
         var slug = GenerateSlug(dto.Title);
-        var slugExists = await _uow.BlogPosts.ExistsAsync(p => p.Slug == slug, ct);
+        // Ignore query filters so soft-deleted posts still count — the DB unique index on Slug covers them.
+        var slugExists = await _uow.BlogPosts.Query()
+            .IgnoreQueryFilters()
+            .AnyAsync(p => p.Slug == slug, ct);
         if (slugExists)
             slug = $"{slug}-{Guid.NewGuid().ToString()[..8]}";
 

@@ -56,17 +56,10 @@ public class ExceptionHandlingMiddleware
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)statusCode;
 
-        // TEMPORARY DIAGNOSTIC: expose real error detail on 500s to locate the root cause.
-        var detail = statusCode == HttpStatusCode.InternalServerError
-            ? $"{exception.GetType().Name}: {exception.Message}" +
-              (exception.InnerException != null ? $" | INNER: {exception.InnerException.GetType().Name}: {exception.InnerException.Message}" : "")
-            : null;
-
         var response = new
         {
             status = (int)statusCode,
             message,
-            detail,
             timestamp = DateTime.UtcNow
         };
 
