@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text.RegularExpressions;
 using BlogSpot.Application.Constants;
 using BlogSpot.Application.DTOs.Blog;
@@ -833,6 +834,7 @@ public class BlogService : IBlogService
     private static string GenerateExcerpt(string html, int maxLength = 200)
     {
         var text = Regex.Replace(html, "<[^>]+>", " ");
+        text = WebUtility.HtmlDecode(text); // Decode HTML entities (&nbsp; → space, &amp; → &, etc.)
         text = Regex.Replace(text, @"\s+", " ").Trim();
         return text.Length <= maxLength ? text : text[..maxLength].TrimEnd();
     }

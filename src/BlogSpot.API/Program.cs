@@ -34,7 +34,11 @@ builder.Services.AddHostedService<PostSchedulerService>();
 builder.Services.AddMemoryCache();
 
 // Controllers
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+    });
 
 // HttpClient for external API calls (Resend email)
 builder.Services.AddHttpClient();
