@@ -54,9 +54,9 @@ public class BlogService : IBlogService
         {
             if (dto.ScheduledPublishAt.HasValue)
             {
-                // Safety net for direct API calls: scheduled time must be at least 30 minutes ahead.
-                if (dto.ScheduledPublishAt.Value < DateTime.UtcNow.AddMinutes(29))
-                    throw new ArgumentException("Scheduled publish time must be at least 30 minutes in the future.");
+                // Safety net for direct API calls: scheduled time must be at least 1 hour ahead.
+                if (dto.ScheduledPublishAt.Value < DateTime.UtcNow.AddHours(1))
+                    throw new ArgumentException("Scheduled publish time must be at least 1 hour in the future.");
 
                 status = PostStatus.Scheduled;
                 isPublished = false;
@@ -169,9 +169,9 @@ public class BlogService : IBlogService
         {
             if (dto.ScheduledPublishAt.HasValue)
             {
-                // Safety net for direct API calls: scheduled time must be at least 30 minutes ahead.
-                if (dto.ScheduledPublishAt.Value < DateTime.UtcNow.AddMinutes(29))
-                    throw new ArgumentException("Scheduled publish time must be at least 30 minutes in the future.");
+                // Safety net for direct API calls: scheduled time must be at least 1 hour ahead.
+                if (dto.ScheduledPublishAt.Value < DateTime.UtcNow.AddHours(1))
+                    throw new ArgumentException("Scheduled publish time must be at least 1 hour in the future.");
 
                 post.Status = PostStatus.Scheduled;
                 post.ScheduledPublishAt = dto.ScheduledPublishAt;

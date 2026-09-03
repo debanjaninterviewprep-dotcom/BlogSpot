@@ -54,8 +54,19 @@ public class PostSchedulerService : BackgroundService
             var uow = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
             var emailService = scope.ServiceProvider.GetRequiredService<IEmailQueueService>();
 
-            // Find all posts scheduled for publishing that are now due
             var now = DateTime.UtcNow;
+
+            // Lightweight check: only proceed if there are any scheduled posts
+            var hasScheduledPosts = await uow.BlogPosts.Query()
+                .AnyAsync(p => p.Status == PostStatus.Scheduled && !p.IsDeleted, cancellationToken);
+
+            if (!hasScheduledPosts)
+            {
+                _logger.LogDebug("No scheduled posts found. Skipping database processing.");
+                return;
+            }
+
+            // Find all posts scheduled for publishing that are now due
             var duePostsQuery = uow.BlogPosts.Query()
                 .Include(p => p.Author)
                 .Where(p => p.Status == PostStatus.Scheduled && p.ScheduledPublishAt <= now && !p.IsDeleted);
