@@ -1,4 +1,5 @@
 using BlogSpot.Domain.Common;
+using BlogSpot.Domain.Enums;
 
 namespace BlogSpot.Domain.Entities;
 
@@ -11,9 +12,13 @@ public class BlogPost : BaseEntity
     public string Content { get; set; } = string.Empty;
     public string? Summary { get; set; }
     public string Slug { get; set; } = string.Empty;
+    public PostStatus Status { get; set; } = PostStatus.Draft;
     public bool IsPublished { get; set; } = true;
     public bool IsDraft { get; set; } = false;
     public bool IsDeleted { get; set; } = false;
+    
+    /// <summary>When this post should be automatically published (if Status is Scheduled).</summary>
+    public DateTime? ScheduledPublishAt { get; set; }
     public int ViewCount { get; set; } = 0;
     public int ReadingTimeMinutes { get; set; } = 0;
     public string? Category { get; set; }

@@ -9,6 +9,8 @@ public class BlogPostDto
     public string Slug { get; set; } = string.Empty;
     public bool IsPublished { get; set; }
     public bool IsDraft { get; set; }
+    public int Status { get; set; } // PostStatus enum value
+    public DateTime? ScheduledPublishAt { get; set; }
     public int ViewCount { get; set; }
     public int ReadingTimeMinutes { get; set; }
     public string? Category { get; set; }

@@ -19,4 +19,7 @@ public class UpdateBlogPostDto
     public List<string> Tags { get; set; } = new();
 
     public bool IsDraft { get; set; } = false;
+
+    /// <summary>Update scheduled publish time. Clear by passing null.</summary>
+    public DateTime? ScheduledPublishAt { get; set; }
 }

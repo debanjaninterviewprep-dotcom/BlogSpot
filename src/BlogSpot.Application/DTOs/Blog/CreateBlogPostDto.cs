@@ -21,4 +21,7 @@ public class CreateBlogPostDto
 
     /// <summary>If true, save as draft; otherwise publish.</summary>
     public bool IsDraft { get; set; } = false;
+
+    /// <summary>If provided, post will be scheduled for future publishing instead of immediate publish.</summary>
+    public DateTime? ScheduledPublishAt { get; set; }
 }

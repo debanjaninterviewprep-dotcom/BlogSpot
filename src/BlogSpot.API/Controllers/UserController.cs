@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace BlogSpot.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/v1/[controller]")]
 public class UserController : ControllerBase
 {
     private readonly IUserService _userService;

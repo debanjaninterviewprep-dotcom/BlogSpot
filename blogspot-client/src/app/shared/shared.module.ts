@@ -25,6 +25,7 @@ import { MatBadgeModule } from '@angular/material/badge';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatListModule } from '@angular/material/list';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatRadioModule } from '@angular/material/radio';
 
 import { PostCardComponent } from './components/post-card/post-card.component';
 import { UserCardComponent } from './components/user-card/user-card.component';
@@ -54,7 +55,8 @@ const materialModules = [
   MatBadgeModule,
   MatProgressBarModule,
   MatListModule,
-  MatSlideToggleModule
+  MatSlideToggleModule,
+  MatRadioModule
 ];
 
 @NgModule({

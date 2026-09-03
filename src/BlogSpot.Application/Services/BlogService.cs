@@ -42,6 +42,24 @@ public class BlogService : IBlogService
 
         var sanitizedContent = _sanitizer.Sanitize(dto.Content);
 
+        // Determine status based on DTO
+        PostStatus status = PostStatus.Draft;
+        bool isPublished = false;
+
+        if (!dto.IsDraft)
+        {
+            if (dto.ScheduledPublishAt.HasValue && dto.ScheduledPublishAt > DateTime.UtcNow)
+            {
+                status = PostStatus.Scheduled;
+                isPublished = false;
+            }
+            else
+            {
+                status = PostStatus.Published;
+                isPublished = true;
+            }
+        }
+
         var post = new BlogPost
         {
             Title = dto.Title,
@@ -49,7 +67,9 @@ public class BlogService : IBlogService
             Summary = string.IsNullOrWhiteSpace(dto.Summary) ? GenerateExcerpt(sanitizedContent) : dto.Summary.Trim(),
             Slug = slug,
             AuthorId = userId,
-            IsPublished = !dto.IsDraft,
+            Status = status,
+            ScheduledPublishAt = dto.ScheduledPublishAt,
+            IsPublished = isPublished,
             IsDraft = dto.IsDraft,
             Category = dto.Category,
             ReadingTimeMinutes = CalculateReadingTime(sanitizedContent)
@@ -109,9 +129,30 @@ public class BlogService : IBlogService
         post.Summary = string.IsNullOrWhiteSpace(dto.Summary) ? GenerateExcerpt(sanitizedContent) : dto.Summary.Trim();
         post.Category = dto.Category;
         post.IsDraft = dto.IsDraft;
-        post.IsPublished = !dto.IsDraft;
         post.ReadingTimeMinutes = CalculateReadingTime(sanitizedContent);
         post.UpdatedAt = DateTime.UtcNow;
+
+        // Handle scheduling updates
+        if (!dto.IsDraft)
+        {
+            if (dto.ScheduledPublishAt.HasValue && dto.ScheduledPublishAt > DateTime.UtcNow)
+            {
+                post.Status = PostStatus.Scheduled;
+                post.ScheduledPublishAt = dto.ScheduledPublishAt;
+                post.IsPublished = false;
+            }
+            else
+            {
+                post.Status = PostStatus.Published;
+                post.ScheduledPublishAt = null;
+                post.IsPublished = true;
+            }
+        }
+        else
+        {
+            post.Status = PostStatus.Draft;
+            post.IsPublished = false;
+        }
 
         _uow.BlogPosts.Update(post);
         await _uow.SaveChangesAsync(ct);

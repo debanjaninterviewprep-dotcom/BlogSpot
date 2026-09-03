@@ -1,6 +1,7 @@
 using BlogSpot.API.Hubs;
 using BlogSpot.API.Middleware;
 using BlogSpot.Application;
+using BlogSpot.Application.Services;
 using BlogSpot.Infrastructure;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
@@ -25,6 +26,9 @@ builder.Host.UseSerilog();
 // Add services - Clean Architecture layers
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+
+// Background services
+builder.Services.AddHostedService<PostSchedulerService>();
 
 // In-memory cache
 builder.Services.AddMemoryCache();

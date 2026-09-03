@@ -113,16 +113,47 @@ import { MatChipInputEvent } from '@angular/material/chips';
               </div>
             </div>
 
+            <!-- Publishing Options -->
+            <div class="publish-section">
+              <label class="section-label">Publishing Options</label>
+              <mat-radio-group [(ngModel)]="publishMode" (change)="setMinScheduleDate()">
+                <mat-radio-button value="draft" *ngIf="!isEditing">
+                  <mat-icon>draft</mat-icon>
+                  <span>Save as Draft</span>
+                </mat-radio-button>
+                <mat-radio-button value="now">
+                  <mat-icon>publish</mat-icon>
+                  <span>{{ isEditing ? 'Update Post' : 'Publish Now' }}</span>
+                </mat-radio-button>
+                <mat-radio-button value="later">
+                  <mat-icon>schedule</mat-icon>
+                  <span>Schedule for Later</span>
+                </mat-radio-button>
+              </mat-radio-group>
+
+              <!-- Scheduled Publish Date/Time -->
+              <div class="schedule-datetime" *ngIf="publishMode === 'later'">
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Schedule publish date & time</mat-label>
+                  <input matInput type="datetime-local" 
+                         formControlName="scheduledPublishAt"
+                         [min]="minScheduleDate"
+                         required>
+                  <mat-icon matPrefix>event</mat-icon>
+                  <mat-hint>Post will be automatically published at this time</mat-hint>
+                  <mat-error *ngIf="postForm.get('scheduledPublishAt')?.hasError('required')">
+                    Please select a date and time
+                  </mat-error>
+                </mat-form-field>
+              </div>
+            </div>
+
             <div class="actions">
               <button mat-button type="button" (click)="cancel()">Cancel</button>
-              <button mat-stroked-button type="button" (click)="saveDraft()"
-                      [disabled]="isLoading" *ngIf="!isEditing">
-                <mat-icon>save</mat-icon> Save as Draft
-              </button>
               <button mat-raised-button color="primary" type="submit" 
                       [disabled]="postForm.invalid || isLoading">
                 <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
-                {{ isEditing ? 'Update Post' : 'Publish Post' }}
+                {{ isEditing ? 'Update Post' : (publishMode === 'draft' ? 'Save Draft' : publishMode === 'later' ? 'Schedule Post' : 'Publish Post') }}
               </button>
             </div>
           </form>
@@ -224,6 +255,42 @@ import { MatChipInputEvent } from '@angular/material/chips';
       line-height: 24px !important;
       color: var(--color-primary);
     }
+    .publish-section {
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      padding: 16px;
+      background: var(--color-bg-secondary);
+      margin: 16px 0;
+    }
+    .section-label {
+      display: block;
+      font-size: var(--font-size-xs);
+      color: var(--color-text-secondary);
+      margin-bottom: 12px;
+      font-weight: var(--font-weight-medium);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    mat-radio-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    mat-radio-button {
+      display: flex !important;
+      align-items: center;
+      gap: 8px;
+    }
+    mat-radio-button mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+    .schedule-datetime {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--color-border);
+    }
     .actions {
       display: flex;
       justify-content: flex-end;
@@ -270,6 +337,10 @@ export class BlogCreateComponent implements OnInit, OnDestroy {
     'Education', 'Entertainment', 'Sports', 'Other'
   ];
 
+  // Scheduling
+  publishMode: 'draft' | 'now' | 'later' = 'now';
+  minScheduleDate: string = '';
+
   constructor(
     private fb: FormBuilder,
     private blogService: BlogService,
@@ -282,8 +353,18 @@ export class BlogCreateComponent implements OnInit, OnDestroy {
       title: ['', [Validators.required, Validators.minLength(5), Validators.maxLength(200)]],
       summary: ['', Validators.maxLength(500)],
       content: ['', [Validators.required, Validators.minLength(20)]],
-      category: ['']
+      category: [''],
+      scheduledPublishAt: [null] // For scheduling posts
     });
+    // Set minimum schedule date to now
+    this.setMinScheduleDate();
+  }
+
+  private setMinScheduleDate(): void {
+    const now = new Date();
+    // Add 1 minute to current time for scheduling
+    now.setMinutes(now.getMinutes() + 1);
+    this.minScheduleDate = now.toISOString().slice(0, 16);
   }
 
   ngOnInit(): void {
@@ -315,9 +396,14 @@ export class BlogCreateComponent implements OnInit, OnDestroy {
           title: post.title,
           summary: post.summary,
           content: post.content,
-          category: post.category || ''
+          category: post.category || '',
+          scheduledPublishAt: post.scheduledPublishAt ? new Date(post.scheduledPublishAt).toISOString().slice(0, 16) : null
         });
         this.tags = post.tags || [];
+        // Set publish mode based on post status
+        if (post.status === 0) this.publishMode = 'draft';
+        else if (post.status === 1) this.publishMode = 'later';
+        else this.publishMode = 'now';
       },
       error: () => {
         this.snackBar.open('Failed to load post', 'Close', { duration: 3000 });
@@ -407,9 +493,28 @@ export class BlogCreateComponent implements OnInit, OnDestroy {
   onSubmit(): void {
     if (this.postForm.invalid) return;
 
+    // Validate scheduling
+    if (this.publishMode === 'later' && !this.postForm.get('scheduledPublishAt')?.value) {
+      this.snackBar.open('Please select a date and time to schedule the post', 'Close', { duration: 3000 });
+      return;
+    }
+
     this.isLoading = true;
     const formVal = this.postForm.value;
-    const payload = { ...formVal, tags: this.tags, isDraft: false };
+    
+    const payload: any = {
+      title: formVal.title,
+      content: formVal.content,
+      summary: formVal.summary,
+      category: formVal.category,
+      tags: this.tags,
+      isDraft: this.publishMode === 'draft'
+    };
+
+    // Add scheduling if selected
+    if (this.publishMode === 'later' && formVal.scheduledPublishAt) {
+      payload.scheduledPublishAt = new Date(formVal.scheduledPublishAt).toISOString();
+    }
 
     const request = this.isEditing
       ? this.blogService.updatePost(this.editPostId!, payload)
@@ -421,11 +526,15 @@ export class BlogCreateComponent implements OnInit, OnDestroy {
         if (this.draftId) {
           this.blogService.deleteDraft(this.draftId).subscribe();
         }
-        this.snackBar.open(
-          this.isEditing ? 'Post updated!' : 'Post published!',
-          'Close',
-          { duration: 3000 }
-        );
+        const message = this.isEditing 
+          ? 'Post updated!' 
+          : this.publishMode === 'draft' 
+            ? 'Draft saved!'
+            : this.publishMode === 'later'
+              ? 'Post scheduled!'
+              : 'Post published!';
+        
+        this.snackBar.open(message, 'Close', { duration: 3000 });
         this.router.navigate(['/blog', post.slug]);
       },
       error: (err) => {

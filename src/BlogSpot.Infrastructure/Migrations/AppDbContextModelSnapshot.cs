@@ -100,6 +100,12 @@ namespace BlogSpot.Infrastructure.Migrations
                     b.Property<bool>("IsPublished")
                         .HasColumnType("bit");
 
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ScheduledPublishAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<int>("ReadingTimeMinutes")
                         .HasColumnType("int");
 
