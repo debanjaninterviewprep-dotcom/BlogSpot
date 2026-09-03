@@ -14,7 +14,7 @@ public class PostSchedulerService : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<PostSchedulerService> _logger;
-    private readonly TimeSpan _interval = TimeSpan.FromMinutes(1); // Check every minute
+    private readonly TimeSpan _interval = TimeSpan.FromMinutes(30); // Check every 30 minutes
 
     public PostSchedulerService(IServiceProvider serviceProvider, ILogger<PostSchedulerService> logger)
     {

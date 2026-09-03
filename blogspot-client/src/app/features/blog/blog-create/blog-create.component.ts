@@ -151,7 +151,7 @@ import { MatChipInputEvent } from '@angular/material/chips';
 
                 <p class="schedule-hint">
                   <mat-icon>info</mat-icon>
-                  Post will be automatically published at the selected date and time.
+                  You can schedule a post at least 30 minutes ahead — not in the past or sooner. It will be published automatically at the selected time.
                 </p>
               </div>
             </div>
@@ -555,8 +555,11 @@ export class BlogCreateComponent implements OnInit, OnDestroy {
       const scheduled = new Date(dateVal);
       const [hours, minutes] = timeVal.split(':').map(Number);
       scheduled.setHours(hours, minutes, 0, 0);
-      if (scheduled <= new Date()) {
-        this.snackBar.open('Scheduled time must be in the future', 'Close', { duration: 3000 });
+      // Must be at least 30 minutes in the future
+      const minAllowed = new Date();
+      minAllowed.setMinutes(minAllowed.getMinutes() + 30);
+      if (scheduled < minAllowed) {
+        this.snackBar.open('You can only schedule a post at least 30 minutes from now (not in the past or sooner)', 'Close', { duration: 4000 });
         return;
       }
       scheduledIso = scheduled.toISOString();
