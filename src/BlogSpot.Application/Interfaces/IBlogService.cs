@@ -1,5 +1,6 @@
 using BlogSpot.Application.DTOs.Blog;
 using BlogSpot.Application.DTOs.Common;
+using BlogSpot.Application.DTOs.User;
 
 namespace BlogSpot.Application.Interfaces;
 
@@ -15,6 +16,7 @@ public interface IBlogService
 
     // Likes (legacy)
     Task<bool> ToggleLikeAsync(Guid userId, Guid postId, CancellationToken ct = default);
+    Task<PagedResult<UserProfileDto>> GetPostLikersAsync(Guid postId, PaginationParams pagination, Guid? currentUserId = null, CancellationToken ct = default);
 
     // Reactions
     Task<ReactionSummaryDto> ToggleReactionAsync(Guid userId, Guid postId, string reactionType, CancellationToken ct = default);

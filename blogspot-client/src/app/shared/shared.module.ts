@@ -33,6 +33,7 @@ import { PostCardComponent } from './components/post-card/post-card.component';
 import { UserCardComponent } from './components/user-card/user-card.component';
 import { LoadingSpinnerComponent } from './components/loading-spinner/loading-spinner.component';
 import { ErrorStateComponent } from './components/error-state/error-state.component';
+import { PostLikersDialogComponent } from './components/post-likers-dialog/post-likers-dialog.component';
 import { ImageUrlPipe } from './pipes/image-url.pipe';
 import { FormatContentPipe } from './pipes/format-content.pipe';
 
@@ -69,6 +70,7 @@ const materialModules = [
     UserCardComponent,
     LoadingSpinnerComponent,
     ErrorStateComponent,
+    PostLikersDialogComponent,
     ImageUrlPipe,
     FormatContentPipe
   ],
@@ -89,6 +91,7 @@ const materialModules = [
     UserCardComponent,
     LoadingSpinnerComponent,
     ErrorStateComponent,
+    PostLikersDialogComponent,
     ImageUrlPipe,
     FormatContentPipe
   ]

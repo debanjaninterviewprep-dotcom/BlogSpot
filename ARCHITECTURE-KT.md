@@ -591,6 +591,7 @@ app.Run()
 | GET | `/search` | No | query + pagination | `PagedResult<BlogPostDto>` | Title/content search |
 | GET | `/fullsearch` | No | query + pagination | `SearchResultDto` | Posts + users + tags |
 | POST | `/{id}/like` | Yes | — | bool | Toggle like (legacy) |
+| GET | `/{id}/likers` | No | pagination | `PagedResult<UserProfileDto>` | Users who liked the post (Instagram-style likers list) |
 | POST | `/{id}/reactions` | Yes | `ReactionDto` | `ReactionSummaryDto` | Toggle emoji reaction |
 | GET | `/{id}/reactions` | No | — | `ReactionSummaryDto` | Get reaction counts |
 | POST | `/{id}/bookmark` | Yes | — | bool | Toggle bookmark |
@@ -775,7 +776,7 @@ IBlogService:
   - CreatePostAsync, UpdatePostAsync, DeletePostAsync
   - GetPostByIdAsync, GetPostBySlugAsync, GetPostsByUserAsync
   - SearchPostsAsync, FullTextSearchAsync
-  - ToggleLikeAsync, ToggleReactionAsync, GetReactionsAsync
+  - ToggleLikeAsync, GetPostLikersAsync, ToggleReactionAsync, GetReactionsAsync
   - ToggleBookmarkAsync, GetBookmarkedPostsAsync
   - AddCommentAsync, DeleteCommentAsync, GetCommentsAsync, ToggleCommentLikeAsync
   - AddImageToPostAsync, RemoveImageFromPostAsync

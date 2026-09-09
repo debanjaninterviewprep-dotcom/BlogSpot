@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using BlogSpot.Application.DTOs.Blog;
 using BlogSpot.Application.DTOs.Common;
+using BlogSpot.Application.DTOs.User;
 using BlogSpot.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -110,6 +111,14 @@ public class BlogController : ControllerBase
         var userId = GetCurrentUserId()!.Value;
         var liked = await _blogService.ToggleLikeAsync(userId, id, ct);
         return Ok(new { liked });
+    }
+
+    [HttpGet("{id:guid}/likers")]
+    public async Task<ActionResult<PagedResult<UserProfileDto>>> GetLikers(
+        Guid id, [FromQuery] PaginationParams pagination, CancellationToken ct)
+    {
+        var result = await _blogService.GetPostLikersAsync(id, pagination, GetCurrentUserId(), ct);
+        return Ok(result);
     }
 
     // --- Reactions ---

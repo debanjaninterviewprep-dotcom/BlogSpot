@@ -6,6 +6,7 @@ import {
   BlogPost, Comment, CreateBlogPost, CreateComment, PostImage, UpdateBlogPost,
   ReactionDto, ReactionSummaryDto, DraftBlog, SaveDraft, SearchResult
 } from '../models/blog.model';
+import { UserProfile } from '../models/user.model';
 import { PagedResult, PaginationParams } from '../models/pagination.model';
 
 @Injectable({
@@ -57,6 +58,11 @@ export class BlogService {
 
   toggleLike(postId: string): Observable<{ liked: boolean }> {
     return this.http.post<{ liked: boolean }>(`${this.apiUrl}/${postId}/like`, {});
+  }
+
+  getPostLikers(postId: string, pagination: PaginationParams): Observable<PagedResult<UserProfile>> {
+    const params = this.buildPaginationParams(pagination);
+    return this.http.get<PagedResult<UserProfile>>(`${this.apiUrl}/${postId}/likers`, { params });
   }
 
   // --- Reactions ---

@@ -2,9 +2,11 @@ import { Component, OnInit, HostListener } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatDialog } from '@angular/material/dialog';
 import { BlogService } from '@core/services/blog.service';
 import { AuthService } from '@core/services/auth.service';
 import { BlogPost, Comment, ReactionType, ReactionSummaryDto } from '@core/models/blog.model';
+import { PostLikersDialogComponent } from '../../../shared/components/post-likers-dialog/post-likers-dialog.component';
 
 @Component({
   selector: 'app-blog-detail',
@@ -72,7 +74,10 @@ import { BlogPost, Comment, ReactionType, ReactionSummaryDto } from '@core/model
                     [attr.aria-label]="post.isLikedByCurrentUser ? 'Unlike post' : 'Like post'"
                     [color]="post.isLikedByCurrentUser ? 'warn' : ''">
               <mat-icon>{{ post.isLikedByCurrentUser ? 'favorite' : 'favorite_border' }}</mat-icon>
-              {{ post.likeCount }}
+            </button>
+            <button mat-button class="like-count-btn" *ngIf="post.likeCount" (click)="openLikers()"
+                    aria-label="See who liked this post">
+              {{ post.likeCount }} {{ post.likeCount === 1 ? 'Like' : 'Likes' }}
             </button>
 
             <div class="emoji-reactions">
@@ -284,6 +289,8 @@ import { BlogPost, Comment, ReactionType, ReactionSummaryDto } from '@core/model
     .post-content em { font-style: italic; }
     .post-engagement { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; }
     .reaction-bar { display: flex; align-items: center; gap: 12px; }
+    .like-count-btn { margin-left: -8px; }
+    .like-count-btn:hover { text-decoration: underline; }
     .emoji-reactions { display: flex; gap: 4px; }
     .reaction-btn { width: 36px; height: 36px; }
     .reaction-btn.active { background: var(--color-primary-light); border-radius: 50%; }
@@ -383,7 +390,8 @@ export class BlogDetailComponent implements OnInit {
     private fb: FormBuilder,
     private blogService: BlogService,
     public authService: AuthService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private dialog: MatDialog
   ) {
     this.commentForm = this.fb.group({
       content: ['', [Validators.required, Validators.minLength(1)]]
@@ -468,6 +476,15 @@ export class BlogDetailComponent implements OnInit {
           this.post.likeCount += result.liked ? 1 : -1;
         }
       }
+    });
+  }
+
+  openLikers(): void {
+    if (!this.post) return;
+    this.dialog.open(PostLikersDialogComponent, {
+      data: { postId: this.post.id },
+      width: '400px',
+      autoFocus: false
     });
   }
 

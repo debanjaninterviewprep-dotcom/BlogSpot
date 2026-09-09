@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using BlogSpot.Application.Constants;
 using BlogSpot.Application.DTOs.Blog;
 using BlogSpot.Application.DTOs.Common;
+using BlogSpot.Application.DTOs.User;
 using BlogSpot.Application.Interfaces;
 using BlogSpot.Domain.Entities;
 using BlogSpot.Domain.Enums;
@@ -341,6 +342,49 @@ public class BlogService : IBlogService
         await _uow.SaveChangesAsync(ct);
         await _log.Info(ActivityActions.LikePost, nameof(BlogService), actor?.UserName, "Liked", ct);
         return true;
+    }
+
+    public async Task<PagedResult<UserProfileDto>> GetPostLikersAsync(Guid postId, PaginationParams pagination, Guid? currentUserId = null, CancellationToken ct = default)
+    {
+        var likersQuery = _uow.Likes.Query()
+            .Where(l => l.BlogPostId == postId)
+            .Include(l => l.User).ThenInclude(u => u.Profile)
+            .Include(l => l.User).ThenInclude(u => u.Followers)
+            .Include(l => l.User).ThenInclude(u => u.Following)
+            .Include(l => l.User).ThenInclude(u => u.BlogPosts)
+            .OrderByDescending(l => l.CreatedAt);
+
+        var totalCount = await likersQuery.CountAsync(ct);
+        var likers = await likersQuery
+            .Skip((pagination.Page - 1) * pagination.PageSize)
+            .Take(pagination.PageSize)
+            .Select(l => l.User)
+            .ToListAsync(ct);
+
+        return new PagedResult<UserProfileDto>
+        {
+            Items = likers.Select(u => MapToLikerDto(u, currentUserId)).ToList(),
+            TotalCount = totalCount,
+            Page = pagination.Page,
+            PageSize = pagination.PageSize
+        };
+    }
+
+    private static UserProfileDto MapToLikerDto(User user, Guid? currentUserId)
+    {
+        return new UserProfileDto
+        {
+            Id = user.Id,
+            UserName = user.UserName,
+            DisplayName = user.Profile?.DisplayName,
+            ProfilePictureUrl = user.Profile?.ProfilePictureUrl,
+            JoinedAt = user.CreatedAt,
+            FollowersCount = user.Followers?.Count ?? 0,
+            FollowingCount = user.Following?.Count ?? 0,
+            PostsCount = user.BlogPosts?.Count(p => p.IsPublished) ?? 0,
+            IsFollowedByCurrentUser = currentUserId.HasValue &&
+                (user.Followers?.Any(f => f.FollowerId == currentUserId.Value) ?? false)
+        };
     }
 
     // --- Reactions ---
