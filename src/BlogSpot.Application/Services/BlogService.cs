@@ -18,6 +18,8 @@ namespace BlogSpot.Application.Services;
 public class BlogService : IBlogService
 {
     private static readonly HtmlSanitizer _sanitizer = new();
+    // PostSchedulerService only polls every 15 min, so confirmations show a window instead of a false-precise exact time.
+    private const int PublishWindowMinutes = 20;
 
     private readonly IUnitOfWork _uow;
     private readonly INotificationService _notificationService;
@@ -105,7 +107,9 @@ public class BlogService : IBlogService
         {
             var istTimeZone = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
             var scheduledIst = TimeZoneInfo.ConvertTime(post.ScheduledPublishAt.Value, TimeZoneInfo.Utc, istTimeZone);
-            var scheduledIstFormatted = scheduledIst.ToString("dddd, dd MMM yyyy 'at' HH:mm 'IST'");
+            var windowEndIst = scheduledIst.AddMinutes(PublishWindowMinutes);
+            var scheduledDateFormatted = scheduledIst.ToString("dddd, dd MMM yyyy");
+            var scheduledWindowFormatted = $"between {scheduledIst:h:mm tt} and {windowEndIst:h:mm tt} IST";
             
             await _emailQueueService.EnqueueAsync(
                 author!.Email,
@@ -113,8 +117,8 @@ public class BlogService : IBlogService
                 $@"<div style='font-family:sans-serif;max-width:600px;margin:0 auto;padding:32px'>
                     <h2 style='color:#1d9bf0'>Post Scheduled</h2>
                     <h3>{post.Title}</h3>
-                    <p style='color:#536471'>Your post has been scheduled and will be published automatically at:</p>
-                    <p style='font-size:16px;font-weight:bold;color:#0f1419'>{scheduledIstFormatted}</p>
+                    <p style='color:#536471'>Your post has been scheduled and will be published automatically on {scheduledDateFormatted},</p>
+                    <p style='font-size:16px;font-weight:bold;color:#0f1419'>{scheduledWindowFormatted}</p>
                     <p style='color:#536471;font-size:13px'>We'll email you again once it goes live.</p>
                 </div>",
                 ct);

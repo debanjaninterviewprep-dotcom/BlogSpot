@@ -375,6 +375,8 @@ export class BlogCreateComponent implements OnInit, OnDestroy {
   // Scheduling
   publishMode: 'now' | 'later' = 'now';
   minDate: Date = new Date();
+  // PostSchedulerService only polls every 15 min, so confirmations show a window instead of a false-precise exact time.
+  private readonly publishWindowMinutes = 20;
 
   constructor(
     private fb: FormBuilder,
@@ -398,6 +400,12 @@ export class BlogCreateComponent implements OnInit, OnDestroy {
 
   setMinScheduleDate(): void {
     this.minDate = new Date();
+  }
+
+  private formatPublishWindow(scheduled: Date): string {
+    const windowEnd = new Date(scheduled.getTime() + this.publishWindowMinutes * 60000);
+    const opts: Intl.DateTimeFormatOptions = { hour: 'numeric', minute: '2-digit', hour12: true };
+    return `${scheduled.toLocaleTimeString('en-US', opts)} and ${windowEnd.toLocaleTimeString('en-US', opts)}`;
   }
 
   ngOnInit(): void {
@@ -543,6 +551,7 @@ export class BlogCreateComponent implements OnInit, OnDestroy {
     if (this.postForm.invalid) return;
 
     let scheduledIso: string | null = null;
+    let scheduledDate: Date | null = null;
 
     // Validate and build scheduled datetime
     if (this.publishMode === 'later') {
@@ -563,6 +572,7 @@ export class BlogCreateComponent implements OnInit, OnDestroy {
         return;
       }
       scheduledIso = scheduled.toISOString();
+      scheduledDate = scheduled;
     }
 
     this.isLoading = true;
@@ -592,13 +602,18 @@ export class BlogCreateComponent implements OnInit, OnDestroy {
         if (this.draftId) {
           this.blogService.deleteDraft(this.draftId).subscribe();
         }
-        const message = this.isEditing 
-          ? 'Post updated!' 
-          : this.publishMode === 'later'
-            ? 'Post scheduled!'
-            : 'Post published!';
-        
-        this.snackBar.open(message, 'Close', { duration: 3000 });
+        let message: string;
+        let duration = 3000;
+        if (this.isEditing) {
+          message = 'Post updated!';
+        } else if (this.publishMode === 'later' && scheduledDate) {
+          message = `Post scheduled! It will be published between ${this.formatPublishWindow(scheduledDate)}.`;
+          duration = 5000;
+        } else {
+          message = 'Post published!';
+        }
+
+        this.snackBar.open(message, 'Close', { duration });
         this.router.navigate(['/blog', post.slug]);
       },
       error: (err) => {

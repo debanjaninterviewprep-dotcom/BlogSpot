@@ -474,15 +474,15 @@ BlogService.createPost → POST /api/v1/blog (with scheduledPublishAt)
        ↓
 BlogController.Create → BlogService.CreatePostAsync
        ↓
-Backend re-validates 30-min minimum lead time
+Backend re-validates 1-hour minimum lead time
        ↓
 Status = Scheduled, ScheduledPublishAt = UTC time, IsPublished = false
        ↓
-Confirmation email queued (publish time formatted in IST)
+Confirmation email queued (publish window formatted in IST, e.g. "between 2:00 PM and 2:20 PM")
        ↓
 ActivityLogService.Info("PostScheduled", ...) → ActivityLogs table
        ↓
-[time passes] PostSchedulerService polls every 30 min (configurable)
+[time passes] PostSchedulerService polls every 15 min (configurable)
        ↓
 Finds due posts: Status=Scheduled AND ScheduledPublishAt ≤ UtcNow AND !IsDeleted
        ↓
@@ -664,7 +664,7 @@ app.Run()
 
 | Service | Key Responsibilities |
 |---------|---------------------|
-| **BlogService** | Post CRUD, slug generation, HTML sanitization (Ganss.XSS), reading time calc (~200 wpm), tag sync, reactions (add/change/remove), bookmarks, threaded comments, comment likes, image management, draft CRUD, full-text search (posts + users + tags), post scheduling (30-min min lead time, IST confirmation email, list scheduled posts) |
+| **BlogService** | Post CRUD, slug generation, HTML sanitization (Ganss.XSS), reading time calc (~200 wpm), tag sync, reactions (add/change/remove), bookmarks, threaded comments, comment likes, image management, draft CRUD, full-text search (posts + users + tags), post scheduling (1-hour min lead time, IST confirmation email showing a 20-min publish window, list scheduled posts) |
 | **UserService** | Profile CRUD, picture/cover upload, follow toggle with notification, follower removal, paginated followers/following, suggested users (top-5 by follower count), user search, creator analytics (views, reactions, comments, followers growth 30d, daily stats, top posts), notification preference management |
 | **FeedService** | Home feed (followed + trending fill), trending (MemoryCache 5 min, score = Views + Reactions×3 + Comments×5, 7-day window), latest (newest first) |
 | **AdminService** | Paginated admin views, toggle user status (email notification), change role (email notification), admin delete post/comment (soft delete + email), seed 30 Indian demo users + 40 posts + follows + likes + comments, format plain text posts to HTML |
@@ -674,7 +674,7 @@ app.Run()
 | **EmailQueueService** (Infra) | Enqueue single/bulk emails, process queue (Brevo API, 50/batch, 3 retries), send OTP (6-digit, 10-min expiry), verify OTP |
 | **FileStorageService** (Infra) | Upload to Cloudinary (if configured) or local wwwroot/uploads, delete from Cloudinary or local |
 | **EmailProcessorJob** (Infra) | BackgroundService, configurable interval via `Email:JobIntervalMinutes` (15 min in prod), batches queued emails (50/batch, 3 retries), calls ProcessQueueAsync() |
-| **PostSchedulerService** (App) | BackgroundService, configurable interval via `PostScheduler:JobIntervalMinutes` (default 30 min), publishes due scheduled posts (Status=Scheduled, ScheduledPublishAt ≤ now) and emails authors "now live" |
+| **PostSchedulerService** (App) | BackgroundService, configurable interval via `PostScheduler:JobIntervalMinutes` (15 min configured), publishes due scheduled posts (Status=Scheduled, ScheduledPublishAt ≤ now) and emails authors "now live" |
 
 ## 5. Repositories
 
@@ -834,16 +834,16 @@ Two long-running `BackgroundService` workers run inside the API process:
 | Job | Layer | Registration | Interval | Responsibility |
 |-----|-------|-------------|----------|----------------|
 | **EmailProcessorJob** | Infrastructure | `AddHostedService` in `AddInfrastructure()` | `Email:JobIntervalMinutes` (15 min prod) | Dequeues `EmailQueue` rows (50/batch, 3 retries), sends via Brevo API |
-| **PostSchedulerService** | Application | `AddHostedService` in `Program.cs` | `PostScheduler:JobIntervalMinutes` (30 min default) | Publishes due scheduled posts and emails authors |
+| **PostSchedulerService** | Application | `AddHostedService` in `Program.cs` | `PostScheduler:JobIntervalMinutes` (15 min configured) | Publishes due scheduled posts and emails authors |
 
 ### Post Scheduling Flow
 
-1. Author picks a future date/time in the editor (Material calendar + separate time field). The frontend enforces a **30-minute minimum lead time**; the backend re-validates (`ScheduledPublishAt >= UtcNow + 30 min`) as a safety net for direct API calls.
-2. `BlogService.CreatePostAsync` sets `Status = Scheduled`, stores `ScheduledPublishAt` (UTC), keeps `IsPublished = false`, queues a **confirmation email** showing the publish time converted to **IST** (`India Standard Time`), and writes a `PostScheduled` entry to `ActivityLogs`.
+1. Author picks a future date/time in the editor (Material calendar + separate time field). The frontend enforces a **1-hour minimum lead time**; the backend re-validates (`ScheduledPublishAt >= UtcNow + 1 hour`) as a safety net for direct API calls.
+2. `BlogService.CreatePostAsync` sets `Status = Scheduled`, stores `ScheduledPublishAt` (UTC), keeps `IsPublished = false`, queues a **confirmation email** showing a publish time **window** (scheduled time to scheduled time + 20 min, converted to **IST**) instead of an exact time — since `PostSchedulerService` only polls every 15 min, an exact time would be misleading — and writes a `PostScheduled` entry to `ActivityLogs`. The frontend success snackbar shows the same window immediately after submission.
 3. `PostSchedulerService` polls every N minutes for `Status == Scheduled && ScheduledPublishAt <= UtcNow && !IsDeleted`, flips them to `Published` (`IsPublished = true`, `ScheduledPublishAt = null`), and queues a **"your post is now live"** email to each author (query eager-loads `Author` for the address).
 4. Authors review upcoming posts at `/blog/scheduled` (`GET /api/v1/blog/scheduled` → `GetScheduledPostsAsync`, ordered by publish time) and can edit/reschedule through the normal edit route.
 
-> **Trade-off:** a 30-minute poll keeps the Neon free-tier DB awake more than a longer interval would; the interval is configurable to balance publish latency against compute-hour usage.
+> **Trade-off:** a 15-minute poll keeps the Neon free-tier DB awake more than a longer interval would; the interval is configurable to balance publish latency against compute-hour usage.
 
 ---
 
@@ -923,7 +923,7 @@ AppComponent template: <app-navbar> + <router-outlet> with @routeFade animation
 | **LoginComponent** | Auth | Login form | Email/username + password, validation, redirect to returnUrl |
 | **RegisterComponent** | Auth | Registration form | 3-step OTP flow, password strength validator (8+ chars, upper/lower/digit/special), real-time validation checkmarks |
 | **FeedComponent** | Feed | Content feed | 3 tabs, infinite scroll (load more), post cards with engagement, sidebar with suggested users (logged in) or guest promo card |
-| **BlogCreateComponent** | Blog | Rich text editor | Quill editor (ngx-quill), grammar check (LanguageTool), tags input (Enter/comma), category dropdown, save-as-draft, publish now / schedule (Material calendar + time, 30-min min lead time) |
+| **BlogCreateComponent** | Blog | Rich text editor | Quill editor (ngx-quill), grammar check (LanguageTool), tags input (Enter/comma), category dropdown, save-as-draft, publish now / schedule (Material calendar + time, 1-hour min lead time) |
 | **BlogDetailComponent** | Blog | Post viewer | Read progress bar, author info, engagement bar (like burst animation, emoji reactions, bookmark), threaded comments with replies |
 | **BlogSearchComponent** | Blog | Search results | Two tabs (Posts + People), full-text search, pagination |
 | **BookmarksComponent** | Blog | Saved posts | Paginated bookmarked posts |
@@ -1359,7 +1359,7 @@ If 401 → Angular interceptor → attempt refresh → retry or logout
 | `Email:BrevoApiKey` | API key | Transactional email provider |
 | `Email:FromEmail/FromName` | Sender identity | Email from address |
 | `Email:JobIntervalMinutes` | `"15"` | Background email processor interval (minutes) |
-| `PostScheduler:JobIntervalMinutes` | `"30"` | Scheduled-post publisher poll interval (minutes) |
+| `PostScheduler:JobIntervalMinutes` | `"15"` | Scheduled-post publisher poll interval (minutes) |
 | `Cors:AllowedOrigins` | Array of URLs | Whitelisted frontend origins |
 
 ## Frontend Environments
