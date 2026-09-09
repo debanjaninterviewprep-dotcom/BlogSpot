@@ -1717,7 +1717,6 @@ Clean Architecture provides maximum separation of concerns. The domain layer has
 ## Weaknesses
 - No automated tests: No unit or integration test projects exist
 - No CQRS: Read and write operations use the same models/services
-- No API versioning: Breaking changes would affect all clients
 - No caching layer: Only MemoryCache for trending feed; no distributed cache (Redis)
 - Monolith: Single API handles all domains; no microservice boundaries
 - Frontend state: Scattered BehaviorSubjects; no centralized state management
@@ -1733,12 +1732,11 @@ Clean Architecture provides maximum separation of concerns. The domain layer has
 ## Refactoring Opportunities
 1. Add unit + integration test projects
 2. Introduce MediatR for CQRS (separate read/write paths)
-3. Add API versioning (`/api/v1/`)
-4. Move to NgRx or Angular Signals for frontend state
-5. Add OnPush change detection to components
-6. Replace LIKE search with full-text search index
-7. Batch ViewCount increments
-8. Add health check endpoint with dependency checks
+3. Move to NgRx or Angular Signals for frontend state
+4. Add OnPush change detection to components
+5. Replace LIKE search with full-text search index
+6. Batch ViewCount increments
+7. Add health check endpoint with dependency checks
 
 ## Technical Debt
 - Legacy `Like` entity co-exists with newer `Reaction` entity
