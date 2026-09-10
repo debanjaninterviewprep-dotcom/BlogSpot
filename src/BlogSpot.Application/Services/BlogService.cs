@@ -22,6 +22,8 @@ public class BlogService : IBlogService
     private static readonly Regex _mentionRegex = new(@"@([A-Za-z0-9_]{3,50})", RegexOptions.Compiled);
     // PostSchedulerService only polls every 15 min, so confirmations show a window instead of a false-precise exact time.
     private const int PublishWindowMinutes = 20;
+    // Medium-style cap so clapping can't be used to spam a post's reaction count indefinitely.
+    private const int MaxClapCount = 50;
 
     private readonly IUnitOfWork _uow;
     private readonly INotificationService _notificationService;
@@ -405,19 +407,37 @@ public class BlogService : IBlogService
         var existing = (await _uow.Reactions.FindAsync(
             r => r.UserId == userId && r.BlogPostId == postId, ct)).FirstOrDefault();
 
+        bool isNewReaction = false;
+
         if (existing != null)
         {
             if (existing.Type == parsedType)
             {
-                // Remove reaction
-                _uow.Reactions.Remove(existing);
-                await _uow.SaveChangesAsync(ct);
-                await _log.Info(ActivityActions.Reaction, nameof(BlogService), actor?.UserName, $"Removed {reactionType}", ct);
+                if (parsedType == ReactionType.Clap)
+                {
+                    // Clap again to raise intensity, like Medium — capped so it can't be spammed.
+                    if (existing.Count < MaxClapCount)
+                    {
+                        existing.Count++;
+                        existing.UpdatedAt = DateTime.UtcNow;
+                        _uow.Reactions.Update(existing);
+                        await _uow.SaveChangesAsync(ct);
+                        await _log.Info(ActivityActions.Reaction, nameof(BlogService), actor?.UserName, $"Clap count {existing.Count}", ct);
+                    }
+                }
+                else
+                {
+                    // Remove reaction
+                    _uow.Reactions.Remove(existing);
+                    await _uow.SaveChangesAsync(ct);
+                    await _log.Info(ActivityActions.Reaction, nameof(BlogService), actor?.UserName, $"Removed {reactionType}", ct);
+                }
             }
             else
             {
-                // Change reaction type
+                // Change reaction type — starts a fresh count
                 existing.Type = parsedType;
+                existing.Count = 1;
                 existing.UpdatedAt = DateTime.UtcNow;
                 _uow.Reactions.Update(existing);
                 await _uow.SaveChangesAsync(ct);
@@ -431,11 +451,16 @@ public class BlogService : IBlogService
             {
                 UserId = userId,
                 BlogPostId = postId,
-                Type = parsedType
+                Type = parsedType,
+                Count = 1
             }, ct);
             await _uow.SaveChangesAsync(ct);
             await _log.Info(ActivityActions.Reaction, nameof(BlogService), actor?.UserName, $"Added {reactionType}", ct);
+            isNewReaction = true;
+        }
 
+        if (isNewReaction)
+        {
             // Notify post author
             var post = await _uow.BlogPosts.GetByIdAsync(postId, ct);
             if (post != null && post.AuthorId != userId)
@@ -458,20 +483,23 @@ public class BlogService : IBlogService
 
         var counts = reactions
             .GroupBy(r => r.Type.ToString())
-            .ToDictionary(g => g.Key, g => g.Count());
+            .ToDictionary(g => g.Key, g => g.Sum(r => r.Count));
 
         string? currentUserReaction = null;
+        int currentUserReactionCount = 0;
         if (currentUserId.HasValue)
         {
             var userReaction = reactions.FirstOrDefault(r => r.UserId == currentUserId.Value);
             currentUserReaction = userReaction?.Type.ToString();
+            currentUserReactionCount = userReaction?.Count ?? 0;
         }
 
         return new ReactionSummaryDto
         {
             Counts = counts,
             TotalCount = reactions.Count,
-            CurrentUserReaction = currentUserReaction
+            CurrentUserReaction = currentUserReaction,
+            CurrentUserReactionCount = currentUserReactionCount
         };
     }
 
@@ -865,13 +893,15 @@ public class BlogService : IBlogService
     {
         var reactionCounts = post.Reactions?
             .GroupBy(r => r.Type.ToString())
-            .ToDictionary(g => g.Key, g => g.Count()) ?? new();
+            .ToDictionary(g => g.Key, g => g.Sum(r => r.Count)) ?? new();
 
         string? currentUserReaction = null;
+        int currentUserReactionCount = 0;
         if (currentUserId.HasValue && post.Reactions != null)
         {
             var userReaction = post.Reactions.FirstOrDefault(r => r.UserId == currentUserId.Value);
             currentUserReaction = userReaction?.Type.ToString();
+            currentUserReactionCount = userReaction?.Count ?? 0;
         }
 
         return new BlogPostDto
@@ -899,6 +929,7 @@ public class BlogService : IBlogService
             IsBookmarkedByCurrentUser = currentUserId.HasValue && (post.Bookmarks?.Any(b => b.UserId == currentUserId.Value) ?? false),
             ReactionCounts = reactionCounts,
             CurrentUserReaction = currentUserReaction,
+            CurrentUserReactionCount = currentUserReactionCount,
             Tags = post.BlogPostTags?.Select(bt => bt.Tag.Name).ToList() ?? new(),
             Images = post.Images?.Select(i => new PostImageDto
             {

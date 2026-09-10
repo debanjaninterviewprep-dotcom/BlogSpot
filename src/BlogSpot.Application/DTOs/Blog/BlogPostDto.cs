@@ -33,6 +33,7 @@ public class BlogPostDto
     // Reactions
     public Dictionary<string, int> ReactionCounts { get; set; } = new();
     public string? CurrentUserReaction { get; set; }
+    public int CurrentUserReactionCount { get; set; }
 
     // Tags
     public List<string> Tags { get; set; } = new();

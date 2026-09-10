@@ -62,8 +62,9 @@ import { BlogPost, ReactionType } from '@core/models/blog.model';
                   [class.active]="post.currentUserReaction === r.type"
                   (click)="onReaction.emit({postId: post.id, type: r.type})"
                   [attr.aria-label]="r.type + ' reaction'"
-                  [matTooltip]="r.type">
+                  [matTooltip]="r.type + (post.reactionCounts?.[r.type] ? ' (' + post.reactionCounts[r.type] + ')' : '')">
             <span class="reaction-emoji">{{ r.emoji }}</span>
+            <span class="clap-count-badge" *ngIf="r.type === 'Clap' && post.currentUserReaction === 'Clap' && (post.currentUserReactionCount || 0) > 1">{{ post.currentUserReactionCount }}</span>
           </button>
         </div>
 
@@ -268,10 +269,24 @@ import { BlogPost, ReactionType } from '@core/models/blog.model';
 
     /* Reactions */
     .reaction-group { display: flex; align-items: center; gap: 2px; }
-    .reaction-btn { padding: 4px 6px; border-radius: 50%; }
+    .reaction-btn { padding: 4px 6px; border-radius: 50%; position: relative; }
     .reaction-btn:hover { background: var(--color-bg-hover); }
     .reaction-btn.active { background: var(--color-primary-light); }
     .reaction-emoji { font-size: 16px; line-height: 1; }
+    .clap-count-badge {
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      background: var(--color-primary);
+      color: #fff;
+      font-size: 9px;
+      font-weight: 700;
+      line-height: 1;
+      padding: 2px 4px;
+      border-radius: 8px;
+      min-width: 14px;
+      text-align: center;
+    }
     .spacer { flex: 1; }
 
     @media (max-width: 600px) {

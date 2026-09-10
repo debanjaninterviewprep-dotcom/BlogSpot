@@ -100,6 +100,7 @@ export class BookmarksComponent implements OnInit {
         if (post) {
           post.reactionCounts = result.counts;
           post.currentUserReaction = result.currentUserReaction;
+          post.currentUserReactionCount = result.currentUserReactionCount;
         }
       }
     });

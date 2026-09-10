@@ -24,6 +24,7 @@ export interface BlogPost {
   isBookmarkedByCurrentUser: boolean;
   reactionCounts: { [key: string]: number };
   currentUserReaction?: string;
+  currentUserReactionCount?: number;
   tags: string[];
   images: PostImage[];
 }
@@ -84,6 +85,7 @@ export interface ReactionSummaryDto {
   totalCount: number;
   counts: { [key: string]: number };
   currentUserReaction?: string;
+  currentUserReactionCount?: number;
 }
 
 // Drafts

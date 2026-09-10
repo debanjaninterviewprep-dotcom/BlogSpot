@@ -328,7 +328,7 @@ blogspot-client/src/app/
 | **Profile** | Extended user info: bio, avatar, social links, skills |
 | **BlogPost** | Published or draft article with rich text content |
 | **Comment** | Threaded comments on posts (nested replies) |
-| **Reaction** | Emoji reactions: Like, Love, Fire, Clap |
+| **Reaction** | Emoji reactions: Like, Love, Fire, Clap (Clap is repeatable up to 50x per user, like Medium) |
 | **Bookmark** | Saved posts for later reading |
 | **Follow** | User-to-user social relationship |
 | **Tag** | Content categorization label |
@@ -706,7 +706,7 @@ Plus `SaveChangesAsync()`.
 | **Profile** | DisplayName, Bio, ProfilePictureUrl, CoverPhotoUrl, Website, Location, SocialLinks (JSON), Skills (CSV), NotificationPreferences (JSON), UserId (FK, cascade) |
 | **BlogPost** | Title (200), Content, Summary (500), Slug (250, unique), Status (PostStatus enum), ScheduledPublishAt (nullable — auto-publish time), IsPublished, IsDraft, IsDeleted (query filter), ViewCount, ReadingTimeMinutes, Category (100), FeaturedImageUrl, AuthorId (FK). Nav: Images, Comments, Likes, Reactions, Bookmarks, BlogPostTags |
 | **Comment** | Content, IsEdited, IsDeleted, ParentCommentId (self-ref for nesting), UserId (FK, restrict), BlogPostId (FK, cascade). Nav: Replies, CommentLikes |
-| **Reaction** | Type (enum: Like/Love/Fire/Clap), UserId (FK), BlogPostId (FK) |
+| **Reaction** | Type (enum: Like/Love/Fire/Clap), Count (int, default 1 — lets Clap be clicked repeatedly up to 50 like Medium), UserId (FK), BlogPostId (FK) |
 | **Bookmark** | UserId (FK), BlogPostId (FK) |
 | **Follow** | FollowerId (FK), FollowingId (FK), composite PK |
 | **Tag** | Name, NormalizedName (uppercase). Nav: BlogPostTags |
@@ -1130,7 +1130,8 @@ Components use optimistic updates for likes/follows/bookmarks.
 | Id | UNIQUEIDENTIFIER | PK |
 | UserId | UNIQUEIDENTIFIER | FK → Users.Id, CASCADE |
 | BlogPostId | UNIQUEIDENTIFIER | FK → BlogPosts.Id, CASCADE |
-| Type | INT | CHECK IN (0=Like, 1=Love, 2=Fire, 3=Clap) |
+| Type | NVARCHAR(20) | Like/Love/Fire/Clap (stored as string) |
+| Count | INT | DEFAULT 1 — clap intensity, capped at 50 in BlogService |
 | CreatedAt | DATETIME2 | DEFAULT SYSUTCDATETIME() |
 
 ### Other Tables
@@ -1243,8 +1244,9 @@ Request: { "type": "Fire" }
 Response (200):
 {
   "totalCount": 15,
-  "counts": { "Like": 8, "Love": 3, "Fire": 3, "Clap": 1 },
-  "currentUserReaction": "Fire"
+  "counts": { "Like": 8, "Love": 3, "Fire": 3, "Clap": 12 },
+  "currentUserReaction": "Fire",
+  "currentUserReactionCount": 1
 }
 ```
 

@@ -215,7 +215,7 @@ BEGIN
 END
 GO
 
--- Reactions (emoji-style reactions stored as string Type, e.g. Like/Love/Fire/Clap)
+-- Reactions (emoji-style reactions stored as string Type, e.g. Like/Love/Fire/Clap; Count lets Clap be clicked multiple times like Medium)
 IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Reactions')
 BEGIN
     CREATE TABLE [dbo].[Reactions]
@@ -224,6 +224,7 @@ BEGIN
         [BlogPostId] UNIQUEIDENTIFIER NOT NULL,
         [UserId]     UNIQUEIDENTIFIER NOT NULL,
         [Type]       NVARCHAR(20)     NOT NULL,
+        [Count]      INT              NOT NULL DEFAULT 1,
         [CreatedAt]  DATETIME2        NOT NULL DEFAULT SYSUTCDATETIME(),
         [UpdatedAt]  DATETIME2        NULL,
 

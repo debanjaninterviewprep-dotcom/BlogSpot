@@ -423,7 +423,7 @@ export class FeedComponent implements OnInit {
     this.blogService.toggleReaction(event.postId, { type: event.type }).subscribe({
       next: (result: any) => {
         const post = this.posts.find(p => p.id === event.postId);
-        if (post) { post.reactionCounts = result.counts; post.currentUserReaction = result.currentUserReaction; }
+        if (post) { post.reactionCounts = result.counts; post.currentUserReaction = result.currentUserReaction; post.currentUserReactionCount = result.currentUserReactionCount; }
       }
     });
   }

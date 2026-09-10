@@ -175,13 +175,14 @@ CREATE TABLE IF NOT EXISTS "Likes"
 
 CREATE INDEX IF NOT EXISTS "IX_Likes_BlogPostId" ON "Likes"("BlogPostId");
 
--- Reactions (emoji-style reactions stored as string Type, e.g. Like/Love/Fire/Clap)
+-- Reactions (emoji-style reactions stored as string Type, e.g. Like/Love/Fire/Clap; Count lets Clap be clicked multiple times like Medium)
 CREATE TABLE IF NOT EXISTS "Reactions"
 (
     "Id"         uuid        NOT NULL DEFAULT gen_random_uuid(),
     "BlogPostId" uuid        NOT NULL,
     "UserId"     uuid        NOT NULL,
     "Type"       varchar(20) NOT NULL,
+    "Count"      integer     NOT NULL DEFAULT 1,
     "CreatedAt"  timestamp   NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
     "UpdatedAt"  timestamp   NULL,
 

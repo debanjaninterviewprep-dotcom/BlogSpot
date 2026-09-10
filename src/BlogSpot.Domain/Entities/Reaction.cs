@@ -10,6 +10,9 @@ public class Reaction : BaseEntity
 {
     public ReactionType Type { get; set; }
 
+    /// <summary>Number of times this user reacted with this type on this post (e.g. Medium-style claps, capped in BlogService).</summary>
+    public int Count { get; set; } = 1;
+
     // Foreign keys
     public Guid UserId { get; set; }
     public User User { get; set; } = null!;

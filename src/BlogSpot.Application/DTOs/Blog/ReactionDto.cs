@@ -19,4 +19,5 @@ public class ReactionSummaryDto
     public Dictionary<string, int> Counts { get; set; } = new();
     public int TotalCount { get; set; }
     public string? CurrentUserReaction { get; set; }
+    public int CurrentUserReactionCount { get; set; }
 }

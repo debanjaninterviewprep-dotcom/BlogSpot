@@ -88,8 +88,9 @@ import { PostLikersDialogComponent } from '../../../shared/components/post-liker
                       [class.active]="post.currentUserReaction === r.type"
                       (click)="toggleReaction(r.type)"
                       [attr.aria-label]="r.type + ' reaction'"
-                      [matTooltip]="r.type + (reactionSummary?.counts?.[r.type] ? ' (' + reactionSummary!.counts![r.type] + ')' : '')">
+                      [matTooltip]="reactionTooltip(r.type)">
                 <span class="reaction-emoji">{{ r.emoji }}</span>
+                <span class="clap-count-badge" *ngIf="r.type === 'Clap' && post.currentUserReaction === 'Clap' && (post.currentUserReactionCount || 0) > 1">{{ post.currentUserReactionCount }}</span>
               </button>
             </div>
 
@@ -328,9 +329,23 @@ import { PostLikersDialogComponent } from '../../../shared/components/post-liker
     .like-count-btn { margin-left: -8px; }
     .like-count-btn:hover { text-decoration: underline; }
     .emoji-reactions { display: flex; gap: 4px; }
-    .reaction-btn { width: 36px; height: 36px; }
+    .reaction-btn { width: 36px; height: 36px; position: relative; }
     .reaction-btn.active { background: var(--color-primary-light); border-radius: 50%; }
     .reaction-emoji { font-size: 18px; }
+    .clap-count-badge {
+      position: absolute;
+      top: 0;
+      right: 0;
+      background: var(--color-primary);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      line-height: 1;
+      padding: 2px 4px;
+      border-radius: 8px;
+      min-width: 14px;
+      text-align: center;
+    }
     .comment-count { display: flex; align-items: center; gap: 4px; color: var(--color-text-secondary); }
     .comments-section { margin-top: 24px; }
     .comment-form { margin-bottom: 24px; }
@@ -577,10 +592,20 @@ export class BlogDetailComponent implements OnInit {
         this.reactionSummary = summary;
         if (this.post) {
           this.post.currentUserReaction = summary.currentUserReaction;
+          this.post.currentUserReactionCount = summary.currentUserReactionCount;
           this.post.reactionCounts = summary.counts;
         }
       }
     });
+  }
+
+  reactionTooltip(type: ReactionType): string {
+    const total = this.reactionSummary?.counts?.[type];
+    let tooltip = type + (total ? ` (${total})` : '');
+    if (type === 'Clap' && this.post?.currentUserReaction === 'Clap' && (this.post?.currentUserReactionCount || 0) > 0) {
+      tooltip += ` — you clapped ${this.post.currentUserReactionCount}x`;
+    }
+    return tooltip;
   }
 
   toggleBookmark(): void {
