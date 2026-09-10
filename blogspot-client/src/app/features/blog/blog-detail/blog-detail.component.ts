@@ -576,7 +576,7 @@ export class BlogDetailComponent implements OnInit {
 
   private queueMentionSearch(value: string, caretPos: number, target: 'comment' | 'reply'): void {
     const upToCaret = value.slice(0, caretPos);
-    const match = upToCaret.match(/@(\w{1,30})$/);
+    const match = upToCaret.match(/@(\w{0,30})$/);
     if (!match) {
       this.showMentionMenu = false;
       return;
@@ -584,10 +584,24 @@ export class BlogDetailComponent implements OnInit {
     this.mentionTarget = target;
     this.mentionAtIndex = caretPos - match[0].length;
     this.mentionQueryLength = match[1].length;
+    const query = match[1];
 
     clearTimeout(this.mentionDebounceTimer);
+
+    if (!query) {
+      // Just typed "@" with nothing after it yet — show a default list right away, no debounce needed.
+      this.userService.getSuggestedUsers(5).subscribe({
+        next: (users) => {
+          this.mentionSuggestions = users;
+          this.showMentionMenu = users.length > 0;
+        },
+        error: () => (this.showMentionMenu = false)
+      });
+      return;
+    }
+
     this.mentionDebounceTimer = setTimeout(() => {
-      this.userService.searchUsers(match[1], { page: 1, pageSize: 5 }).subscribe({
+      this.userService.searchUsers(query, { page: 1, pageSize: 5 }).subscribe({
         next: (result) => {
           this.mentionSuggestions = result.items;
           this.showMentionMenu = result.items.length > 0;
