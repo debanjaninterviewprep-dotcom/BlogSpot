@@ -114,17 +114,26 @@ import { PostLikersDialogComponent } from '../../../shared/components/post-liker
 
           <form [formGroup]="commentForm" (ngSubmit)="addComment()" 
                 *ngIf="authService.isLoggedIn" class="comment-form">
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Write a comment...</mat-label>
-              <textarea matInput formControlName="content" rows="3"
-                        (input)="onCommentInput($event)" (blur)="onMentionInputBlur()"></textarea>
-            </mat-form-field>
-            <div class="mention-menu" *ngIf="showMentionMenu && mentionTarget === 'comment'">
-              <div class="mention-item" *ngFor="let u of mentionSuggestions" (mousedown)="selectMention(u)">
-                <img [src]="(u.profilePictureUrl | imageUrl) || 'assets/default-avatar.svg'" class="mention-avatar" alt="">
-                <span class="mention-name">{{ u.displayName || u.userName }}</span>
-                <span class="mention-username">&#64;{{ u.userName }}</span>
+            <div class="mention-input-wrapper">
+              <div class="mention-menu" *ngIf="showMentionMenu && mentionTarget === 'comment'">
+                <div class="mention-loading" *ngIf="mentionLoading">
+                  <mat-spinner diameter="16"></mat-spinner>
+                  <span>Loading users...</span>
+                </div>
+                <ng-container *ngIf="!mentionLoading">
+                  <div class="mention-item" *ngFor="let u of mentionSuggestions" (mousedown)="selectMention(u)">
+                    <img [src]="(u.profilePictureUrl | imageUrl) || 'assets/default-avatar.svg'" class="mention-avatar" alt="">
+                    <span class="mention-name">{{ u.displayName || u.userName }}</span>
+                    <span class="mention-username">&#64;{{ u.userName }}</span>
+                  </div>
+                  <div class="mention-empty" *ngIf="mentionSuggestions.length === 0">No matching users</div>
+                </ng-container>
               </div>
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Write a comment...</mat-label>
+                <textarea matInput formControlName="content" rows="3"
+                          (input)="onCommentInput($event)" (blur)="onMentionInputBlur()"></textarea>
+              </mat-form-field>
             </div>
             <button mat-raised-button color="primary" type="submit" 
                     [disabled]="commentForm.invalid">
@@ -176,16 +185,25 @@ import { PostLikersDialogComponent } from '../../../shared/components/post-liker
 
             <!-- Reply form -->
             <div *ngIf="replyingTo === comment.id" class="reply-form">
-              <mat-form-field appearance="outline" class="full-width">
-                <input matInput placeholder="Write a reply..." [(ngModel)]="replyContent"
-                       (input)="onReplyInput($event)" (blur)="onMentionInputBlur()">
-              </mat-form-field>
-              <div class="mention-menu" *ngIf="showMentionMenu && mentionTarget === 'reply'">
-                <div class="mention-item" *ngFor="let u of mentionSuggestions" (mousedown)="selectMention(u)">
-                  <img [src]="(u.profilePictureUrl | imageUrl) || 'assets/default-avatar.svg'" class="mention-avatar" alt="">
-                  <span class="mention-name">{{ u.displayName || u.userName }}</span>
-                  <span class="mention-username">&#64;{{ u.userName }}</span>
+              <div class="mention-input-wrapper">
+                <div class="mention-menu" *ngIf="showMentionMenu && mentionTarget === 'reply'">
+                  <div class="mention-loading" *ngIf="mentionLoading">
+                    <mat-spinner diameter="16"></mat-spinner>
+                    <span>Loading users...</span>
+                  </div>
+                  <ng-container *ngIf="!mentionLoading">
+                    <div class="mention-item" *ngFor="let u of mentionSuggestions" (mousedown)="selectMention(u)">
+                      <img [src]="(u.profilePictureUrl | imageUrl) || 'assets/default-avatar.svg'" class="mention-avatar" alt="">
+                      <span class="mention-name">{{ u.displayName || u.userName }}</span>
+                      <span class="mention-username">&#64;{{ u.userName }}</span>
+                    </div>
+                    <div class="mention-empty" *ngIf="mentionSuggestions.length === 0">No matching users</div>
+                  </ng-container>
                 </div>
+                <mat-form-field appearance="outline" class="full-width">
+                  <input matInput placeholder="Write a reply..." [(ngModel)]="replyContent"
+                         (input)="onReplyInput($event)" (blur)="onMentionInputBlur()">
+                </mat-form-field>
               </div>
               <button mat-raised-button color="primary" (click)="addReply(comment.id)"
                       [disabled]="!replyContent?.trim()">Reply</button>
@@ -316,15 +334,28 @@ import { PostLikersDialogComponent } from '../../../shared/components/post-liker
     .comment-count { display: flex; align-items: center; gap: 4px; color: var(--color-text-secondary); }
     .comments-section { margin-top: 24px; }
     .comment-form { margin-bottom: 24px; }
+    .mention-input-wrapper { position: relative; }
     .mention-menu {
-      position: relative;
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 100%;
+      margin-bottom: 6px;
       z-index: 20;
-      margin: -8px 0 12px;
       background: var(--card-bg, #fff);
       border: 1px solid var(--color-border);
       border-radius: 8px;
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-      overflow: hidden;
+      overflow-y: auto;
+      max-height: 220px;
+    }
+    .mention-loading, .mention-empty {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      font-size: 13px;
+      color: var(--color-text-secondary);
     }
     .mention-item {
       display: flex;
@@ -419,6 +450,7 @@ export class BlogDetailComponent implements OnInit {
 
   mentionSuggestions: UserProfile[] = [];
   showMentionMenu = false;
+  mentionLoading = false;
   mentionTarget: 'comment' | 'reply' = 'comment';
   private mentionAtIndex = 0;
   private mentionQueryLength = 0;
@@ -586,6 +618,8 @@ export class BlogDetailComponent implements OnInit {
     this.mentionQueryLength = match[1].length;
     const query = match[1];
 
+    this.showMentionMenu = true;
+    this.mentionLoading = true;
     clearTimeout(this.mentionDebounceTimer);
 
     if (!query) {
@@ -593,9 +627,12 @@ export class BlogDetailComponent implements OnInit {
       this.userService.getSuggestedUsers(5).subscribe({
         next: (users) => {
           this.mentionSuggestions = users;
-          this.showMentionMenu = users.length > 0;
+          this.mentionLoading = false;
         },
-        error: () => (this.showMentionMenu = false)
+        error: () => {
+          this.mentionSuggestions = [];
+          this.mentionLoading = false;
+        }
       });
       return;
     }
@@ -604,9 +641,12 @@ export class BlogDetailComponent implements OnInit {
       this.userService.searchUsers(query, { page: 1, pageSize: 5 }).subscribe({
         next: (result) => {
           this.mentionSuggestions = result.items;
-          this.showMentionMenu = result.items.length > 0;
+          this.mentionLoading = false;
         },
-        error: () => (this.showMentionMenu = false)
+        error: () => {
+          this.mentionSuggestions = [];
+          this.mentionLoading = false;
+        }
       });
     }, 200);
   }
