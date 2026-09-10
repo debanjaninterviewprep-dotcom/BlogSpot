@@ -56,6 +56,16 @@
   border-radius: 4px;
 }
 
+/* @mention links injected via [innerHTML] in post/comment content (formatContent / linkifyMentions pipes) */
+.mention-link {
+  color: var(--color-primary);
+  font-weight: var(--font-weight-medium);
+  text-decoration: none;
+}
+.mention-link:hover {
+  text-decoration: underline;
+}
+
 html, body {
   height: 100%;
   margin: 0;

@@ -124,6 +124,7 @@ public class NotificationService : INotificationService
         NotificationType.Comment => prefs.Comment,
         NotificationType.CommentLike => prefs.CommentLike,
         NotificationType.PostPublished => prefs.PostPublished,
+        NotificationType.Mention => prefs.Mention,
         _ => true
     };
 }

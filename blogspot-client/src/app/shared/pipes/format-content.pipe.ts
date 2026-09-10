@@ -1,5 +1,6 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { linkifyMentions } from '../utils/mention.util';
 
 /**
  * Converts plain-text blog content to properly formatted HTML.
@@ -30,12 +31,12 @@ export class FormatContentPipe implements PipeTransform {
 
     // If content already contains HTML block-level tags, it's already formatted
     if (this.isHtmlContent(content)) {
-      return this.sanitizer.bypassSecurityTrustHtml(this.sanitizeHtml(content));
+      return this.sanitizer.bypassSecurityTrustHtml(linkifyMentions(this.sanitizeHtml(content)));
     }
 
     // Convert plain text to professional HTML
     const html = this.convertPlainTextToHtml(content);
-    return this.sanitizer.bypassSecurityTrustHtml(html);
+    return this.sanitizer.bypassSecurityTrustHtml(linkifyMentions(html));
   }
 
   private isHtmlContent(content: string): boolean {

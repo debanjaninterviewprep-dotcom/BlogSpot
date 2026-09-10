@@ -5,7 +5,9 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { BlogService } from '@core/services/blog.service';
 import { AuthService } from '@core/services/auth.service';
+import { UserService } from '@core/services/user.service';
 import { BlogPost, Comment, ReactionType, ReactionSummaryDto } from '@core/models/blog.model';
+import { UserProfile } from '@core/models/user.model';
 import { PostLikersDialogComponent } from '../../../shared/components/post-likers-dialog/post-likers-dialog.component';
 
 @Component({
@@ -114,8 +116,16 @@ import { PostLikersDialogComponent } from '../../../shared/components/post-liker
                 *ngIf="authService.isLoggedIn" class="comment-form">
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Write a comment...</mat-label>
-              <textarea matInput formControlName="content" rows="3"></textarea>
+              <textarea matInput formControlName="content" rows="3"
+                        (input)="onCommentInput($event)" (blur)="onMentionInputBlur()"></textarea>
             </mat-form-field>
+            <div class="mention-menu" *ngIf="showMentionMenu && mentionTarget === 'comment'">
+              <div class="mention-item" *ngFor="let u of mentionSuggestions" (mousedown)="selectMention(u)">
+                <img [src]="(u.profilePictureUrl | imageUrl) || 'assets/default-avatar.svg'" class="mention-avatar" alt="">
+                <span class="mention-name">{{ u.displayName || u.userName }}</span>
+                <span class="mention-username">&#64;{{ u.userName }}</span>
+              </div>
+            </div>
             <button mat-raised-button color="primary" type="submit" 
                     [disabled]="commentForm.invalid">
               Post Comment
@@ -147,7 +157,7 @@ import { PostLikersDialogComponent } from '../../../shared/components/post-liker
                 <mat-icon>delete_outline</mat-icon>
               </button>
             </div>
-            <p class="comment-content">{{ comment.content }}</p>
+            <p class="comment-content" [innerHTML]="comment.content | linkifyMentions"></p>
 
             <div class="comment-actions">
               <!-- Like -->
@@ -167,8 +177,16 @@ import { PostLikersDialogComponent } from '../../../shared/components/post-liker
             <!-- Reply form -->
             <div *ngIf="replyingTo === comment.id" class="reply-form">
               <mat-form-field appearance="outline" class="full-width">
-                <input matInput placeholder="Write a reply..." [(ngModel)]="replyContent">
+                <input matInput placeholder="Write a reply..." [(ngModel)]="replyContent"
+                       (input)="onReplyInput($event)" (blur)="onMentionInputBlur()">
               </mat-form-field>
+              <div class="mention-menu" *ngIf="showMentionMenu && mentionTarget === 'reply'">
+                <div class="mention-item" *ngFor="let u of mentionSuggestions" (mousedown)="selectMention(u)">
+                  <img [src]="(u.profilePictureUrl | imageUrl) || 'assets/default-avatar.svg'" class="mention-avatar" alt="">
+                  <span class="mention-name">{{ u.displayName || u.userName }}</span>
+                  <span class="mention-username">&#64;{{ u.userName }}</span>
+                </div>
+              </div>
               <button mat-raised-button color="primary" (click)="addReply(comment.id)"
                       [disabled]="!replyContent?.trim()">Reply</button>
             </div>
@@ -187,7 +205,7 @@ import { PostLikersDialogComponent } from '../../../shared/components/post-liker
                   <mat-icon>delete_outline</mat-icon>
                 </button>
               </div>
-              <p class="comment-content">{{ reply.content }}</p>
+              <p class="comment-content" [innerHTML]="reply.content | linkifyMentions"></p>
               <div class="comment-actions">
                 <button class="comment-like-btn" [class.liked]="reply.isLikedByCurrentUser"
                         [attr.aria-label]="reply.isLikedByCurrentUser ? 'Unlike reply' : 'Like reply'"
@@ -298,6 +316,27 @@ import { PostLikersDialogComponent } from '../../../shared/components/post-liker
     .comment-count { display: flex; align-items: center; gap: 4px; color: var(--color-text-secondary); }
     .comments-section { margin-top: 24px; }
     .comment-form { margin-bottom: 24px; }
+    .mention-menu {
+      position: relative;
+      z-index: 20;
+      margin: -8px 0 12px;
+      background: var(--card-bg, #fff);
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+      overflow: hidden;
+    }
+    .mention-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+    .mention-item:hover { background: var(--color-bg-hover, rgba(108, 92, 231, 0.06)); }
+    .mention-avatar { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
+    .mention-name { font-size: 13px; font-weight: 500; color: var(--color-text-primary); }
+    .mention-username { font-size: 12px; color: var(--color-text-secondary); }
     .comment { padding: 12px 0; border-bottom: 1px solid var(--color-border); }
     .comment-enter { animation: commentFadeUp 0.35s ease both; }
     @keyframes commentFadeUp {
@@ -378,6 +417,13 @@ export class BlogDetailComponent implements OnInit {
   replyingTo: string | null = null;
   replyContent = '';
 
+  mentionSuggestions: UserProfile[] = [];
+  showMentionMenu = false;
+  mentionTarget: 'comment' | 'reply' = 'comment';
+  private mentionAtIndex = 0;
+  private mentionQueryLength = 0;
+  private mentionDebounceTimer: any;
+
   reactionTypes = [
     { type: 'Love' as ReactionType, emoji: '❤️' },
     { type: 'Fire' as ReactionType, emoji: '🔥' },
@@ -390,6 +436,7 @@ export class BlogDetailComponent implements OnInit {
     private fb: FormBuilder,
     private blogService: BlogService,
     public authService: AuthService,
+    private userService: UserService,
     private snackBar: MatSnackBar,
     private dialog: MatDialog
   ) {
@@ -511,6 +558,56 @@ export class BlogDetailComponent implements OnInit {
         }
       }
     });
+  }
+
+  onCommentInput(event: Event): void {
+    const el = event.target as HTMLTextAreaElement;
+    this.queueMentionSearch(el.value, el.selectionStart ?? el.value.length, 'comment');
+  }
+
+  onReplyInput(event: Event): void {
+    const el = event.target as HTMLInputElement;
+    this.queueMentionSearch(el.value, el.selectionStart ?? el.value.length, 'reply');
+  }
+
+  onMentionInputBlur(): void {
+    this.showMentionMenu = false;
+  }
+
+  private queueMentionSearch(value: string, caretPos: number, target: 'comment' | 'reply'): void {
+    const upToCaret = value.slice(0, caretPos);
+    const match = upToCaret.match(/@(\w{1,30})$/);
+    if (!match) {
+      this.showMentionMenu = false;
+      return;
+    }
+    this.mentionTarget = target;
+    this.mentionAtIndex = caretPos - match[0].length;
+    this.mentionQueryLength = match[1].length;
+
+    clearTimeout(this.mentionDebounceTimer);
+    this.mentionDebounceTimer = setTimeout(() => {
+      this.userService.searchUsers(match[1], { page: 1, pageSize: 5 }).subscribe({
+        next: (result) => {
+          this.mentionSuggestions = result.items;
+          this.showMentionMenu = result.items.length > 0;
+        },
+        error: () => (this.showMentionMenu = false)
+      });
+    }, 200);
+  }
+
+  selectMention(user: UserProfile): void {
+    const insert = `@${user.userName} `;
+    if (this.mentionTarget === 'comment') {
+      const current: string = this.commentForm.get('content')?.value || '';
+      const updated = current.slice(0, this.mentionAtIndex) + insert + current.slice(this.mentionAtIndex + 1 + this.mentionQueryLength);
+      this.commentForm.patchValue({ content: updated });
+    } else {
+      const current = this.replyContent || '';
+      this.replyContent = current.slice(0, this.mentionAtIndex) + insert + current.slice(this.mentionAtIndex + 1 + this.mentionQueryLength);
+    }
+    this.showMentionMenu = false;
   }
 
   addComment(): void {

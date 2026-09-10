@@ -130,6 +130,10 @@ import { NotificationPreferences } from '@core/models/user.model';
               <span>New post from admin</span>
               <mat-slide-toggle [(ngModel)]="notifPrefs.postPublished" color="primary"></mat-slide-toggle>
             </div>
+            <div class="notif-toggle-row">
+              <span>Someone mentions me</span>
+              <mat-slide-toggle [(ngModel)]="notifPrefs.mention" color="primary"></mat-slide-toggle>
+            </div>
             <button mat-stroked-button color="primary" class="save-prefs-btn"
                     (click)="saveNotifPrefs()" [disabled]="savingPrefs">
               Save Preferences
@@ -180,7 +184,7 @@ export class ProfileEditComponent implements OnInit {
   isLoading = false;
   skills: string[] = [];
   readonly separatorKeyCodes = [ENTER, COMMA] as const;
-  notifPrefs: NotificationPreferences = { follow: true, reaction: true, comment: true, commentLike: true, postPublished: true };
+  notifPrefs: NotificationPreferences = { follow: true, reaction: true, comment: true, commentLike: true, postPublished: true, mention: true };
   savingPrefs = false;
 
   constructor(

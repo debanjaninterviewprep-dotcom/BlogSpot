@@ -36,6 +36,7 @@ import { ErrorStateComponent } from './components/error-state/error-state.compon
 import { PostLikersDialogComponent } from './components/post-likers-dialog/post-likers-dialog.component';
 import { ImageUrlPipe } from './pipes/image-url.pipe';
 import { FormatContentPipe } from './pipes/format-content.pipe';
+import { LinkifyMentionsPipe } from './pipes/linkify-mentions.pipe';
 
 const materialModules = [
   MatToolbarModule,
@@ -72,7 +73,8 @@ const materialModules = [
     ErrorStateComponent,
     PostLikersDialogComponent,
     ImageUrlPipe,
-    FormatContentPipe
+    FormatContentPipe,
+    LinkifyMentionsPipe
   ],
   imports: [
     CommonModule,
@@ -93,7 +95,8 @@ const materialModules = [
     ErrorStateComponent,
     PostLikersDialogComponent,
     ImageUrlPipe,
-    FormatContentPipe
+    FormatContentPipe,
+    LinkifyMentionsPipe
   ]
 })
 export class SharedModule { }

@@ -19,6 +19,7 @@ namespace BlogSpot.Application.Services;
 public class BlogService : IBlogService
 {
     private static readonly HtmlSanitizer _sanitizer = new();
+    private static readonly Regex _mentionRegex = new(@"@([A-Za-z0-9_]{3,50})", RegexOptions.Compiled);
     // PostSchedulerService only polls every 15 min, so confirmations show a window instead of a false-precise exact time.
     private const int PublishWindowMinutes = 20;
 
@@ -97,7 +98,10 @@ public class BlogService : IBlogService
         var author = await _uow.Users.GetByIdAsync(userId, ct);
 
         if (post.IsPublished)
+        {
             await _log.Info(ActivityActions.PostBlog, nameof(BlogService), author?.UserName, post.Title, ct);
+            await NotifyMentionedUsersAsync(sanitizedContent, userId, post.Id, "post", ct);
+        }
 
         if (post.Status == PostStatus.Scheduled)
             await _log.Info(ActivityActions.PostScheduled, nameof(BlogService), author?.UserName, $"{post.Title} → {post.ScheduledPublishAt:yyyy-MM-dd HH:mm} UTC", ct);
@@ -203,6 +207,9 @@ public class BlogService : IBlogService
 
         var editor = await _uow.Users.GetByIdAsync(userId, ct);
         await _log.Info(ActivityActions.UpdatePost, nameof(BlogService), editor?.UserName, post.Title, ct);
+
+        if (post.IsPublished)
+            await NotifyMentionedUsersAsync(sanitizedContent, userId, post.Id, "post", ct);
 
         return await GetPostByIdAsync(postId, userId, ct)
             ?? throw new InvalidOperationException("Failed to retrieve updated post.");
@@ -534,6 +541,8 @@ public class BlogService : IBlogService
                 $"{commenter?.UserName} commented on your post",
                 postId, ct);
         }
+
+        await NotifyMentionedUsersAsync(dto.Content, userId, postId, "comment", ct);
 
         var savedComment = await _uow.Comments.Query()
             .Include(c => c.User).ThenInclude(u => u.Profile)
@@ -949,5 +958,37 @@ public class BlogService : IBlogService
         slug = Regex.Replace(slug, @"-+", "-");
         slug = slug.Trim('-');
         return slug;
+    }
+
+    /// <summary>
+    /// Parses @username tokens from post/comment content and notifies mentioned users (skips the actor, inactive users, and mentions already notified for this post).
+    /// </summary>
+    private async Task NotifyMentionedUsersAsync(string content, Guid actorId, Guid postId, string context, CancellationToken ct)
+    {
+        var usernames = _mentionRegex.Matches(content)
+            .Select(m => m.Groups[1].Value.ToLowerInvariant())
+            .Distinct()
+            .ToList();
+        if (usernames.Count == 0) return;
+
+        var mentionedUsers = await _uow.Users.Query()
+            .Where(u => u.IsActive && u.Id != actorId && usernames.Contains(u.UserName.ToLower()))
+            .ToListAsync(ct);
+        if (mentionedUsers.Count == 0) return;
+
+        var actor = await _uow.Users.GetByIdAsync(actorId, ct);
+
+        foreach (var user in mentionedUsers)
+        {
+            var alreadyNotified = await _uow.Notifications.Query().AnyAsync(n =>
+                n.UserId == user.Id && n.ActorId == actorId &&
+                n.Type == NotificationType.Mention && n.ReferenceId == postId, ct);
+            if (alreadyNotified) continue;
+
+            await _notificationService.CreateNotificationAsync(
+                user.Id, actorId, "Mention",
+                $"{actor?.UserName} mentioned you in a {context}",
+                postId, ct);
+        }
     }
 }

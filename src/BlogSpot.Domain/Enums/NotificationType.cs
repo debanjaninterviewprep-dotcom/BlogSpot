@@ -9,5 +9,6 @@ public enum NotificationType
     Reaction = 1,
     Comment = 2,
     PostPublished = 3,
-    CommentLike = 4
+    CommentLike = 4,
+    Mention = 5
 }

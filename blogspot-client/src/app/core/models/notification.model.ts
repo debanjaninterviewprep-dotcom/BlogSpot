@@ -10,4 +10,4 @@ export interface Notification {
   actorProfilePictureUrl?: string;
 }
 
-export type NotificationType = 'Follow' | 'Reaction' | 'Comment' | 'PostPublished';
+export type NotificationType = 'Follow' | 'Reaction' | 'Comment' | 'PostPublished' | 'Mention';

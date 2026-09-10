@@ -26,6 +26,7 @@ Provides a modern content publishing and discovery experience with social engage
 - Rich text blog editor (Quill) with grammar checking (LanguageTool API)
 - Draft auto-save and post scheduling (future auto-publish with IST email confirmation + "now live" alert)
 - Emoji reactions (Like, Love, Fire, Clap), bookmarks, threaded comments
+- @Mentions in posts/comments with autocomplete, notifying mentioned users
 - Personalized home feed, trending, latest feeds
 - Follow/unfollow with suggested users
 - Real-time notifications via SignalR WebSockets
@@ -332,7 +333,7 @@ blogspot-client/src/app/
 | **Follow** | User-to-user social relationship |
 | **Tag** | Content categorization label |
 | **DraftBlog** | Auto-saved draft before publishing |
-| **Notification** | Follow, reaction, comment alerts |
+| **Notification** | Follow, reaction, comment, mention alerts |
 | **EmailQueue** | Outbound emails (welcome, moderation, reports) |
 | **OtpVerification** | Email verification codes |
 | **ActivityLog** | System event audit trail |
@@ -442,6 +443,8 @@ notification$ BehaviorSubject emits → NavbarComponent shows toast
        ↓
 unreadCount$ incremented → badge updated
 ```
+
+Mentions reuse the same pipeline: `BlogService.NotifyMentionedUsersAsync` regex-parses `@username` tokens out of post content (on create/update, published posts only) and comment content (on add), resolves active users (excluding the actor), skips users already notified for that post by the same actor, then calls `NotificationService.CreateNotificationAsync(..., type="Mention", referenceId=postId)` per mentioned user — same preference check + SignalR push as above. Frontend autocomplete (`BlogDetailComponent`) reuses the existing `GET /user/search` endpoint; rendered mentions are linkified client-side via the `linkifyMentions` pipe/`formatContent` pipe.
 
 ### Workflow 5: Admin Moderation
 
@@ -718,7 +721,7 @@ Plus `SaveChangesAsync()`.
 ```
 UserRole:         User = 0, Admin = 1
 ReactionType:     Like = 0, Love = 1, Fire = 2, Clap = 3
-NotificationType: Follow = 0, Reaction = 1, Comment = 2, PostPublished = 3, CommentLike = 4
+NotificationType: Follow = 0, Reaction = 1, Comment = 2, PostPublished = 3, CommentLike = 4, Mention = 5
 EmailStatus:      Queued = 0, Sent = 1, Failed = 2
 LogLevel:         Info = 0, Error = 1, Warning = 2
 PostStatus:       Draft = 0, Scheduled = 1, Published = 2, Archived = 3

@@ -63,4 +63,5 @@ export interface NotificationPreferences {
   comment: boolean;
   commentLike: boolean;
   postPublished: boolean;
+  mention: boolean;
 }

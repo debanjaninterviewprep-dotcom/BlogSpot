@@ -700,6 +700,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
       case 'Reaction': return 'favorite';
       case 'Comment': return 'comment';
       case 'PostPublished': return 'article';
+      case 'Mention': return 'alternate_email';
       default: return 'notifications';
     }
   }

@@ -7,4 +7,5 @@ public class NotificationPreferencesDto
     public bool Comment { get; set; } = true;
     public bool CommentLike { get; set; } = true;
     public bool PostPublished { get; set; } = true;
+    public bool Mention { get; set; } = true;
 }
