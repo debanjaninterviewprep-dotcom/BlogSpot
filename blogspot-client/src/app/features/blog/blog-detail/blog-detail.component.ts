@@ -500,8 +500,11 @@ export class BlogDetailComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    const slug = this.route.snapshot.paramMap.get('slug')!;
-    this.blogService.getPostBySlug(slug).subscribe({
+    const param = this.route.snapshot.paramMap.get('slug')!;
+    // Notification deep-links pass the post's GUID id, not its slug — support both under the same route.
+    const isId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(param);
+    const post$ = isId ? this.blogService.getPostById(param) : this.blogService.getPostBySlug(param);
+    post$.subscribe({
       next: (post) => {
         this.post = post;
         this.loading = false;
