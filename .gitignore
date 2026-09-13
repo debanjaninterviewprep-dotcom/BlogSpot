@@ -69,6 +69,7 @@ Desktop.ini
 appsettings.Production.json
 *.pfx
 *.key
+neon-backup.config.ps1
 
 # =========================
 # Uploads (user content)
