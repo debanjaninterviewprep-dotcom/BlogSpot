@@ -294,6 +294,11 @@ import { MatChipInputEvent } from '@angular/material/chips';
       align-items: center;
       gap: 8px;
     }
+    mat-radio-button .mdc-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
     mat-radio-button mat-icon {
       font-size: 18px;
       width: 18px;

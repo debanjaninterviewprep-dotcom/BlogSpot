@@ -543,6 +543,11 @@ body.dark-theme {
     color: #fff !important;
     box-shadow: 0 4px 15px rgba(108, 92, 231, 0.35) !important;
   }
+  /* Without this a disabled button keeps the light theme's ink and is unreadable. */
+  .mat-mdc-raised-button:disabled {
+    background: #1e1e3a !important;
+    color: #6b6a80 !important;
+  }
   .mat-mdc-icon-button { color: #b0afc5 !important; }
 
   /* Chips */
@@ -775,6 +780,37 @@ body { padding-top: 56px; }
 
 .ql-editor h1, .ql-editor h2, .ql-editor h3 {
   margin: 1.2em 0 0.5em;
+}
+
+/* Quill's snow theme hardcodes near-black ink, which vanishes on a dark background. */
+body.dark-theme {
+  .ql-toolbar.ql-snow .ql-stroke { stroke: #b0afc5; }
+  .ql-toolbar.ql-snow .ql-fill { fill: #b0afc5; }
+  .ql-toolbar.ql-snow .ql-picker { color: #b0afc5; }
+
+  .ql-toolbar.ql-snow button:hover .ql-stroke,
+  .ql-toolbar.ql-snow button.ql-active .ql-stroke,
+  .ql-toolbar.ql-snow .ql-picker-label:hover .ql-stroke,
+  .ql-toolbar.ql-snow .ql-picker-label.ql-active .ql-stroke { stroke: var(--color-primary); }
+
+  .ql-toolbar.ql-snow button:hover .ql-fill,
+  .ql-toolbar.ql-snow button.ql-active .ql-fill { fill: var(--color-primary); }
+
+  .ql-toolbar.ql-snow .ql-picker-label:hover,
+  .ql-toolbar.ql-snow .ql-picker-label.ql-active,
+  .ql-toolbar.ql-snow .ql-picker-item:hover,
+  .ql-toolbar.ql-snow .ql-picker-item.ql-selected { color: var(--color-primary); }
+
+  .ql-toolbar.ql-snow .ql-picker-options {
+    background: var(--color-bg-secondary);
+    border-color: var(--color-border);
+  }
+  .ql-toolbar.ql-snow .ql-picker.ql-expanded .ql-picker-label {
+    border-color: var(--color-border);
+  }
+
+  .ql-container.ql-snow { color: var(--color-text-primary); }
+  .ql-editor.ql-blank::before { color: var(--color-text-secondary); }
 }
 
 /* =============================
