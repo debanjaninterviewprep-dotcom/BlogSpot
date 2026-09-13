@@ -207,7 +207,7 @@ import { PostLikersDialogComponent } from '../../../shared/components/post-liker
                 </mat-form-field>
               </div>
               <button mat-raised-button color="primary" (click)="addReply(comment.id)"
-                      [disabled]="!replyContent?.trim()">Reply</button>
+                      [disabled]="!replyContent.trim()">Reply</button>
             </div>
 
             <!-- Replies -->

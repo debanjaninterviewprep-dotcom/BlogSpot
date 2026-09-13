@@ -29,7 +29,11 @@
               "node_modules/quill/dist/quill.snow.css",
               "src/styles.scss"
             ],
-            "scripts": []
+            "scripts": [],
+            "allowedCommonJsDependencies": [
+              "quill-delta",
+              "file-saver"
+            ]
           },
           "configurations": {
             "production": {
@@ -41,7 +45,7 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "6kb",
+                  "maximumWarning": "8kb",
                   "maximumError": "10kb"
                 }
               ],

@@ -62,7 +62,7 @@ import { BlogPost, ReactionType } from '@core/models/blog.model';
                   [class.active]="post.currentUserReaction === r.type"
                   (click)="onReaction.emit({postId: post.id, type: r.type})"
                   [attr.aria-label]="r.type + ' reaction'"
-                  [matTooltip]="r.type + (post.reactionCounts?.[r.type] ? ' (' + post.reactionCounts[r.type] + ')' : '')">
+                  [matTooltip]="r.type + (post.reactionCounts[r.type] ? ' (' + post.reactionCounts[r.type] + ')' : '')">
             <span class="reaction-emoji">{{ r.emoji }}</span>
             <span class="clap-count-badge" *ngIf="r.type === 'Clap' && post.currentUserReaction === 'Clap' && (post.currentUserReactionCount || 0) > 1">{{ post.currentUserReactionCount }}</span>
           </button>
