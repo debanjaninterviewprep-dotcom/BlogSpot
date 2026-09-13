@@ -13,6 +13,14 @@ using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Machine-specific overrides (e.g. local DB password); gitignored.
+// Development-only: appended here it would otherwise outrank the environment
+// variables that supply the connection string in deployed environments.
+if (builder.Environment.IsDevelopment())
+{
+    builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
+}
+
 // Serilog
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)

@@ -67,6 +67,7 @@ Desktop.ini
 # Secrets (NEVER commit)
 # =========================
 appsettings.Production.json
+appsettings.Local.json
 *.pfx
 *.key
 neon-backup.config.ps1
