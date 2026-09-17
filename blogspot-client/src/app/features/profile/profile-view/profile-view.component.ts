@@ -207,7 +207,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     .profile-top { display: flex; gap: 16px; align-items: flex-start; }
     .profile-avatar {
       width: 120px; height: 120px; border-radius: 50%; object-fit: cover;
-      border: 4px solid white; margin-top: -60px; background: white; flex-shrink: 0;
+      border: 4px solid var(--card-bg); margin-top: -60px; background: var(--card-bg); flex-shrink: 0;
     }
     .profile-info { flex: 1; min-width: 0; }
     .profile-info h1 { margin: 0; font-size: var(--font-size-xl); font-weight: 800; color: var(--color-text-primary); letter-spacing: -0.02em; }

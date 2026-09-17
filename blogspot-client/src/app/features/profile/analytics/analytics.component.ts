@@ -80,15 +80,15 @@ import { CreatorAnalytics } from '@core/models/user.model';
       font-size: 32px;
       width: 32px;
       height: 32px;
-      color: #3f51b5;
+      color: var(--color-primary);
     }
     .stat-value {
       font-size: 36px;
       font-weight: 700;
       margin: 8px 0;
     }
-    .stat-label { color: #888; font-size: 14px; }
-    .stat-growth { color: #4caf50; font-size: 12px; margin-top: 4px; }
+    .stat-label { color: var(--color-text-secondary); font-size: 14px; }
+    .stat-growth { color: var(--color-success); font-size: 12px; margin-top: 4px; }
     .top-post {
       display: flex;
       align-items: center;
@@ -96,15 +96,15 @@ import { CreatorAnalytics } from '@core/models/user.model';
       width: 100%;
       padding: 8px 0;
     }
-    .rank { font-size: 18px; font-weight: 700; color: #888; min-width: 30px; }
+    .rank { font-size: 18px; font-weight: 700; color: var(--color-text-secondary); min-width: 30px; }
     .post-info { flex: 1; }
-    .post-title { text-decoration: none; color: #333; font-weight: 500; }
+    .post-title { text-decoration: none; color: var(--color-text-primary); font-weight: 500; }
     .post-title:hover { text-decoration: underline; }
     .post-stats {
       display: flex;
       gap: 16px;
       font-size: 13px;
-      color: #888;
+      color: var(--color-text-secondary);
       margin-top: 4px;
     }
     .post-stats span { display: flex; align-items: center; gap: 4px; }

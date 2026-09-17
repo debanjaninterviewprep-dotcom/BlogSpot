@@ -449,6 +449,7 @@ import { ExportService } from '@core/services/export.service';
       outline: none;
       min-width: 220px;
     }
+    .form-field select:focus { border-color: var(--color-primary); }
 
     .job-cards { display: flex; flex-direction: column; gap: 12px; max-width: 640px; }
     .job-card {
@@ -487,6 +488,7 @@ import { ExportService } from '@core/services/export.service';
       border-radius: 20px;
       background: var(--color-bg-secondary);
     }
+    .tab-search:focus-within { border-color: var(--color-primary); }
     .tab-search mat-icon { font-size: 18px; width: 18px; height: 18px; color: var(--color-text-secondary); }
     .tab-search input {
       border: none;
@@ -592,7 +594,7 @@ import { ExportService } from '@core/services/export.service';
     }
     .status-toggle.active .toggle-thumb { transform: translateX(16px); }
 
-    @media (max-width: 900px) {
+    @media (max-width: 1024px) {
       .admin-layout { flex-direction: column; }
       .admin-sidebar {
         width: 100%;

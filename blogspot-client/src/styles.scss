@@ -443,6 +443,17 @@ body.dark-theme {
     background-position: right 8px center !important;
   }
   .edit-field select:focus { border-color: var(--color-primary) !important; }
+
+  /* Data Tools dropdown arrow (admin-dashboard .form-field) needs the same lighter arrow as other admin selects. */
+  .form-field select {
+    background: #0a0a1a !important;
+    color: #e8e6f0 !important;
+    border-color: #2a2a4a !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%238b8aa0' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 10px center !important;
+  }
+  .form-field select:focus { border-color: var(--color-primary) !important; }
   .status-toggle { color: #8b8aa0 !important; }
   .toggle-track { background: #2a2a4a !important; }
   .status-toggle.active .toggle-track { background: var(--color-success) !important; }
@@ -546,9 +557,13 @@ body.dark-theme {
   /* Without this a disabled button keeps the light theme's ink and is unreadable. */
   .mat-mdc-raised-button:disabled {
     background: #1e1e3a !important;
-    color: #6b6a80 !important;
+    color: #9998b3 !important;
   }
   .mat-mdc-icon-button { color: #b0afc5 !important; }
+
+  /* Radio Buttons */
+  /* MDC hardcodes near-black label ink (same issue as Quill's toolbar), invisible on a dark background. */
+  .mat-mdc-radio-button .mdc-label { color: #e8e6f0 !important; }
 
   /* Chips */
   .mat-mdc-chip:not(.mat-mdc-chip-disabled) {

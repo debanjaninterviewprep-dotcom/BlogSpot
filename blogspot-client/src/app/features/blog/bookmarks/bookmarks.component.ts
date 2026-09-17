@@ -33,8 +33,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
   `,
   styles: [`
     .bookmarks-container { width: 100%; padding: 0 24px; box-sizing: border-box; min-height: calc(100vh - 56px); }
-    .empty-state { text-align: center; padding: 48px; color: #888; }
-    .empty-state mat-icon { font-size: 64px; width: 64px; height: 64px; color: #ccc; }
+    .empty-state { text-align: center; padding: 48px; color: var(--color-text-secondary); }
+    .empty-state mat-icon { font-size: 64px; width: 64px; height: 64px; color: var(--color-border); }
   `]
 })
 export class BookmarksComponent implements OnInit {

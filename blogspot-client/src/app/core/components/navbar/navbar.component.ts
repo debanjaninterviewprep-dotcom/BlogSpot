@@ -208,7 +208,7 @@ import { User } from '../../models/auth.model';
       top: 0; left: 0; right: 0;
       z-index: 1000;
       height: 56px;
-      background: #fff;
+      background: var(--navbar-bg);
       border-bottom: 1px solid var(--color-border);
       display: flex;
       align-items: center;
@@ -272,7 +272,7 @@ import { User } from '../../models/auth.model';
       transition: background 0.2s, border-color 0.2s;
     }
     .search-wrapper.focused {
-      background: #fff;
+      background: var(--search-focus-bg);
       border-color: var(--color-primary);
     }
     .search-wrapper.focused .search-icon { color: var(--color-primary); }
@@ -285,7 +285,7 @@ import { User } from '../../models/auth.model';
       position: absolute;
       top: 48px;
       left: 0; right: 0;
-      background: #fff;
+      background: var(--card-bg);
       border-radius: 16px;
       box-shadow: var(--card-hover-shadow);
       border: 1px solid var(--color-border);
@@ -347,9 +347,9 @@ import { User } from '../../models/auth.model';
     .search-post-icon { color: var(--color-primary); font-size: 18px; width: 18px; height: 18px; }
     .search-item-info { display: flex; flex-direction: column; min-width: 0; }
     .search-item-name { font-size: var(--font-size-base); font-weight: var(--font-weight-semibold); color: var(--color-text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .search-item-name mark { background-color: #ffeb3b; color: var(--color-text-primary); font-weight: var(--font-weight-bold); padding: 0 2px; }
+    .search-item-name mark { background-color: #ffeb3b; color: #1a1a2e; font-weight: var(--font-weight-bold); padding: 0 2px; }
     .search-item-sub { font-size: var(--font-size-xs); color: var(--color-text-secondary); }
-    .search-item-sub mark { background-color: #ffeb3b; color: var(--color-text-primary); font-weight: var(--font-weight-bold); padding: 0 2px; }
+    .search-item-sub mark { background-color: #ffeb3b; color: #1a1a2e; font-weight: var(--font-weight-bold); padding: 0 2px; }
     .search-view-all {
       display: block;
       text-align: center;

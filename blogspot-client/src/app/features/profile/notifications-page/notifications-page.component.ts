@@ -75,8 +75,8 @@ import { Notification } from '@core/models/notification.model';
       cursor: pointer;
       transition: background 0.15s;
     }
-    .notif-card:hover { background: rgba(63,81,181,0.05); }
-    .notif-card.unread { border-left: 3px solid #3f51b5; }
+    .notif-card:hover { background: var(--color-bg-hover); }
+    .notif-card.unread { border-left: 3px solid var(--color-primary); }
     .notif-row {
       display: flex;
       align-items: center;
@@ -86,22 +86,22 @@ import { Notification } from '@core/models/notification.model';
     .notif-icon {
       width: 40px; height: 40px; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      background: rgba(63,81,181,0.12);
+      background: var(--color-primary-light);
       flex-shrink: 0;
     }
-    .notif-icon.type-follow { background: rgba(76,175,80,0.15); color: #4caf50; }
-    .notif-icon.type-reaction { background: rgba(244,67,54,0.12); color: #f44336; }
+    .notif-icon.type-follow { background: rgba(0, 184, 148, 0.15); color: var(--color-success); }
+    .notif-icon.type-reaction { background: rgba(255, 107, 107, 0.12); color: var(--color-danger); }
     .notif-icon.type-comment { background: rgba(33,150,243,0.12); color: #2196f3; }
     .notif-icon mat-icon { font-size: 20px; width: 20px; height: 20px; }
     .notif-body { flex: 1; }
     .notif-message { margin: 0 0 4px; font-size: 14px; line-height: 1.4; }
-    .notif-time { font-size: 12px; color: #888; }
+    .notif-time { font-size: 12px; color: var(--color-text-secondary); }
     .unread-dot {
       width: 8px; height: 8px; border-radius: 50%;
-      background: #3f51b5; flex-shrink: 0;
+      background: var(--color-primary); flex-shrink: 0;
     }
     .empty-state {
-      text-align: center; padding: 64px 16px; color: #888;
+      text-align: center; padding: 64px 16px; color: var(--color-text-secondary);
     }
     .empty-state mat-icon {
       font-size: 72px; width: 72px; height: 72px;

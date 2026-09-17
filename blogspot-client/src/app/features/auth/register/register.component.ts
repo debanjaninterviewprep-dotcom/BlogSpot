@@ -196,7 +196,7 @@ function passwordStrengthValidator(control: AbstractControl): ValidationErrors |
       max-width: 480px;
       padding: 32px;
       box-sizing: border-box;
-      background: #fff;
+      background: var(--card-bg);
       border-radius: 20px;
       border: 1px solid var(--color-border);
       position: relative;
@@ -327,7 +327,7 @@ function passwordStrengthValidator(control: AbstractControl): ValidationErrors |
       color: var(--color-success); font-size: var(--font-size-base); font-weight: var(--font-weight-semibold); margin: 8px 0 0;
     }
     .otp-verified mat-icon { font-size: 18px; width: 18px; height: 18px; }
-    @media (max-width: 480px) {
+    @media (max-width: 600px) {
       .auth-card { padding: 24px 16px; border: none; border-radius: 0; }
       .auth-title { font-size: 24px; }
       .auth-container { padding: 16px; }

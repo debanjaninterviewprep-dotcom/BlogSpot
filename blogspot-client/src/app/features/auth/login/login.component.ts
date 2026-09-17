@@ -106,7 +106,7 @@ import { AuthService } from '@core/services/auth.service';
       max-width: 440px;
       padding: 32px;
       box-sizing: border-box;
-      background: #fff;
+      background: var(--card-bg);
       border-radius: 20px;
       border: 1px solid var(--color-border);
       position: relative;
@@ -171,7 +171,7 @@ import { AuthService } from '@core/services/auth.service';
       font-weight: var(--font-weight-semibold);
     }
     .auth-link:hover { text-decoration: underline; }
-    @media (max-width: 480px) {
+    @media (max-width: 600px) {
       .auth-card { padding: 24px 16px; border: none; border-radius: 0; }
       .auth-title { font-size: 24px; }
     }

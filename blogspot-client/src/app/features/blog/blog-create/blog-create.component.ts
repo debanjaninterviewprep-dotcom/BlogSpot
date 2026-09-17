@@ -188,7 +188,7 @@ import { MatChipInputEvent } from '@angular/material/chips';
     .spacer { flex: 1; }
     .autosave-status {
       font-size: 12px;
-      color: #888;
+      color: var(--color-text-secondary);
       font-style: italic;
     }
     form {
@@ -250,6 +250,7 @@ import { MatChipInputEvent } from '@angular/material/chips';
     }
     .issue-text {
       background: #fff3cd;
+      color: #1a1a2e;
       padding: 2px 6px;
       border-radius: 4px;
     }

@@ -149,7 +149,7 @@ import { NotificationPreferences } from '@core/models/user.model';
     .cover-section { margin-bottom: 16px; }
     .cover-preview {
       height: 150px;
-      background: linear-gradient(135deg, #3f51b5, #7986cb);
+      background: var(--gradient-hero);
       background-size: cover;
       background-position: center;
       border-radius: 8px;
@@ -160,7 +160,7 @@ import { NotificationPreferences } from '@core/models/user.model';
     .avatar-section { display: flex; align-items: center; gap: 16px; margin: 16px 0 24px; }
     .avatar-preview { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; }
     form { display: flex; flex-direction: column; gap: 8px; }
-    .section-title { margin: 16px 0 8px; font-size: 16px; color: #555; }
+    .section-title { margin: 16px 0 8px; font-size: 16px; color: var(--color-text-primary); }
     .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
     .notif-prefs-section { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--color-border, #eee); }
     .section-hint { font-size: 13px; color: var(--color-text-secondary, #666); margin: 0 0 16px; }

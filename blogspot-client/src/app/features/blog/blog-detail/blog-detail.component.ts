@@ -417,11 +417,11 @@ import { PostLikersDialogComponent } from '../../../shared/components/post-liker
       transition: color 0.15s, background 0.15s;
     }
     .comment-like-btn:hover {
-      color: #f91880;
-      background: rgba(249,24,128,0.08);
+      color: var(--color-like);
+      background: rgba(255, 107, 129, 0.08);
     }
     .comment-like-btn.liked {
-      color: #f91880;
+      color: var(--color-like);
     }
     .comment-like-btn mat-icon {
       font-size: 16px;
