@@ -93,9 +93,13 @@ export class AdminService {
   }
 
   private buildParams(pagination: PaginationParams): HttpParams {
-    return new HttpParams()
+    let params = new HttpParams()
       .set('page', pagination.page.toString())
       .set('pageSize', pagination.pageSize.toString());
+    if (pagination.search) {
+      params = params.set('search', pagination.search);
+    }
+    return params;
   }
 }
 

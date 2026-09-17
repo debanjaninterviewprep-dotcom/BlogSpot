@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { PageEvent } from '@angular/material/paginator';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { trigger, state, style, transition, animate } from '@angular/animations';
+import { Subject, debounceTime, takeUntil } from 'rxjs';
 import { AdminService, AdminUser, AdminPost, AdminComment, EmailQueueItem } from '@core/services/admin.service';
 import { AuthService } from '@core/services/auth.service';
 import { ExportService } from '@core/services/export.service';
@@ -32,7 +33,7 @@ import { ExportService } from '@core/services/export.service';
               <span class="tab-count">{{ usersTotalCount }} users</span>
               <div class="tab-search">
                 <mat-icon>search</mat-icon>
-                <input type="text" placeholder="Filter by username or email..." [(ngModel)]="usersFilter">
+                <input type="text" placeholder="Filter by username or email..." [(ngModel)]="usersFilter" (input)="onUsersFilterChange()">
               </div>
               <button mat-stroked-button [matMenuTriggerFor]="usersExportMenu" class="export-btn">
                 <mat-icon>download</mat-icon> Export Report
@@ -46,7 +47,7 @@ import { ExportService } from '@core/services/export.service';
                 </button>
               </mat-menu>
             </div>
-            <table mat-table [dataSource]="filteredUsers" class="full-width" multiTemplateDataRows>
+            <table mat-table [dataSource]="users" class="full-width" multiTemplateDataRows>
               <ng-container matColumnDef="userName">
                 <th mat-header-cell *matHeaderCellDef>Username</th>
                 <td mat-cell *matCellDef="let user">
@@ -136,7 +137,7 @@ import { ExportService } from '@core/services/export.service';
               <span class="tab-count">{{ postsTotalCount }} posts</span>
               <div class="tab-search">
                 <mat-icon>search</mat-icon>
-                <input type="text" placeholder="Filter by title or author..." [(ngModel)]="postsFilter">
+                <input type="text" placeholder="Filter by title or author..." [(ngModel)]="postsFilter" (input)="onPostsFilterChange()">
               </div>
               <button mat-stroked-button [matMenuTriggerFor]="postsExportMenu" class="export-btn">
                 <mat-icon>download</mat-icon> Export Report
@@ -150,7 +151,7 @@ import { ExportService } from '@core/services/export.service';
                 </button>
               </mat-menu>
             </div>
-            <table mat-table [dataSource]="filteredPosts" class="full-width">
+            <table mat-table [dataSource]="posts" class="full-width">
               <ng-container matColumnDef="title">
                 <th mat-header-cell *matHeaderCellDef>Title</th>
                 <td mat-cell *matCellDef="let post">
@@ -198,7 +199,7 @@ import { ExportService } from '@core/services/export.service';
               <span class="tab-count">{{ commentsTotalCount }} comments</span>
               <div class="tab-search">
                 <mat-icon>search</mat-icon>
-                <input type="text" placeholder="Filter by content or user..." [(ngModel)]="commentsFilter">
+                <input type="text" placeholder="Filter by content or user..." [(ngModel)]="commentsFilter" (input)="onCommentsFilterChange()">
               </div>
               <button mat-stroked-button [matMenuTriggerFor]="commentsExportMenu" class="export-btn">
                 <mat-icon>download</mat-icon> Export Report
@@ -212,7 +213,7 @@ import { ExportService } from '@core/services/export.service';
                 </button>
               </mat-menu>
             </div>
-            <table mat-table [dataSource]="filteredComments" class="full-width">
+            <table mat-table [dataSource]="comments" class="full-width">
               <ng-container matColumnDef="content">
                 <th mat-header-cell *matHeaderCellDef>Comment</th>
                 <td mat-cell *matCellDef="let c">{{ c.content | slice:0:80 }}</td>
@@ -443,7 +444,7 @@ import { ExportService } from '@core/services/export.service';
     ])
   ]
 })
-export class AdminDashboardComponent implements OnInit {
+export class AdminDashboardComponent implements OnInit, OnDestroy {
   // Users
   users: AdminUser[] = [];
   usersTotalCount = 0;
@@ -471,23 +472,10 @@ export class AdminDashboardComponent implements OnInit {
   isSeeding = false;
   isFormatting = false;
 
-  get filteredUsers(): AdminUser[] {
-    const q = this.usersFilter.trim().toLowerCase();
-    if (!q) return this.users;
-    return this.users.filter(u => u.userName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
-  }
-
-  get filteredPosts(): AdminPost[] {
-    const q = this.postsFilter.trim().toLowerCase();
-    if (!q) return this.posts;
-    return this.posts.filter(p => p.title.toLowerCase().includes(q) || p.authorUserName.toLowerCase().includes(q));
-  }
-
-  get filteredComments(): AdminComment[] {
-    const q = this.commentsFilter.trim().toLowerCase();
-    if (!q) return this.comments;
-    return this.comments.filter(c => c.content.toLowerCase().includes(q) || c.userName.toLowerCase().includes(q));
-  }
+  private destroy$ = new Subject<void>();
+  private usersSearch$ = new Subject<void>();
+  private postsSearch$ = new Subject<void>();
+  private commentsSearch$ = new Subject<void>();
 
   constructor(
     private adminService: AdminService,
@@ -501,10 +489,31 @@ export class AdminDashboardComponent implements OnInit {
     this.loadPosts(1);
     this.loadComments(1);
     this.loadEmails(1);
+
+    this.usersSearch$.pipe(debounceTime(300), takeUntil(this.destroy$)).subscribe(() => this.loadUsers(1));
+    this.postsSearch$.pipe(debounceTime(300), takeUntil(this.destroy$)).subscribe(() => this.loadPosts(1));
+    this.commentsSearch$.pipe(debounceTime(300), takeUntil(this.destroy$)).subscribe(() => this.loadComments(1));
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  onUsersFilterChange(): void {
+    this.usersSearch$.next();
+  }
+
+  onPostsFilterChange(): void {
+    this.postsSearch$.next();
+  }
+
+  onCommentsFilterChange(): void {
+    this.commentsSearch$.next();
   }
 
   loadUsers(page: number): void {
-    this.adminService.getUsers({ page, pageSize: 12 }).subscribe({
+    this.adminService.getUsers({ page, pageSize: 12, search: this.usersFilter.trim() || undefined }).subscribe({
       next: (result) => {
         this.users = result.items;
         this.usersTotalCount = result.totalCount;
@@ -513,7 +522,7 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   loadPosts(page: number): void {
-    this.adminService.getPosts({ page, pageSize: 10 }).subscribe({
+    this.adminService.getPosts({ page, pageSize: 10, search: this.postsFilter.trim() || undefined }).subscribe({
       next: (result) => {
         this.posts = result.items;
         this.postsTotalCount = result.totalCount;
@@ -522,7 +531,7 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   loadComments(page: number): void {
-    this.adminService.getComments({ page, pageSize: 10 }).subscribe({
+    this.adminService.getComments({ page, pageSize: 10, search: this.commentsFilter.trim() || undefined }).subscribe({
       next: (result) => {
         this.comments = result.items;
         this.commentsTotalCount = result.totalCount;

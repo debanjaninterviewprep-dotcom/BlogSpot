@@ -651,12 +651,12 @@ app.Run()
 
 | Method | Route | Input | Output | Purpose |
 |--------|-------|-------|--------|---------|
-| GET | `/users` | pagination | `PagedResult<AdminUserDto>` | All users |
+| GET | `/users` | pagination (+ optional `search` on username/email) | `PagedResult<AdminUserDto>` | All users |
 | PUT | `/users/{id}/toggle-status` | — | message | Toggle active/inactive |
 | PUT | `/users/{id}/role` | `ChangeRoleRequest` | message | Change role |
-| GET | `/posts` | pagination | `PagedResult<AdminPostDto>` | All posts |
+| GET | `/posts` | pagination (+ optional `search` on title/author) | `PagedResult<AdminPostDto>` | All posts |
 | DELETE | `/posts/{id}` | — | message | Admin delete + email author |
-| GET | `/comments` | pagination | `PagedResult<AdminCommentDto>` | All comments |
+| GET | `/comments` | pagination (+ optional `search` on content/username) | `PagedResult<AdminCommentDto>` | All comments |
 | DELETE | `/comments/{id}` | — | message | Admin delete + email commenter |
 | POST | `/seed` | — | message | Seed 30 users, 40 posts, follows |
 | POST | `/format-posts` | — | message | Convert plain text → HTML |

@@ -26,13 +26,20 @@ public class AdminService : IAdminService
 
     public async Task<PagedResult<AdminUserDto>> GetAllUsersAsync(PaginationParams pagination, CancellationToken ct = default)
     {
-        var query = _uow.Users.Query()
+        IQueryable<User> query = _uow.Users.Query()
             .Include(u => u.BlogPosts)
-            .Include(u => u.Comments)
-            .OrderByDescending(u => u.CreatedAt);
+            .Include(u => u.Comments);
 
-        var totalCount = await query.CountAsync(ct);
-        var users = await query
+        if (!string.IsNullOrWhiteSpace(pagination.Search))
+        {
+            var search = pagination.Search.Trim().ToLower();
+            query = query.Where(u => u.UserName.ToLower().Contains(search) || u.Email.ToLower().Contains(search));
+        }
+
+        var ordered = query.OrderByDescending(u => u.CreatedAt);
+
+        var totalCount = await ordered.CountAsync(ct);
+        var users = await ordered
             .Skip((pagination.Page - 1) * pagination.PageSize)
             .Take(pagination.PageSize)
             .ToListAsync(ct);
@@ -109,14 +116,21 @@ public class AdminService : IAdminService
 
     public async Task<PagedResult<AdminPostDto>> GetAllPostsAsync(PaginationParams pagination, CancellationToken ct = default)
     {
-        var query = _uow.BlogPosts.Query()
+        IQueryable<BlogPost> query = _uow.BlogPosts.Query()
             .Include(p => p.Author)
             .Include(p => p.Likes)
-            .Include(p => p.Comments)
-            .OrderByDescending(p => p.CreatedAt);
+            .Include(p => p.Comments);
 
-        var totalCount = await query.CountAsync(ct);
-        var posts = await query
+        if (!string.IsNullOrWhiteSpace(pagination.Search))
+        {
+            var search = pagination.Search.Trim().ToLower();
+            query = query.Where(p => p.Title.ToLower().Contains(search) || p.Author.UserName.ToLower().Contains(search));
+        }
+
+        var ordered = query.OrderByDescending(p => p.CreatedAt);
+
+        var totalCount = await ordered.CountAsync(ct);
+        var posts = await ordered
             .Skip((pagination.Page - 1) * pagination.PageSize)
             .Take(pagination.PageSize)
             .ToListAsync(ct);
@@ -171,13 +185,20 @@ public class AdminService : IAdminService
 
     public async Task<PagedResult<AdminCommentDto>> GetAllCommentsAsync(PaginationParams pagination, CancellationToken ct = default)
     {
-        var query = _uow.Comments.Query()
+        IQueryable<Comment> query = _uow.Comments.Query()
             .Include(c => c.User)
-            .Include(c => c.BlogPost)
-            .OrderByDescending(c => c.CreatedAt);
+            .Include(c => c.BlogPost);
 
-        var totalCount = await query.CountAsync(ct);
-        var comments = await query
+        if (!string.IsNullOrWhiteSpace(pagination.Search))
+        {
+            var search = pagination.Search.Trim().ToLower();
+            query = query.Where(c => c.Content.ToLower().Contains(search) || c.User.UserName.ToLower().Contains(search));
+        }
+
+        var ordered = query.OrderByDescending(c => c.CreatedAt);
+
+        var totalCount = await ordered.CountAsync(ct);
+        var comments = await ordered
             .Skip((pagination.Page - 1) * pagination.PageSize)
             .Take(pagination.PageSize)
             .ToListAsync(ct);
