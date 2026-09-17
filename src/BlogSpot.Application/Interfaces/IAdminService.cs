@@ -17,4 +17,9 @@ public interface IAdminService
 
     Task<string> SeedDummyDataAsync(string? actorUserName = null, CancellationToken ct = default);
     Task<string> FormatExistingPostsAsync(string? actorUserName = null, CancellationToken ct = default);
+
+    // Manual job triggers
+    Task<string> RunEmailQueueJobAsync(string? actorUserName = null, CancellationToken ct = default);
+    Task<string> RunPostSchedulerJobAsync(string? actorUserName = null, CancellationToken ct = default);
+    Task<string> RunHealthCheckJobAsync(string? actorUserName = null, CancellationToken ct = default);
 }

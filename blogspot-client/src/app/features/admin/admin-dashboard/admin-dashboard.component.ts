@@ -13,22 +13,43 @@ import { ExportService } from '@core/services/export.service';
     <div class="admin-container">
       <div class="admin-header">
         <h1><mat-icon>admin_panel_settings</mat-icon> Admin Dashboard</h1>
-        <div class="header-actions">
-          <button mat-raised-button color="warn" (click)="formatPosts()" [disabled]="isFormatting">
-            <mat-icon>{{ isFormatting ? 'hourglass_empty' : 'auto_fix_high' }}</mat-icon>
-            {{ isFormatting ? 'Formatting...' : 'Format All Posts' }}
-          </button>
-          <button mat-raised-button color="accent" (click)="seedData()" [disabled]="isSeeding">
-            <mat-icon>{{ isSeeding ? 'hourglass_empty' : 'data_array' }}</mat-icon>
-            {{ isSeeding ? 'Seeding...' : 'Seed Dummy Data' }}
-          </button>
-        </div>
       </div>
 
-      <mat-tab-group>
-        <!-- Users Tab -->
-        <mat-tab label="Users">
-          <div class="tab-content">
+      <div class="admin-layout">
+        <nav class="admin-sidebar">
+          <div class="sidebar-section">
+            <h3 class="sidebar-heading">Data Management</h3>
+            <button class="sidebar-link" [class.active]="activeSection === 'users'" (click)="setSection('users')">
+              <mat-icon>group</mat-icon> Users
+            </button>
+            <button class="sidebar-link" [class.active]="activeSection === 'posts'" (click)="setSection('posts')">
+              <mat-icon>article</mat-icon> Posts
+            </button>
+            <button class="sidebar-link" [class.active]="activeSection === 'comments'" (click)="setSection('comments')">
+              <mat-icon>comment</mat-icon> Comments
+            </button>
+            <button class="sidebar-link" [class.active]="activeSection === 'emails'" (click)="setSection('emails')">
+              <mat-icon>email</mat-icon> Emails
+            </button>
+          </div>
+
+          <div class="sidebar-section">
+            <h3 class="sidebar-heading">Data Tools</h3>
+            <button class="sidebar-link" [class.active]="activeSection === 'data-tools'" (click)="setSection('data-tools')">
+              <mat-icon>build</mat-icon> Data Tools
+            </button>
+          </div>
+
+          <div class="sidebar-section">
+            <h3 class="sidebar-heading">Job Runner</h3>
+            <button class="sidebar-link" [class.active]="activeSection === 'jobs'" (click)="setSection('jobs')">
+              <mat-icon>play_circle</mat-icon> Job Runner
+            </button>
+          </div>
+        </nav>
+
+        <div class="admin-content">
+        <div class="tab-content" *ngIf="activeSection === 'users'">
             <div class="tab-toolbar">
               <span class="tab-count">{{ usersTotalCount }} users</span>
               <div class="tab-search">
@@ -128,11 +149,8 @@ import { ExportService } from '@core/services/export.service';
                            (page)="onUsersPageChange($event)">
             </mat-paginator>
           </div>
-        </mat-tab>
 
-        <!-- Posts Tab -->
-        <mat-tab label="Posts">
-          <div class="tab-content">
+        <div class="tab-content" *ngIf="activeSection === 'posts'">
             <div class="tab-toolbar">
               <span class="tab-count">{{ postsTotalCount }} posts</span>
               <div class="tab-search">
@@ -190,11 +208,8 @@ import { ExportService } from '@core/services/export.service';
                            (page)="onPostsPageChange($event)">
             </mat-paginator>
           </div>
-        </mat-tab>
 
-        <!-- Comments Tab -->
-        <mat-tab label="Comments">
-          <div class="tab-content">
+        <div class="tab-content" *ngIf="activeSection === 'comments'">
             <div class="tab-toolbar">
               <span class="tab-count">{{ commentsTotalCount }} comments</span>
               <div class="tab-search">
@@ -246,11 +261,8 @@ import { ExportService } from '@core/services/export.service';
                            (page)="onCommentsPageChange($event)">
             </mat-paginator>
           </div>
-        </mat-tab>
 
-        <!-- Emails Tab -->
-        <mat-tab label="Emails">
-          <div class="tab-content">
+        <div class="tab-content" *ngIf="activeSection === 'emails'">
             <div class="tab-toolbar">
               <span class="tab-count">{{ emailsTotalCount }} emails</span>
             </div>
@@ -293,15 +305,167 @@ import { ExportService } from '@core/services/export.service';
                            (page)="onEmailsPageChange($event)">
             </mat-paginator>
           </div>
-        </mat-tab>
-      </mat-tab-group>
+
+          <!-- Data Tools Section -->
+          <div class="tab-content data-tools-content" *ngIf="activeSection === 'data-tools'">
+            <h2 class="section-title">Data Tools</h2>
+            <p class="section-subtitle">Run a one-off data maintenance action.</p>
+            <div class="data-tools-form">
+              <div class="form-field">
+                <label>Action</label>
+                <select [(ngModel)]="selectedDataTool">
+                  <option value="format-posts">Format All Posts</option>
+                  <option value="seed-data">Seed Dummy Data</option>
+                </select>
+              </div>
+              <button mat-raised-button color="primary" (click)="runDataTool()" [disabled]="isSeeding || isFormatting">
+                <mat-icon>{{ (isSeeding || isFormatting) ? 'hourglass_empty' : 'play_arrow' }}</mat-icon>
+                {{ (isSeeding || isFormatting) ? 'Running...' : 'Submit' }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Job Runner Section -->
+          <div class="tab-content jobs-content" *ngIf="activeSection === 'jobs'">
+            <h2 class="section-title">Job Runner</h2>
+            <p class="section-subtitle">Manually trigger a background job instead of waiting for its schedule.</p>
+            <div class="job-cards">
+              <div class="job-card">
+                <div class="job-card-info">
+                  <mat-icon>mail</mat-icon>
+                  <div>
+                    <h4>Email Sending</h4>
+                    <p>Process the queued email batch right now.</p>
+                  </div>
+                </div>
+                <button mat-stroked-button color="primary" (click)="runJob('email-queue')" [disabled]="runningJob === 'email-queue'">
+                  {{ runningJob === 'email-queue' ? 'Running...' : 'Run Now' }}
+                </button>
+              </div>
+              <div class="job-card">
+                <div class="job-card-info">
+                  <mat-icon>schedule_send</mat-icon>
+                  <div>
+                    <h4>Post Scheduling</h4>
+                    <p>Publish any scheduled posts that are already due.</p>
+                  </div>
+                </div>
+                <button mat-stroked-button color="primary" (click)="runJob('post-scheduler')" [disabled]="runningJob === 'post-scheduler'">
+                  {{ runningJob === 'post-scheduler' ? 'Running...' : 'Run Now' }}
+                </button>
+              </div>
+              <div class="job-card">
+                <div class="job-card-info">
+                  <mat-icon>monitor_heart</mat-icon>
+                  <div>
+                    <h4>Health Check</h4>
+                    <p>Verify the API and database are reachable.</p>
+                  </div>
+                </div>
+                <button mat-stroked-button color="primary" (click)="runJob('health-check')" [disabled]="runningJob === 'health-check'">
+                  {{ runningJob === 'health-check' ? 'Running...' : 'Run Now' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   `,
   styles: [`
     .admin-container { width: 100%; padding: 16px 24px 0; box-sizing: border-box; min-height: calc(100vh - 56px); }
     .admin-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 8px; }
-    .header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
     h1 { display: flex; align-items: center; gap: 8px; margin: 0; }
+
+    .admin-layout { display: flex; gap: 24px; align-items: flex-start; }
+    .admin-sidebar {
+      width: 220px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      position: sticky;
+      top: 72px;
+    }
+    .sidebar-section { display: flex; flex-direction: column; gap: 2px; }
+    .sidebar-heading {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--color-text-secondary, #536471);
+      margin: 0 0 6px 10px;
+    }
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border: none;
+      background: none;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--color-text-primary);
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.15s;
+    }
+    .sidebar-link:hover { background: var(--color-bg-secondary, #f7f9f9); }
+    .sidebar-link.active { background: var(--color-primary-light); color: var(--color-primary); }
+    .sidebar-link mat-icon { font-size: 20px; width: 20px; height: 20px; }
+    .admin-content { flex: 1; min-width: 0; }
+
+    .section-title { margin: 4px 0 4px; font-size: 20px; }
+    .section-subtitle { margin: 0 0 20px; color: var(--color-text-secondary, #536471); font-size: 14px; }
+
+    .data-tools-form {
+      display: flex;
+      align-items: flex-end;
+      gap: 16px;
+      flex-wrap: wrap;
+      background: var(--color-bg-secondary, #f7f9f9);
+      padding: 20px;
+      border-radius: 12px;
+      max-width: 480px;
+    }
+    .form-field { display: flex; flex-direction: column; gap: 6px; }
+    .form-field label { font-size: 13px; font-weight: 600; color: var(--color-text-secondary, #536471); }
+    .form-field select {
+      padding: 8px 30px 8px 12px;
+      border: 1px solid var(--color-border, #eff3f4);
+      border-radius: 8px;
+      background: var(--color-bg, #fff);
+      color: var(--color-text-primary, #0f1419);
+      font-size: 14px;
+      font-family: inherit;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%23536471' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      outline: none;
+      min-width: 220px;
+    }
+
+    .job-cards { display: flex; flex-direction: column; gap: 12px; max-width: 640px; }
+    .job-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 16px 20px;
+      border: 1px solid var(--color-border, #eff3f4);
+      border-radius: 12px;
+      background: var(--color-bg-secondary, #f7f9f9);
+    }
+    .job-card-info { display: flex; align-items: center; gap: 14px; }
+    .job-card-info mat-icon { font-size: 26px; width: 26px; height: 26px; color: var(--color-primary); }
+    .job-card-info h4 { margin: 0 0 2px; font-size: 15px; }
+    .job-card-info p { margin: 0; font-size: 13px; color: var(--color-text-secondary, #536471); }
+
     .tab-content { padding: 16px 0; overflow-x: auto; }
     .tab-toolbar {
       display: flex;
@@ -428,8 +592,22 @@ import { ExportService } from '@core/services/export.service';
     }
     .status-toggle.active .toggle-thumb { transform: translateX(16px); }
 
+    @media (max-width: 900px) {
+      .admin-layout { flex-direction: column; }
+      .admin-sidebar {
+        width: 100%;
+        flex-direction: row;
+        flex-wrap: wrap;
+        position: static;
+        gap: 8px;
+      }
+      .sidebar-section { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 4px; }
+      .sidebar-heading { display: none; }
+    }
+
     @media (max-width: 600px) {
       .edit-panel { flex-direction: column; align-items: flex-start; gap: 14px; }
+      .data-tools-form { flex-direction: column; align-items: stretch; }
     }
   `],
   animations: [
@@ -472,6 +650,10 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   isSeeding = false;
   isFormatting = false;
 
+  activeSection: 'users' | 'posts' | 'comments' | 'emails' | 'data-tools' | 'jobs' = 'users';
+  selectedDataTool: 'format-posts' | 'seed-data' = 'format-posts';
+  runningJob: string | null = null;
+
   private destroy$ = new Subject<void>();
   private usersSearch$ = new Subject<void>();
   private postsSearch$ = new Subject<void>();
@@ -510,6 +692,10 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
   onCommentsFilterChange(): void {
     this.commentsSearch$.next();
+  }
+
+  setSection(section: 'users' | 'posts' | 'comments' | 'emails' | 'data-tools' | 'jobs'): void {
+    this.activeSection = section;
   }
 
   loadUsers(page: number): void {
@@ -643,6 +829,28 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       error: (err: any) => {
         this.isFormatting = false;
         this.snackBar.open(err.error?.message || 'Formatting failed', 'Close', { duration: 5000 });
+      }
+    });
+  }
+
+  runDataTool(): void {
+    if (this.selectedDataTool === 'format-posts') {
+      this.formatPosts();
+    } else {
+      this.seedData();
+    }
+  }
+
+  runJob(job: 'email-queue' | 'post-scheduler' | 'health-check'): void {
+    this.runningJob = job;
+    this.adminService.runJob(job).subscribe({
+      next: (res: { message: string }) => {
+        this.runningJob = null;
+        this.snackBar.open(res.message, 'Close', { duration: 6000 });
+      },
+      error: (err: any) => {
+        this.runningJob = null;
+        this.snackBar.open(err.error?.message || 'Job failed to run', 'Close', { duration: 5000 });
       }
     });
   }

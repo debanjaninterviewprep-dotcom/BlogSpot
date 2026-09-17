@@ -798,6 +798,54 @@ public class BlogService : IBlogService
         return posts.Select(p => MapToDto(p, userId)).ToList();
     }
 
+    public async Task<int> PublishDuePostsAsync(CancellationToken ct = default)
+    {
+        var now = DateTime.UtcNow;
+
+        // Lightweight check first to avoid unnecessary DB work / Neon wake-ups when nothing is due.
+        var hasScheduledPosts = await _uow.BlogPosts.Query()
+            .AnyAsync(p => p.Status == PostStatus.Scheduled && !p.IsDeleted, ct);
+        if (!hasScheduledPosts)
+            return 0;
+
+        var duePosts = await _uow.BlogPosts.Query()
+            .Include(p => p.Author)
+            .Where(p => p.Status == PostStatus.Scheduled && p.ScheduledPublishAt <= now && !p.IsDeleted)
+            .ToListAsync(ct);
+
+        if (!duePosts.Any())
+            return 0;
+
+        foreach (var post in duePosts)
+        {
+            post.Status = PostStatus.Published;
+            post.IsPublished = true;
+            post.ScheduledPublishAt = null;
+            post.UpdatedAt = DateTime.UtcNow;
+            _uow.BlogPosts.Update(post);
+        }
+
+        await _uow.SaveChangesAsync(ct);
+
+        foreach (var post in duePosts)
+        {
+            if (!string.IsNullOrWhiteSpace(post.Author?.Email))
+            {
+                await _emailQueueService.EnqueueAsync(
+                    post.Author.Email,
+                    $"Your post is now live: {post.Title}",
+                    $@"<div style='font-family:sans-serif;max-width:600px;margin:0 auto;padding:32px'>
+                        <h2 style='color:#1d9bf0'>Post Published</h2>
+                        <h3>{post.Title}</h3>
+                        <p style='color:#536471'>Your scheduled post has just been published and is now live on BlogSpot.</p>
+                    </div>",
+                    ct);
+            }
+        }
+
+        return duePosts.Count;
+    }
+
     public async Task DeleteDraftAsync(Guid userId, Guid draftId, CancellationToken ct = default)
     {
         var draft = await _uow.Drafts.GetByIdAsync(draftId, ct)

@@ -81,6 +81,12 @@ export class AdminService {
     return this.http.post<{ message: string }>(`${this.apiUrl}/format-posts`, {});
   }
 
+  // --- Jobs (manual trigger) ---
+
+  runJob(job: 'email-queue' | 'post-scheduler' | 'health-check'): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/jobs/${job}`, {});
+  }
+
   // --- Email Queue ---
 
   getEmails(pagination: PaginationParams): Observable<PagedResult<EmailQueueItem>> {

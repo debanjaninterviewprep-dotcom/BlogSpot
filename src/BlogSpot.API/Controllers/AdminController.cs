@@ -96,6 +96,29 @@ public class AdminController : ControllerBase
         return Ok(new { message = result });
     }
 
+    // --- Jobs (manual trigger) ---
+
+    [HttpPost("jobs/email-queue")]
+    public async Task<ActionResult> RunEmailQueueJob(CancellationToken ct)
+    {
+        var result = await _adminService.RunEmailQueueJobAsync(User.Identity?.Name, ct);
+        return Ok(new { message = result });
+    }
+
+    [HttpPost("jobs/post-scheduler")]
+    public async Task<ActionResult> RunPostSchedulerJob(CancellationToken ct)
+    {
+        var result = await _adminService.RunPostSchedulerJobAsync(User.Identity?.Name, ct);
+        return Ok(new { message = result });
+    }
+
+    [HttpPost("jobs/health-check")]
+    public async Task<ActionResult> RunHealthCheckJob(CancellationToken ct)
+    {
+        var result = await _adminService.RunHealthCheckJobAsync(User.Identity?.Name, ct);
+        return Ok(new { message = result });
+    }
+
     // --- Email Queue ---
 
     [HttpGet("emails")]

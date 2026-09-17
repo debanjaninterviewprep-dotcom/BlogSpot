@@ -44,6 +44,8 @@ public interface IBlogService
 
     // Scheduled posts
     Task<List<BlogPostDto>> GetScheduledPostsAsync(Guid userId, CancellationToken ct = default);
+    /// <summary>Publishes all due scheduled posts; used by PostSchedulerService and the admin manual job trigger.</summary>
+    Task<int> PublishDuePostsAsync(CancellationToken ct = default);
 
     // Search
     Task<SearchResultDto> FullTextSearchAsync(string query, PaginationParams pagination, CancellationToken ct = default);

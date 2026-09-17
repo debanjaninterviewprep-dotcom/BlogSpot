@@ -451,7 +451,7 @@ Mentions reuse the same pipeline: `BlogService.NotifyMentionedUsersAsync` regex-
 ```
 Admin navigates to /admin (AdminGuard validates role)
        ↓
-AdminDashboardComponent → tabs load via AdminService
+AdminDashboardComponent → left sidebar (Data Management / Data Tools / Job Runner) → sections load via AdminService
        ↓
 Delete Post: AdminService.deletePost → DELETE /api/admin/posts/{id}
        ↓
@@ -660,6 +660,9 @@ app.Run()
 | DELETE | `/comments/{id}` | — | message | Admin delete + email commenter |
 | POST | `/seed` | — | message | Seed 30 users, 40 posts, follows |
 | POST | `/format-posts` | — | message | Convert plain text → HTML |
+| POST | `/jobs/email-queue` | — | message | Manually process the queued email batch now |
+| POST | `/jobs/post-scheduler` | — | message | Manually publish any due scheduled posts now |
+| POST | `/jobs/health-check` | — | message | Manually check DB connectivity + latency |
 | GET | `/emails` | pagination | `PagedResult<EmailQueueDto>` | Email queue |
 | POST | `/send-report-email` | `SendReportEmailRequest` | message | Send custom report |
 | GET | `/activity-logs` | filter params | `PagedResult<ActivityLogDto>` | Filtered logs |
@@ -784,7 +787,7 @@ IBlogService:
   - AddCommentAsync, DeleteCommentAsync, GetCommentsAsync, ToggleCommentLikeAsync
   - AddImageToPostAsync, RemoveImageFromPostAsync
   - SaveDraftAsync, GetDraftsAsync, GetDraftByIdAsync, DeleteDraftAsync
-  - GetScheduledPostsAsync
+  - GetScheduledPostsAsync, PublishDuePostsAsync
 
 IUserService:
   - GetProfileAsync, GetProfileByUserNameAsync, UpdateProfileAsync
@@ -937,7 +940,7 @@ AppComponent template: <app-navbar> + <router-outlet> with @routeFade animation
 | **ProfileEditComponent** | Profile | Edit profile | Upload avatar/cover, bio/skills/social links, notification preference toggles |
 | **AnalyticsComponent** | Profile | Creator analytics | Stat cards (views/reactions/comments/followers), top posts table |
 | **NotificationsPageComponent** | Profile | Full notification list | Unread highlight, mark all read, click-to-navigate by type, load more |
-| **AdminDashboardComponent** | Admin | Admin panel | 4 tabs (Users/Posts/Comments/Emails), inline edit, export to Excel, seed data, format posts |
+| **AdminDashboardComponent** | Admin | Admin panel | Left sidebar with 3 sections — Data Management (Users/Posts/Comments/Emails tabs, inline edit, export to Excel), Data Tools (dropdown + submit: seed data or format posts), Job Runner (manually trigger email queue, post scheduler, health check) |
 
 ## 5. Services API Mapping
 
@@ -948,7 +951,7 @@ AppComponent template: <app-navbar> + <router-outlet> with @routeFade animation
 | `UserService` | UserController | getProfile, updateProfile, toggleFollow, getFollowers, getSuggestedUsers, getCreatorAnalytics, notification prefs |
 | `FeedService` | FeedController | getHomeFeed, getTrending, getLatest |
 | `NotificationService` | NotificationController | getNotifications, getUnreadCount, markAsRead, markAllAsRead |
-| `AdminService` | AdminController | getUsers, toggleStatus, changeRole, deletePost, deleteComment, seedData, getEmails |
+| `AdminService` | AdminController | getUsers, toggleStatus, changeRole, deletePost, deleteComment, seedData, getEmails, runJob(email-queue/post-scheduler/health-check) |
 | `SignalRService` | NotificationHub | WebSocket connection, ReceiveNotification listener |
 | `GrammarService` | LanguageTool (external) | checkGrammar → strips HTML, calls API, returns matches |
 | `SearchCacheService` | FeedService (indirect) | Pre-loads 150 posts, local filtering for navbar search |

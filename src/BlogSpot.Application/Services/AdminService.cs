@@ -14,13 +14,15 @@ public class AdminService : IAdminService
     private readonly IUnitOfWork _uow;
     private readonly DbContext _dbContext;
     private readonly IEmailQueueService _emailQueueService;
+    private readonly IBlogService _blogService;
     private readonly IActivityLogService _log;
 
-    public AdminService(IUnitOfWork uow, DbContext dbContext, IEmailQueueService emailQueueService, IActivityLogService log)
+    public AdminService(IUnitOfWork uow, DbContext dbContext, IEmailQueueService emailQueueService, IBlogService blogService, IActivityLogService log)
     {
         _uow = uow;
         _dbContext = dbContext;
         _emailQueueService = emailQueueService;
+        _blogService = blogService;
         _log = log;
     }
 
@@ -523,6 +525,44 @@ public class AdminService : IAdminService
             ? $"Successfully formatted {formatted} posts from plain text to HTML."
             : "All posts are already properly formatted.";
         await _log.Info(ActivityActions.AdminAction, nameof(AdminService), actorUserName, resultMessage, ct);
+        return resultMessage;
+    }
+
+    public async Task<string> RunEmailQueueJobAsync(string? actorUserName = null, CancellationToken ct = default)
+    {
+        var pendingCount = await _uow.EmailQueues.Query()
+            .CountAsync(e => e.Status == EmailStatus.Queued && e.RetryCount < 3, ct);
+
+        await _emailQueueService.ProcessQueueAsync(ct);
+
+        var resultMessage = pendingCount == 0
+            ? "No pending emails to send."
+            : $"Processed up to {Math.Min(pendingCount, 50)} pending email(s).";
+        await _log.Info(ActivityActions.AdminAction, nameof(AdminService), actorUserName, $"Manually ran email queue job: {resultMessage}", ct);
+        return resultMessage;
+    }
+
+    public async Task<string> RunPostSchedulerJobAsync(string? actorUserName = null, CancellationToken ct = default)
+    {
+        var count = await _blogService.PublishDuePostsAsync(ct);
+
+        var resultMessage = count == 0
+            ? "No scheduled posts were due."
+            : $"Published {count} scheduled post(s).";
+        await _log.Info(ActivityActions.AdminAction, nameof(AdminService), actorUserName, $"Manually ran post scheduler job: {resultMessage}", ct);
+        return resultMessage;
+    }
+
+    public async Task<string> RunHealthCheckJobAsync(string? actorUserName = null, CancellationToken ct = default)
+    {
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        var canConnect = await _dbContext.Database.CanConnectAsync(ct);
+        sw.Stop();
+
+        var resultMessage = canConnect
+            ? $"Healthy — database reachable in {sw.ElapsedMilliseconds}ms."
+            : "Unhealthy — could not reach the database.";
+        await _log.Info(ActivityActions.AdminAction, nameof(AdminService), actorUserName, $"Manually ran health check job: {resultMessage}", ct);
         return resultMessage;
     }
 
