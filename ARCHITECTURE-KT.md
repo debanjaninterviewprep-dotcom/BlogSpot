@@ -1749,9 +1749,6 @@ Clean Architecture provides maximum separation of concerns. The domain layer has
 
 ## Technical Debt
 - Legacy `Like` entity co-exists with newer `Reaction` entity
-- Some hardcoded colors in component SCSS instead of CSS variables
-- Inconsistent dark mode (CSS variable overrides not complete)
-- Scattered responsive breakpoints (768px, 600px, 599px, 480px, 400px)
 - No error boundary components for feature modules
 - `FormatContentPipe` uses `bypassSecurityTrustHtml` which bypasses Angular's built-in XSS protection
 
