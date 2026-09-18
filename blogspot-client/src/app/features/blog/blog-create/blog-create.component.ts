@@ -365,7 +365,6 @@ export class BlogCreateComponent implements OnInit, OnDestroy {
       [{ 'list': 'ordered'}, { 'list': 'bullet' }],
       [{ 'indent': '-1'}, { 'indent': '+1' }],
       [{ 'size': ['small', false, 'large', 'huge'] }],
-      [{ 'color': [] }, { 'background': [] }],
       [{ 'align': [] }],
       ['link', 'image'],
       ['clean']

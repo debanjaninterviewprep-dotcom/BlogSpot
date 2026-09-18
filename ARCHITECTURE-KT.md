@@ -1005,7 +1005,7 @@ Components use optimistic updates for likes/follows/bookmarks.
 | `LoadingSpinnerComponent` | `inline?: boolean` | — | Full-page overlay or inline spinner |
 | `ErrorStateComponent` | `title?, message?` | `onRetry` | Error recovery in any list view |
 | `ImageUrlPipe` | URL string | Resolved absolute URL | All `<img>` tags with backend URLs |
-| `FormatContentPipe` | HTML/text string | Safe HTML | Post content rendering |
+| `FormatContentPipe` | HTML/text string | Safe HTML | Post content rendering. Strips inline `color`/`background` declarations so stored content inherits the active theme instead of carrying light-mode ink into dark mode (the Quill colour/background pickers were removed for the same reason) |
 
 ---
 

@@ -148,7 +148,19 @@ export class FormatContentPipe implements PipeTransform {
     html = html.replace(/on\w+="[^"]*"/gi, '');
     html = html.replace(/on\w+='[^']*'/gi, '');
     html = html.replace(/javascript:/gi, '');
-    return html;
+    return this.stripInlineColors(html);
+  }
+
+  /** Ink colours baked into stored HTML don't survive a theme switch, so drop them and let the theme decide. */
+  private stripInlineColors(html: string): string {
+    return html.replace(/\sstyle\s*=\s*(["'])([\s\S]*?)\1/gi, (_match, _quote, declarations: string) => {
+      const kept = declarations
+        .split(';')
+        .map(d => d.trim())
+        .filter(d => d && !/^(color|background|background-color)\s*:/i.test(d))
+        .join('; ');
+      return kept ? ` style="${kept}"` : '';
+    });
   }
 
   /**
