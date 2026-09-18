@@ -64,6 +64,8 @@ public class FeedService : IFeedService
                     var otherPosts = await GetFullPostQuery()
                         .Where(p => p.IsPublished && !followingIds.Contains(p.AuthorId) && !followedPostIds.Contains(p.Id))
                         .OrderByDescending(p => p.ViewCount + (p.Reactions.Count * 3))
+                        .ThenByDescending(p => p.CreatedAt)
+                        .ThenBy(p => p.Id)
                         .Take(needed)
                         .ToListAsync(ct);
 
@@ -120,7 +122,9 @@ public class FeedService : IFeedService
                     p.ViewCount +
                     (p.Reactions.Count * 3) +
                     (p.Comments.Count * 5))
-                .ThenByDescending(p => p.ViewCount);
+                .ThenByDescending(p => p.ViewCount)
+                .ThenByDescending(p => p.CreatedAt)
+                .ThenBy(p => p.Id);
 
             cachedResult = await PaginateAsync(query, pagination, currentUserId, ct);
 

@@ -698,6 +698,19 @@ Exposes typed `IRepository<T>` for all 15 entities:
 `Users`, `Profiles`, `BlogPosts`, `Comments`, `Likes`, `PostImages`, `Reactions`, `Bookmarks`, `Notifications`, `Drafts`, `Tags`, `CommentLikes`, `EmailQueues`, `OtpVerifications`
 Plus `SaveChangesAsync()`.
 
+### Query Splitting (global default)
+`AddInfrastructure` registers `AppDbContext` with `UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)` on **both** providers (Npgsql and SQL Server).
+
+Why it matters: several read helpers stack multiple **collection** `Include`s in one query — `FeedService.GetFullPostQuery()` / `BlogService.GetFullPostQuery()` load `Images`, `Likes`, `Comments`, `Reactions`, `Bookmarks`, `BlogPostTags` together, and `UserService` loads `Followers` + `Following` + `BlogPosts` together. In EF Core's default single-query mode these become one statement with N LEFT JOINs, so the database returns the **cartesian product** of the child collections and repeats every parent column — including the full `BlogPost.Content` HTML — once per row combination. A single post with 3 images × 8 likes × 5 comments × 6 reactions × 2 bookmarks × 4 tags returns 5,760 duplicate rows.
+
+Split query issues one SELECT per collection instead, so each parent row crosses the wire once. Same entities, same DTOs, same results — only the number of round trips changes. This was the root cause of Neon Free-plan egress exhaustion (4 GB/18 days against a 5 GB/month allowance on a ~35 MB database).
+
+Rules for new code:
+- Do **not** remove the global setting; it is the only guard against this class of bug.
+- Any `Skip`/`Take` on a query with collection `Include`s **must** have a **deterministic** `OrderBy`. Split query re-applies the `ORDER BY ... LIMIT/OFFSET` inside each child SELECT, so a tie-prone sort key can make the two executions pick different parent rows (children then render missing). Queries sorting on non-unique keys end with `.ThenByDescending(x => x.CreatedAt).ThenBy(x => x.Id)`: `BlogService.FullTextSearchAsync` (`ViewCount`), `FeedService.GetTrendingPostsAsync` and the home-feed filler query (computed engagement score), `UserService.SearchUsersAsync` and `GetSuggestedUsersAsync` (`Followers.Count`). Everything else sorts on `CreatedAt`, which is unique in practice.
+- Split queries are not executed in a single transaction, so concurrent writes can theoretically be observed mid-flight across the child SELECTs. Acceptable for this read-heavy workload.
+- Do not add `AsNoTracking()` to `BlogService.GetFullPostQuery()` — `GetPostBySlugAsync` mutates `ViewCount` on the returned entity and saves it.
+
 ## 6. Domain Models & DTOs
 
 ### Entities
@@ -756,7 +769,7 @@ Program.cs
 │   └── PostSchedulerService                          (HostedService — registered in Program.cs)
 │
 └── AddInfrastructure(config)
-    ├── AppDbContext                                  (Scoped)
+    ├── AppDbContext                                  (Scoped, QuerySplittingBehavior.SplitQuery)
     ├── IRepository<T>        → Repository<T>        (Scoped)
     ├── IUnitOfWork            → UnitOfWork           (Scoped)
     ├── IAuthService           → AuthService          (Scoped)
@@ -1607,7 +1620,10 @@ Table row updates in-place
 | Area | Issue | Impact | Recommendation |
 |------|-------|--------|----------------|
 | **Feed queries** | Home feed does 2 queries + merging in C# | Moderate latency | Use `sp_GetHomeFeed` stored procedure instead of EF LINQ |
+| **Cartesian Includes** | ~~Multi-collection `Include` cross-joins duplicated `BlogPost.Content` per child combination~~ | ~~Exhausted Neon Free egress (4 GB/18 days on a 35 MB DB)~~ | **FIXED** — global `QuerySplittingBehavior.SplitQuery` in `Infrastructure/DependencyInjection.cs`. See Phase 4 § 5 |
 | **N+1 queries** | Comment loading with nested replies can cause multiple DB trips | Slow comments on popular posts | Eager load with `.Include().ThenInclude()` or limit nesting depth |
+| **List DTO payload** | `MapToDto` returns full `Content` HTML for feed/search/bookmark list views that only render `Summary` | Egress + JSON size, ~10× larger than needed | Project `Content` only on detail endpoints — deferred (changes the `BlogPostDto` contract) |
+| **Counting via Include** | `UserService` loads every `BlogPost` row (incl. `Content`) purely for `PostsCount`; `GetFollowersAsync`/`GetFollowingAsync` load all followers' posts then paginate in memory | Wasted egress per profile/followers view | Replace with server-side aggregates/projections — deferred (requires reshaping `MapToProfileDto`) |
 | **View count** | Every slug GET does a DB write (increment ViewCount) | Write per read | Batch view counts with in-memory counter, flush periodically |
 | **Full-text search** | LIKE-based search on Content (NVARCHAR MAX) | Slow on large datasets | Implement SQL Server Full-Text Index or PostgreSQL `tsvector` |
 | **SearchCacheService** | Pre-loads 150 posts into browser memory on every page load | Memory on client, startup delay | Lazy-load cache on first search interaction, not on init |

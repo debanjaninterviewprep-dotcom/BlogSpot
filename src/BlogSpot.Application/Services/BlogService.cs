@@ -289,7 +289,9 @@ public class BlogService : IBlogService
                 (p.Title.Contains(query) || p.Content.Contains(query) ||
                  (p.Summary != null && p.Summary.Contains(query)) ||
                  p.BlogPostTags.Any(bt => bt.Tag.NormalizedName.Contains(lowerQuery))))
-            .OrderByDescending(p => p.ViewCount);
+            .OrderByDescending(p => p.ViewCount)
+            .ThenByDescending(p => p.CreatedAt)
+            .ThenBy(p => p.Id);
 
         var totalPosts = await postQuery.CountAsync(ct);
         var posts = await postQuery

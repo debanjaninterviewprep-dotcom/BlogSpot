@@ -32,10 +32,16 @@ public static class DependencyInjection
 
         services.AddDbContext<AppDbContext>(options =>
         {
+            // SplitQuery is the default: single-query mode cross-joins every collection Include,
+            // repeating each parent row (incl. BlogPost.Content) once per child combination.
             if (dbProvider.Equals("PostgreSQL", StringComparison.OrdinalIgnoreCase))
-                options.UseNpgsql(connectionString, b => b.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName));
+                options.UseNpgsql(connectionString, b => b
+                    .MigrationsAssembly(typeof(AppDbContext).Assembly.FullName)
+                    .UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery));
             else
-                options.UseSqlServer(connectionString, b => b.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName));
+                options.UseSqlServer(connectionString, b => b
+                    .MigrationsAssembly(typeof(AppDbContext).Assembly.FullName)
+                    .UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery));
         });
 
         // Repositories

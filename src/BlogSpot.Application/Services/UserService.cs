@@ -276,6 +276,8 @@ public class UserService : IUserService
             .Include(u => u.BlogPosts)
             .Where(u => u.IsActive && !followingIds.Contains(u.Id) && u.Role != Domain.Enums.UserRole.Admin)
             .OrderByDescending(u => u.Followers.Count)
+            .ThenByDescending(u => u.CreatedAt)
+            .ThenBy(u => u.Id)
             .Take(count)
             .ToListAsync(ct);
 
@@ -294,7 +296,9 @@ public class UserService : IUserService
             .Where(u => u.IsActive &&
                 (u.UserName.ToLower().Contains(normalizedQuery) ||
                  (u.Profile != null && u.Profile.DisplayName != null && u.Profile.DisplayName.ToLower().Contains(normalizedQuery))))
-            .OrderByDescending(u => u.Followers.Count);
+            .OrderByDescending(u => u.Followers.Count)
+            .ThenByDescending(u => u.CreatedAt)
+            .ThenBy(u => u.Id);
 
         var totalCount = await baseQuery.CountAsync(ct);
         var users = await baseQuery
