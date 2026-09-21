@@ -123,12 +123,16 @@ import { MatSnackBar } from '@angular/material/snack-bar';
         <mat-tab label="Posts">
           <div class="tab-content">
             <app-loading-spinner *ngIf="loadingPosts"></app-loading-spinner>
+            <app-error-state *ngIf="postsLoadError && posts.length === 0"
+                             message="Failed to load posts. Please try again."
+                             (onRetry)="loadUserPosts()">
+            </app-error-state>
             <app-post-card *ngFor="let post of posts" [post]="post"
                            (onLike)="toggleLike($event)"
                            (onBookmark)="toggleBookmark($event)"
                            (onReaction)="toggleReaction($event)">
             </app-post-card>
-            <div *ngIf="!loadingPosts && posts.length === 0" class="empty-state">
+            <div *ngIf="!loadingPosts && !postsLoadError && posts.length === 0" class="empty-state">
               <p>No posts yet</p>
             </div>
           </div>
@@ -144,12 +148,16 @@ import { MatSnackBar } from '@angular/material/snack-bar';
                 </div>
               </div>
             </div>
+            <app-error-state *ngIf="followersLoadError && followers.length === 0"
+                             message="Failed to load followers. Please try again."
+                             (onRetry)="loadFollowers()">
+            </app-error-state>
             <app-user-card *ngFor="let user of followers" [user]="user"
                            [showRemove]="isOwnProfile"
                            (onFollow)="toggleFollowUser($event)"
                            (onRemove)="removeFollower($event)">
             </app-user-card>
-            <div *ngIf="!loadingFollowers && followers.length === 0" class="empty-state">
+            <div *ngIf="!loadingFollowers && !followersLoadError && followers.length === 0" class="empty-state">
               <p>No followers yet</p>
             </div>
           </div>
@@ -165,10 +173,14 @@ import { MatSnackBar } from '@angular/material/snack-bar';
                 </div>
               </div>
             </div>
+            <app-error-state *ngIf="followingLoadError && following.length === 0"
+                             message="Failed to load following. Please try again."
+                             (onRetry)="loadFollowing()">
+            </app-error-state>
             <app-user-card *ngFor="let user of following" [user]="user"
                            (onFollow)="toggleFollowUser($event)">
             </app-user-card>
-            <div *ngIf="!loadingFollowing && following.length === 0" class="empty-state">
+            <div *ngIf="!loadingFollowing && !followingLoadError && following.length === 0" class="empty-state">
               <p>Not following anyone yet</p>
             </div>
           </div>
@@ -210,7 +222,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
       border: 4px solid var(--card-bg); margin-top: -60px; background: var(--card-bg); flex-shrink: 0;
     }
     .profile-info { flex: 1; min-width: 0; }
-    .profile-info h1 { margin: 0; font-size: var(--font-size-xl); font-weight: 800; color: var(--color-text-primary); letter-spacing: -0.02em; }
+    .profile-info h1 { margin: 0; font-size: var(--font-size-xl); font-weight: var(--font-weight-extrabold); color: var(--color-text-primary); letter-spacing: -0.02em; }
     .handle { color: var(--color-text-secondary); margin: 2px 0 12px; font-size: var(--font-size-base); }
     .bio { margin-bottom: 12px; line-height: 1.5; font-size: var(--font-size-base); color: var(--color-text-primary); }
     .skills { margin-bottom: 12px; }
@@ -228,8 +240,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     .profile-actions { display: flex; flex-direction: column; gap: 8px; }
     .profile-actions button {
       border-radius: 24px !important;
-      font-weight: 700 !important;
-      font-size: 14px !important;
+      font-weight: var(--font-weight-bold) !important;
+      font-size: var(--font-size-base) !important;
     }    /* Admin Controls */
     .admin-controls {
       margin-top: 16px;
@@ -243,8 +255,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
       gap: 8px;
       padding: 10px 16px;
       background: var(--color-bg-secondary, #f7f9f9);
-      font-size: 13px;
-      font-weight: 700;
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-bold);
       color: var(--color-text-secondary, #536471);
     }
     .admin-controls-header mat-icon { font-size: 18px; width: 18px; height: 18px; }
@@ -258,7 +270,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
       display: flex; align-items: center; gap: 10px;
     }
     .admin-field label {
-      font-size: 13px; font-weight: 600;
+      font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold);
       color: var(--color-text-secondary, #536471);
     }
     .admin-field select {
@@ -267,7 +279,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
       border-radius: 8px;
       background: var(--color-bg, #fff);
       color: var(--color-text-primary, #0f1419);
-      font-size: 13px;
+      font-size: var(--font-size-sm);
       font-family: inherit;
       cursor: pointer;
       appearance: none;
@@ -280,7 +292,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     .status-toggle {
       display: flex; align-items: center; gap: 8px;
       background: none; border: none;
-      font-family: inherit; font-size: 13px; font-weight: 500;
+      font-family: inherit; font-size: var(--font-size-sm); font-weight: var(--font-weight-medium);
       color: var(--color-text-secondary, #536471);
       cursor: pointer; padding: 0;
     }
@@ -310,10 +322,10 @@ import { MatSnackBar } from '@angular/material/snack-bar';
       .profile-header { padding: 12px 16px 16px; }
       .profile-top { flex-wrap: wrap; }
       .profile-avatar { width: 80px; height: 80px; margin-top: -40px; border-width: 3px; }
-      .profile-info h1 { font-size: 18px; }
+      .profile-info h1 { font-size: var(--font-size-lg); }
       .profile-actions { flex-direction: row; flex-wrap: wrap; width: 100%; margin-top: 8px; }
       .profile-actions button { flex: 1; min-width: 120px; }
-      .stats { gap: 16px; font-size: 13px; }
+      .stats { gap: 16px; font-size: var(--font-size-sm); }
       .cover-photo { height: 140px; }
     }
   `]
@@ -327,6 +339,9 @@ export class ProfileViewComponent implements OnInit {
   loadingPosts = false;
   loadingFollowers = false;
   loadingFollowing = false;
+  postsLoadError = false;
+  followersLoadError = false;
+  followingLoadError = false;
   adminRole = '';
   adminIsActive = true;
   private adminUserId = '';
@@ -418,27 +433,30 @@ export class ProfileViewComponent implements OnInit {
   loadUserPosts(): void {
     if (!this.profile) return;
     this.loadingPosts = true;
+    this.postsLoadError = false;
     this.blogService.getPostsByUser(this.profile.id, { page: 1, pageSize: 20 }).subscribe({
       next: (result) => { this.posts = result.items; this.loadingPosts = false; },
-      error: () => this.loadingPosts = false
+      error: () => { this.loadingPosts = false; this.postsLoadError = true; }
     });
   }
 
   loadFollowers(): void {
     if (!this.profile) return;
     this.loadingFollowers = true;
+    this.followersLoadError = false;
     this.userService.getFollowers(this.profile.id, { page: 1, pageSize: 20 }).subscribe({
       next: (result) => { this.followers = result.items; this.loadingFollowers = false; },
-      error: () => this.loadingFollowers = false
+      error: () => { this.loadingFollowers = false; this.followersLoadError = true; }
     });
   }
 
   loadFollowing(): void {
     if (!this.profile) return;
     this.loadingFollowing = true;
+    this.followingLoadError = false;
     this.userService.getFollowing(this.profile.id, { page: 1, pageSize: 20 }).subscribe({
       next: (result) => { this.following = result.items; this.loadingFollowing = false; },
-      error: () => this.loadingFollowing = false
+      error: () => { this.loadingFollowing = false; this.followingLoadError = true; }
     });
   }
 

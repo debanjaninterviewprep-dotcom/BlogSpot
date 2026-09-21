@@ -130,7 +130,7 @@ import { AuthService } from '@core/services/auth.service';
     }
     .auth-title {
       font-size: 28px;
-      font-weight: 800;
+      font-weight: var(--font-weight-extrabold);
       color: var(--color-text-primary);
       text-align: center;
       margin: 0 0 28px;
@@ -173,7 +173,7 @@ import { AuthService } from '@core/services/auth.service';
     .auth-link:hover { text-decoration: underline; }
     @media (max-width: 600px) {
       .auth-card { padding: 24px 16px; border: none; border-radius: 0; }
-      .auth-title { font-size: 24px; }
+      .auth-title { font-size: var(--font-size-2xl); }
     }
   `]
 })

@@ -17,7 +17,11 @@ import { MatSnackBar } from '@angular/material/snack-bar';
         <mat-tab [label]="'Posts (' + totalPostCount + ')'">
           <div class="tab-content">
             <app-loading-spinner *ngIf="loadingPosts"></app-loading-spinner>
-            <div *ngIf="!loadingPosts && posts.length === 0" class="empty-state">
+            <app-error-state *ngIf="postsLoadError && posts.length === 0"
+                             message="Failed to load posts. Please try again."
+                             (onRetry)="searchPosts()">
+            </app-error-state>
+            <div *ngIf="!loadingPosts && !postsLoadError && posts.length === 0" class="empty-state">
               <mat-icon>search_off</mat-icon>
               <h3>No posts found</h3>
               <p>Try different keywords</p>
@@ -36,7 +40,11 @@ import { MatSnackBar } from '@angular/material/snack-bar';
         <mat-tab [label]="'People (' + totalUserCount + ')'">
           <div class="tab-content">
             <app-loading-spinner *ngIf="loadingUsers"></app-loading-spinner>
-            <div *ngIf="!loadingUsers && users.length === 0" class="empty-state">
+            <app-error-state *ngIf="usersLoadError && users.length === 0"
+                             message="Failed to load people. Please try again."
+                             (onRetry)="searchUsers()">
+            </app-error-state>
+            <div *ngIf="!loadingUsers && !usersLoadError && users.length === 0" class="empty-state">
               <mat-icon>person_search</mat-icon>
               <h3>No people found</h3>
               <p>Try a different name or username</p>
@@ -69,6 +77,8 @@ export class BlogSearchComponent implements OnInit {
   users: UserProfile[] = [];
   loadingPosts = false;
   loadingUsers = false;
+  postsLoadError = false;
+  usersLoadError = false;
   postPage = 1;
   userPage = 1;
   totalPostCount = 0;
@@ -100,6 +110,7 @@ export class BlogSearchComponent implements OnInit {
 
   searchPosts(): void {
     this.loadingPosts = true;
+    this.postsLoadError = false;
     this.blogService.searchPosts(this.query, { page: this.postPage, pageSize: 10 }).subscribe({
       next: (result) => {
         this.posts = [...this.posts, ...result.items];
@@ -109,6 +120,7 @@ export class BlogSearchComponent implements OnInit {
       },
       error: () => {
         this.loadingPosts = false;
+        this.postsLoadError = true;
         this.snackBar.open('Search failed', 'Close', { duration: 3000 });
       }
     });
@@ -116,6 +128,7 @@ export class BlogSearchComponent implements OnInit {
 
   searchUsers(): void {
     this.loadingUsers = true;
+    this.usersLoadError = false;
     this.userService.searchUsers(this.query, { page: this.userPage, pageSize: 10 }).subscribe({
       next: (result) => {
         this.users = [...this.users, ...result.items];
@@ -125,6 +138,7 @@ export class BlogSearchComponent implements OnInit {
       },
       error: () => {
         this.loadingUsers = false;
+        this.usersLoadError = true;
       }
     });
   }

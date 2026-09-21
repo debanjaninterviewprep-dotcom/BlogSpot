@@ -12,7 +12,12 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 
       <app-loading-spinner *ngIf="loading"></app-loading-spinner>
 
-      <div *ngIf="!loading && posts.length === 0" class="empty-state">
+      <app-error-state *ngIf="loadError && posts.length === 0"
+                       message="Failed to load saved posts. Please try again."
+                       (onRetry)="loadBookmarks()">
+      </app-error-state>
+
+      <div *ngIf="!loading && !loadError && posts.length === 0" class="empty-state">
         <mat-icon>bookmark_border</mat-icon>
         <h3>No saved posts</h3>
         <p>Bookmark posts to read them later!</p>
@@ -40,6 +45,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 export class BookmarksComponent implements OnInit {
   posts: BlogPost[] = [];
   loading = false;
+  loadError = false;
   page = 1;
   hasMore = false;
 
@@ -55,13 +61,17 @@ export class BookmarksComponent implements OnInit {
 
   loadBookmarks(): void {
     this.loading = true;
+    this.loadError = false;
     this.blogService.getBookmarkedPosts({ page: this.page, pageSize: 10 }).subscribe({
       next: result => {
         this.posts = [...this.posts, ...result.items];
         this.hasMore = result.hasNextPage;
         this.loading = false;
       },
-      error: () => this.loading = false
+      error: () => {
+        this.loading = false;
+        this.loadError = true;
+      }
     });
   }
 

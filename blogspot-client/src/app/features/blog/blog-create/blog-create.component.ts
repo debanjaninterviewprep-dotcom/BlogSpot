@@ -187,7 +187,7 @@ import { MatChipInputEvent } from '@angular/material/chips';
     }
     .spacer { flex: 1; }
     .autosave-status {
-      font-size: 12px;
+      font-size: var(--font-size-xs);
       color: var(--color-text-secondary);
       font-style: italic;
     }
@@ -217,7 +217,7 @@ import { MatChipInputEvent } from '@angular/material/chips';
       display: flex;
       align-items: center;
       gap: 4px;
-      font-size: 13px;
+      font-size: var(--font-size-sm);
     }
     .inline-spinner {
       display: inline-block;
@@ -242,7 +242,7 @@ import { MatChipInputEvent } from '@angular/material/chips';
       gap: 8px;
     }
     .issue-icon { font-size: 18px; width: 18px; height: 18px; margin-top: 2px; }
-    .issue-message { font-size: 14px; font-weight: 500; }
+    .issue-message { font-size: var(--font-size-base); font-weight: var(--font-weight-medium); }
     .issue-context {
       margin: 4px 0 4px 26px;
       font-size: var(--font-size-sm);
@@ -263,7 +263,7 @@ import { MatChipInputEvent } from '@angular/material/chips';
     }
     .suggestion-label { font-size: var(--font-size-xs); color: var(--color-text-secondary); }
     .suggestion-btn {
-      font-size: 12px !important;
+      font-size: var(--font-size-xs) !important;
       padding: 2px 8px !important;
       min-height: 24px !important;
       line-height: 24px !important;

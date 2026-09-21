@@ -389,8 +389,8 @@ import { ExportService } from '@core/services/export.service';
     }
     .sidebar-section { display: flex; flex-direction: column; gap: 2px; }
     .sidebar-heading {
-      font-size: 11px;
-      font-weight: 700;
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-bold);
       text-transform: uppercase;
       letter-spacing: 0.04em;
       color: var(--color-text-secondary, #536471);
@@ -405,8 +405,8 @@ import { ExportService } from '@core/services/export.service';
       background: none;
       border-radius: 10px;
       font-family: inherit;
-      font-size: 14px;
-      font-weight: 500;
+      font-size: var(--font-size-base);
+      font-weight: var(--font-weight-medium);
       color: var(--color-text-primary);
       cursor: pointer;
       text-align: left;
@@ -417,8 +417,8 @@ import { ExportService } from '@core/services/export.service';
     .sidebar-link mat-icon { font-size: 20px; width: 20px; height: 20px; }
     .admin-content { flex: 1; min-width: 0; }
 
-    .section-title { margin: 4px 0 4px; font-size: 20px; }
-    .section-subtitle { margin: 0 0 20px; color: var(--color-text-secondary, #536471); font-size: 14px; }
+    .section-title { margin: 4px 0 4px; font-size: var(--font-size-xl); }
+    .section-subtitle { margin: 0 0 20px; color: var(--color-text-secondary, #536471); font-size: var(--font-size-base); }
 
     .data-tools-form {
       display: flex;
@@ -431,14 +431,14 @@ import { ExportService } from '@core/services/export.service';
       max-width: 480px;
     }
     .form-field { display: flex; flex-direction: column; gap: 6px; }
-    .form-field label { font-size: 13px; font-weight: 600; color: var(--color-text-secondary, #536471); }
+    .form-field label { font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); color: var(--color-text-secondary, #536471); }
     .form-field select {
       padding: 8px 30px 8px 12px;
       border: 1px solid var(--color-border, #eff3f4);
       border-radius: 8px;
       background: var(--color-bg, #fff);
       color: var(--color-text-primary, #0f1419);
-      font-size: 14px;
+      font-size: var(--font-size-base);
       font-family: inherit;
       cursor: pointer;
       appearance: none;
@@ -464,8 +464,8 @@ import { ExportService } from '@core/services/export.service';
     }
     .job-card-info { display: flex; align-items: center; gap: 14px; }
     .job-card-info mat-icon { font-size: 26px; width: 26px; height: 26px; color: var(--color-primary); }
-    .job-card-info h4 { margin: 0 0 2px; font-size: 15px; }
-    .job-card-info p { margin: 0; font-size: 13px; color: var(--color-text-secondary, #536471); }
+    .job-card-info h4 { margin: 0 0 2px; font-size: var(--font-size-md); }
+    .job-card-info p { margin: 0; font-size: var(--font-size-sm); color: var(--color-text-secondary, #536471); }
 
     .tab-content { padding: 16px 0; overflow-x: auto; }
     .tab-toolbar {
@@ -494,19 +494,19 @@ import { ExportService } from '@core/services/export.service';
       border: none;
       outline: none;
       background: transparent;
-      font-size: 13px;
+      font-size: var(--font-size-sm);
       width: 100%;
       color: var(--color-text-primary);
       font-family: inherit;
     }
     .tab-search input::placeholder { color: var(--color-text-secondary); }
     .tab-count {
-      font-size: 13px;
-      font-weight: 600;
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-semibold);
       color: var(--color-text-secondary, #536471);
     }
     .export-btn {
-      font-size: 13px !important;
+      font-size: var(--font-size-sm) !important;
       border-radius: 20px !important;
       padding: 0 14px !important;
       height: 34px !important;
@@ -518,17 +518,17 @@ import { ExportService } from '@core/services/export.service';
       margin-right: 4px;
     }
     table { width: 100%; }
-    mat-chip { font-size: 12px; }
+    mat-chip { font-size: var(--font-size-xs); }
     .admin-chip { background-color: var(--color-primary-light) !important; color: var(--color-primary) !important; }
     .active-chip { background-color: rgba(0, 184, 148, 0.12) !important; color: var(--color-success) !important; }
     .inactive-chip { background-color: rgba(255, 107, 107, 0.1) !important; color: var(--color-danger) !important; }
     .sent-chip { background-color: rgba(0, 184, 148, 0.12) !important; color: var(--color-success) !important; }
     .queued-chip { background-color: var(--color-primary-light) !important; color: var(--color-primary) !important; }
     .failed-chip { background-color: rgba(255, 107, 107, 0.1) !important; color: var(--color-danger) !important; }
-    .error-cell { font-size: 12px; color: var(--color-danger); max-width: 200px; overflow: hidden; text-overflow: ellipsis; }
-    .user-link { color: inherit; text-decoration: none; font-weight: 500; }
+    .error-cell { font-size: var(--font-size-xs); color: var(--color-danger); max-width: 200px; overflow: hidden; text-overflow: ellipsis; }
+    .user-link { color: inherit; text-decoration: none; font-weight: var(--font-weight-medium); }
     .user-link:hover { text-decoration: underline; color: var(--color-primary); }
-    .post-link { color: inherit; text-decoration: none; font-weight: 500; }
+    .post-link { color: inherit; text-decoration: none; font-weight: var(--font-weight-medium); }
     .post-link:hover { text-decoration: underline; color: var(--color-primary); }
     .expanded-row { border-bottom: none !important; }
     .edit-row td { padding: 0 !important; border-bottom-color: var(--color-border, #eff3f4) !important; }
@@ -546,7 +546,7 @@ import { ExportService } from '@core/services/export.service';
       display: flex; align-items: center; gap: 10px;
     }
     .edit-field label {
-      font-size: 13px; font-weight: 600;
+      font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold);
       color: var(--color-text-secondary, #536471);
     }
     .edit-field select {
@@ -555,7 +555,7 @@ import { ExportService } from '@core/services/export.service';
       border-radius: 8px;
       background: var(--color-bg, #fff);
       color: var(--color-text-primary, #0f1419);
-      font-size: 13px;
+      font-size: var(--font-size-sm);
       font-family: inherit;
       cursor: pointer;
       appearance: none;
@@ -572,7 +572,7 @@ import { ExportService } from '@core/services/export.service';
     .status-toggle {
       display: flex; align-items: center; gap: 8px;
       background: none; border: none;
-      font-family: inherit; font-size: 13px; font-weight: 500;
+      font-family: inherit; font-size: var(--font-size-sm); font-weight: var(--font-weight-medium);
       color: var(--color-text-secondary, #536471);
       cursor: pointer; padding: 0;
     }

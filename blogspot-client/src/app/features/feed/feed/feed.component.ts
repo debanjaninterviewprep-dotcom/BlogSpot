@@ -201,8 +201,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
       max-height: calc(100vh - 140px);
     }
     .sidebar-title {
-      font-size: 19px;
-      font-weight: 800;
+      font-size: var(--font-size-xl);
+      font-weight: var(--font-weight-extrabold);
       color: var(--color-text-primary);
       margin: 0;
       padding: 0 16px 12px;
@@ -260,7 +260,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     /* ---- Mobile suggestions ---- */
     .mobile-suggestions { display: none; }
     .suggestions-scroll-card { border-bottom: 1px solid var(--color-border); padding: 16px 0; }
-    .suggestions-scroll-title { font-size: 16px; font-weight: var(--font-weight-bold); color: var(--color-text-primary); margin: 0 0 12px; padding: 0 16px; }
+    .suggestions-scroll-title { font-size: var(--font-size-md); font-weight: var(--font-weight-bold); color: var(--color-text-primary); margin: 0 0 12px; padding: 0 16px; }
     .suggestions-scroll-track {
       display: flex; gap: 12px; overflow-x: auto; padding: 0 16px 8px;
       scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;

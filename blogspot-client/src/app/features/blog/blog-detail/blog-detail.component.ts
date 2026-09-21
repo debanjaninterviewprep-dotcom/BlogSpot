@@ -152,6 +152,11 @@ import { PostLikersDialogComponent } from '../../../shared/components/post-liker
             </div>
           </div>
 
+          <app-error-state *ngIf="commentsLoadError && comments.length === 0"
+                           message="Failed to load comments. Please try again."
+                           (onRetry)="loadComments()">
+          </app-error-state>
+
           <div *ngFor="let comment of comments; let i = index" class="comment comment-enter" [style.animation-delay.ms]="minAnimDelay(i)">
             <div class="comment-header">
               <img [src]="(comment.userProfilePictureUrl | imageUrl) || 'assets/default-avatar.svg'" 
@@ -271,24 +276,24 @@ import { PostLikersDialogComponent } from '../../../shared/components/post-liker
     .post-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
     .author-info { display: flex; align-items: center; gap: 12px; }
     .author-avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
-    .author-name { text-decoration: none; font-weight: 500; color: var(--color-text-primary); }
+    .author-name { text-decoration: none; font-weight: var(--font-weight-medium); color: var(--color-text-primary); }
     .author-name:hover { text-decoration: underline; }
-    .post-date { font-size: 13px; color: var(--color-text-secondary); margin: 0; }
-    .post-title { font-size: 32px; font-weight: 700; margin: 0 0 16px 0; line-height: 1.3; word-break: break-word; }
+    .post-date { font-size: var(--font-size-sm); color: var(--color-text-secondary); margin: 0; }
+    .post-title { font-size: 32px; font-weight: var(--font-weight-bold); margin: 0 0 16px 0; line-height: 1.3; word-break: break-word; }
     .post-tags { margin-bottom: 12px; }
     .post-category { margin-bottom: 16px; }
     .post-images { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
     .post-image { max-width: 100%; max-height: 400px; border-radius: 8px; object-fit: cover; }
     .post-content { 
       line-height: 1.8; 
-      font-size: 17px; 
+      font-size: var(--font-size-lg); 
       margin-bottom: 24px; 
       word-break: break-word; 
       overflow-wrap: break-word;
       color: var(--color-text-primary);
     }
     .post-content p { margin: 0 0 1.2em 0; }
-    .post-content h1, .post-content h2, .post-content h3 { margin: 1.5em 0 0.6em; font-weight: 700; color: var(--color-text-primary); }
+    .post-content h1, .post-content h2, .post-content h3 { margin: 1.5em 0 0.6em; font-weight: var(--font-weight-bold); color: var(--color-text-primary); }
     .post-content h1 { font-size: 1.8em; }
     .post-content h2 { font-size: 1.5em; }
     .post-content h3 { font-size: 1.25em; }
@@ -322,7 +327,7 @@ import { PostLikersDialogComponent } from '../../../shared/components/post-liker
     .post-content img { max-width: 100%; border-radius: 8px; margin: 1em 0; }
     .post-content a { color: var(--color-primary); text-decoration: none; }
     .post-content a:hover { text-decoration: underline; }
-    .post-content strong { font-weight: 700; }
+    .post-content strong { font-weight: var(--font-weight-bold); }
     .post-content em { font-style: italic; }
     .post-engagement { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; }
     .reaction-bar { display: flex; align-items: center; gap: 12px; }
@@ -339,7 +344,7 @@ import { PostLikersDialogComponent } from '../../../shared/components/post-liker
       background: var(--color-primary);
       color: #fff;
       font-size: 10px;
-      font-weight: 700;
+      font-weight: var(--font-weight-bold);
       line-height: 1;
       padding: 2px 4px;
       border-radius: 8px;
@@ -369,7 +374,7 @@ import { PostLikersDialogComponent } from '../../../shared/components/post-liker
       align-items: center;
       gap: 8px;
       padding: 10px 12px;
-      font-size: 13px;
+      font-size: var(--font-size-sm);
       color: var(--color-text-secondary);
     }
     .mention-item {
@@ -381,8 +386,8 @@ import { PostLikersDialogComponent } from '../../../shared/components/post-liker
     }
     .mention-item:hover { background: var(--color-bg-hover, rgba(108, 92, 231, 0.06)); }
     .mention-avatar { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
-    .mention-name { font-size: 13px; font-weight: 500; color: var(--color-text-primary); }
-    .mention-username { font-size: 12px; color: var(--color-text-secondary); }
+    .mention-name { font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); color: var(--color-text-primary); }
+    .mention-username { font-size: var(--font-size-xs); color: var(--color-text-secondary); }
     .comment { padding: 12px 0; border-bottom: 1px solid var(--color-border); }
     .comment-enter { animation: commentFadeUp 0.35s ease both; }
     @keyframes commentFadeUp {
@@ -394,8 +399,8 @@ import { PostLikersDialogComponent } from '../../../shared/components/post-liker
     .comment-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
     .comment-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
     .comment-avatar.small { width: 24px; height: 24px; }
-    .comment-author { text-decoration: none; font-weight: 500; color: var(--color-text-primary); font-size: 14px; }
-    .comment-date { font-size: 12px; color: var(--color-text-secondary); }
+    .comment-author { text-decoration: none; font-weight: var(--font-weight-medium); color: var(--color-text-primary); font-size: var(--font-size-base); }
+    .comment-date { font-size: var(--font-size-xs); color: var(--color-text-secondary); }
     .comment-content { margin: 0; line-height: 1.5; }
     .comment-actions {
       display: flex;
@@ -412,7 +417,7 @@ import { PostLikersDialogComponent } from '../../../shared/components/post-liker
       cursor: pointer;
       padding: 4px 8px;
       border-radius: 16px;
-      font-size: 12px;
+      font-size: var(--font-size-xs);
       color: var(--color-text-secondary, #536471);
       transition: color 0.15s, background 0.15s;
     }
@@ -429,7 +434,7 @@ import { PostLikersDialogComponent } from '../../../shared/components/post-liker
       height: 16px;
     }
     .reply { margin-left: 40px; padding: 8px 0; }
-    .reply-btn { font-size: 12px; }
+    .reply-btn { font-size: var(--font-size-xs); }
     .reply-form { margin-left: 40px; display: flex; gap: 8px; align-items: center; margin-top: 8px; }
     .read-progress-bar {
       position: fixed;
@@ -457,6 +462,7 @@ export class BlogDetailComponent implements OnInit {
   commentForm: FormGroup;
   loading = true;
   loadingComments = false;
+  commentsLoadError = false;
   commentPage = 1;
   commentsHasMore = false;
   reactionSummary: ReactionSummaryDto | null = null;
@@ -537,13 +543,17 @@ export class BlogDetailComponent implements OnInit {
   loadComments(): void {
     if (!this.post) return;
     this.loadingComments = true;
+    this.commentsLoadError = false;
     this.blogService.getComments(this.post.id, { page: this.commentPage, pageSize: 10 }).subscribe({
       next: (result) => {
         this.comments = [...this.comments, ...result.items];
         this.commentsHasMore = result.hasNextPage;
         this.loadingComments = false;
       },
-      error: () => this.loadingComments = false
+      error: () => {
+        this.loadingComments = false;
+        this.commentsLoadError = true;
+      }
     });
   }
 

@@ -12,7 +12,12 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 
       <app-loading-spinner *ngIf="loading"></app-loading-spinner>
 
-      <div *ngIf="!loading && posts.length === 0" class="empty-state">
+      <app-error-state *ngIf="loadError && posts.length === 0"
+                       message="Failed to load scheduled posts. Please try again."
+                       (onRetry)="loadScheduledPosts()">
+      </app-error-state>
+
+      <div *ngIf="!loading && !loadError && posts.length === 0" class="empty-state">
         <mat-icon>schedule</mat-icon>
         <h3>No scheduled posts</h3>
         <p>Posts you schedule for future publishing will appear here.</p>
@@ -41,8 +46,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
   styles: [`
     .scheduled-container { width: 100%; padding: 16px 24px; box-sizing: border-box; min-height: calc(100vh - 56px); }
     .scheduled-container h2 {
-      font-size: 22px;
-      font-weight: 800;
+      font-size: var(--font-size-2xl);
+      font-weight: var(--font-weight-extrabold);
       margin: 0 0 20px;
       color: var(--color-text-primary, #0f1419);
     }
@@ -61,13 +66,13 @@ import { MatSnackBar } from '@angular/material/snack-bar';
       padding: 16px 16px 0;
     }
     .scheduled-card mat-card-title {
-      font-size: 17px !important;
-      font-weight: 700 !important;
+      font-size: var(--font-size-lg) !important;
+      font-weight: var(--font-weight-bold) !important;
       color: var(--color-text-primary, #0f1419) !important;
       word-break: break-word;
     }
     .scheduled-card mat-card-subtitle {
-      font-size: 13px !important;
+      font-size: var(--font-size-sm) !important;
       color: var(--color-text-secondary, #536471) !important;
       margin-top: 4px !important;
       display: flex;
@@ -87,7 +92,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     .scheduled-preview {
       color: var(--color-text-secondary, #536471);
       line-height: 1.6;
-      font-size: 14px;
+      font-size: var(--font-size-base);
       word-break: break-word;
       overflow-wrap: break-word;
     }
@@ -110,20 +115,21 @@ import { MatSnackBar } from '@angular/material/snack-bar';
       margin-bottom: 12px;
     }
     .empty-state h3 {
-      font-size: 18px;
-      font-weight: 700;
+      font-size: var(--font-size-lg);
+      font-weight: var(--font-weight-bold);
       color: var(--color-text-primary, #0f1419);
       margin: 0 0 8px;
     }
     .empty-state p {
       margin: 0;
-      font-size: 14px;
+      font-size: var(--font-size-base);
     }
   `]
 })
 export class ScheduledPostsComponent implements OnInit {
   posts: BlogPost[] = [];
   loading = false;
+  loadError = false;
 
   constructor(
     private blogService: BlogService,
@@ -137,6 +143,7 @@ export class ScheduledPostsComponent implements OnInit {
 
   loadScheduledPosts(): void {
     this.loading = true;
+    this.loadError = false;
     this.blogService.getScheduledPosts().subscribe({
       next: posts => {
         this.posts = posts;
@@ -144,6 +151,7 @@ export class ScheduledPostsComponent implements OnInit {
       },
       error: () => {
         this.loading = false;
+        this.loadError = true;
         this.snackBar.open('Failed to load scheduled posts', 'Close', { duration: 3000 });
       }
     });

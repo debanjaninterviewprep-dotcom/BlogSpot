@@ -12,7 +12,12 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 
       <app-loading-spinner *ngIf="loading"></app-loading-spinner>
 
-      <div *ngIf="!loading && drafts.length === 0" class="empty-state">
+      <app-error-state *ngIf="loadError && drafts.length === 0"
+                       message="Failed to load drafts. Please try again."
+                       (onRetry)="loadDrafts()">
+      </app-error-state>
+
+      <div *ngIf="!loading && !loadError && drafts.length === 0" class="empty-state">
         <mat-icon>drafts</mat-icon>
         <h3>No drafts</h3>
         <p>Your auto-saved and manually saved drafts will appear here.</p>
@@ -43,8 +48,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
   styles: [`
     .drafts-container { width: 100%; padding: 16px 24px; box-sizing: border-box; min-height: calc(100vh - 56px); }
     .drafts-container h2 {
-      font-size: 22px;
-      font-weight: 800;
+      font-size: var(--font-size-2xl);
+      font-weight: var(--font-weight-extrabold);
       margin: 0 0 20px;
       color: var(--color-text-primary, #0f1419);
     }
@@ -63,13 +68,13 @@ import { MatSnackBar } from '@angular/material/snack-bar';
       padding: 16px 16px 0;
     }
     .draft-card mat-card-title {
-      font-size: 17px !important;
-      font-weight: 700 !important;
+      font-size: var(--font-size-lg) !important;
+      font-weight: var(--font-weight-bold) !important;
       color: var(--color-text-primary, #0f1419) !important;
       word-break: break-word;
     }
     .draft-card mat-card-subtitle {
-      font-size: 13px !important;
+      font-size: var(--font-size-sm) !important;
       color: var(--color-text-secondary, #536471) !important;
       margin-top: 4px !important;
     }
@@ -79,7 +84,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     .draft-preview {
       color: var(--color-text-secondary, #536471);
       line-height: 1.6;
-      font-size: 14px;
+      font-size: var(--font-size-base);
       word-break: break-word;
       overflow-wrap: break-word;
     }
@@ -102,20 +107,21 @@ import { MatSnackBar } from '@angular/material/snack-bar';
       margin-bottom: 12px;
     }
     .empty-state h3 {
-      font-size: 18px;
-      font-weight: 700;
+      font-size: var(--font-size-lg);
+      font-weight: var(--font-weight-bold);
       color: var(--color-text-primary, #0f1419);
       margin: 0 0 8px;
     }
     .empty-state p {
       margin: 0;
-      font-size: 14px;
+      font-size: var(--font-size-base);
     }
   `]
 })
 export class DraftsComponent implements OnInit {
   drafts: DraftBlog[] = [];
   loading = false;
+  loadError = false;
 
   constructor(
     private blogService: BlogService,
@@ -129,12 +135,16 @@ export class DraftsComponent implements OnInit {
 
   loadDrafts(): void {
     this.loading = true;
+    this.loadError = false;
     this.blogService.getDrafts().subscribe({
       next: drafts => {
         this.drafts = drafts;
         this.loading = false;
       },
-      error: () => this.loading = false
+      error: () => {
+        this.loading = false;
+        this.loadError = true;
+      }
     });
   }
 

@@ -17,9 +17,14 @@ export interface PostLikersDialogData {
     <mat-dialog-content class="likers-content">
       <app-loading-spinner [inline]="true" *ngIf="loading && users.length === 0"></app-loading-spinner>
 
+      <app-error-state *ngIf="loadError && users.length === 0"
+                       message="Failed to load likes. Please try again."
+                       (onRetry)="loadLikers()">
+      </app-error-state>
+
       <app-user-card *ngFor="let user of users" [user]="user" (onFollow)="toggleFollow($event)"></app-user-card>
 
-      <div class="empty-state" *ngIf="!loading && users.length === 0">
+      <div class="empty-state" *ngIf="!loading && !loadError && users.length === 0">
         <p>No likes yet</p>
       </div>
 
@@ -49,6 +54,7 @@ export interface PostLikersDialogData {
 export class PostLikersDialogComponent implements OnInit, OnDestroy {
   users: UserProfile[] = [];
   loading = false;
+  loadError = false;
   page = 1;
   pageSize = 20;
   hasMore = false;
@@ -78,13 +84,17 @@ export class PostLikersDialogComponent implements OnInit, OnDestroy {
 
   loadLikers(): void {
     this.loading = true;
+    this.loadError = false;
     this.blogService.getPostLikers(this.data.postId, { page: this.page, pageSize: this.pageSize }).subscribe({
       next: (result) => {
         this.users = [...this.users, ...result.items];
         this.hasMore = result.hasNextPage;
         this.loading = false;
       },
-      error: () => this.loading = false
+      error: () => {
+        this.loading = false;
+        this.loadError = true;
+      }
     });
   }
 

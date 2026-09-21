@@ -314,7 +314,7 @@ import { User } from '../../models/auth.model';
       display: flex;
       align-items: center;
       gap: 6px;
-      font-size: 11px;
+      font-size: var(--font-size-xs);
       font-weight: var(--font-weight-bold);
       color: var(--color-text-secondary);
       padding: 12px 16px 6px;
@@ -459,9 +459,9 @@ import { User } from '../../models/auth.model';
       .mobile-search-back { display: flex; }
       .nav-btn { width: 36px; height: 36px; }
       .nav-btn mat-icon { font-size: 20px; width: 20px; height: 20px; }
-      .logo-text { font-size: 17px; }
-      .login-link { font-size: 13px; padding: 6px 12px; white-space: nowrap; }
-      .register-btn { font-size: 13px; padding: 6px 12px; white-space: nowrap; }
+      .logo-text { font-size: var(--font-size-lg); }
+      .login-link { font-size: var(--font-size-sm); padding: 6px 12px; white-space: nowrap; }
+      .register-btn { font-size: var(--font-size-sm); padding: 6px 12px; white-space: nowrap; }
       .hide-mobile, .hide-sm { display: none; }
       .show-mobile-only { display: flex; }
     }

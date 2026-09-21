@@ -160,17 +160,17 @@ import { NotificationPreferences } from '@core/models/user.model';
     .avatar-section { display: flex; align-items: center; gap: 16px; margin: 16px 0 24px; }
     .avatar-preview { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; }
     form { display: flex; flex-direction: column; gap: 8px; }
-    .section-title { margin: 16px 0 8px; font-size: 16px; color: var(--color-text-primary); }
+    .section-title { margin: 16px 0 8px; font-size: var(--font-size-md); color: var(--color-text-primary); }
     .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
     .notif-prefs-section { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--color-border, #eee); }
-    .section-hint { font-size: 13px; color: var(--color-text-secondary, #666); margin: 0 0 16px; }
+    .section-hint { font-size: var(--font-size-sm); color: var(--color-text-secondary, #666); margin: 0 0 16px; }
     .notif-toggle-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 10px 0;
       border-bottom: 1px solid var(--color-border, #f0f0f0);
-      font-size: 14px;
+      font-size: var(--font-size-base);
     }
     .save-prefs-btn { margin-top: 16px; }
   `]

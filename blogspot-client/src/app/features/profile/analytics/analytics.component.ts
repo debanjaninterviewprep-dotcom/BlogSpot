@@ -10,6 +10,11 @@ import { CreatorAnalytics } from '@core/models/user.model';
 
       <app-loading-spinner *ngIf="loading"></app-loading-spinner>
 
+      <app-error-state *ngIf="loadError && !analytics"
+                       message="Failed to load analytics. Please try again."
+                       (onRetry)="loadAnalytics()">
+      </app-error-state>
+
       <div *ngIf="analytics" class="analytics-content">
         <!-- Stats Overview -->
         <div class="stats-grid">
@@ -84,11 +89,11 @@ import { CreatorAnalytics } from '@core/models/user.model';
     }
     .stat-value {
       font-size: 36px;
-      font-weight: 700;
+      font-weight: var(--font-weight-bold);
       margin: 8px 0;
     }
-    .stat-label { color: var(--color-text-secondary); font-size: 14px; }
-    .stat-growth { color: var(--color-success); font-size: 12px; margin-top: 4px; }
+    .stat-label { color: var(--color-text-secondary); font-size: var(--font-size-base); }
+    .stat-growth { color: var(--color-success); font-size: var(--font-size-xs); margin-top: 4px; }
     .top-post {
       display: flex;
       align-items: center;
@@ -96,14 +101,14 @@ import { CreatorAnalytics } from '@core/models/user.model';
       width: 100%;
       padding: 8px 0;
     }
-    .rank { font-size: 18px; font-weight: 700; color: var(--color-text-secondary); min-width: 30px; }
+    .rank { font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); color: var(--color-text-secondary); min-width: 30px; }
     .post-info { flex: 1; }
-    .post-title { text-decoration: none; color: var(--color-text-primary); font-weight: 500; }
+    .post-title { text-decoration: none; color: var(--color-text-primary); font-weight: var(--font-weight-medium); }
     .post-title:hover { text-decoration: underline; }
     .post-stats {
       display: flex;
       gap: 16px;
-      font-size: 13px;
+      font-size: var(--font-size-sm);
       color: var(--color-text-secondary);
       margin-top: 4px;
     }
@@ -113,17 +118,26 @@ import { CreatorAnalytics } from '@core/models/user.model';
 export class AnalyticsComponent implements OnInit {
   analytics: CreatorAnalytics | null = null;
   loading = false;
+  loadError = false;
 
   constructor(private userService: UserService) {}
 
   ngOnInit(): void {
+    this.loadAnalytics();
+  }
+
+  loadAnalytics(): void {
     this.loading = true;
+    this.loadError = false;
     this.userService.getCreatorAnalytics().subscribe({
       next: data => {
         this.analytics = data;
         this.loading = false;
       },
-      error: () => this.loading = false
+      error: () => {
+        this.loading = false;
+        this.loadError = true;
+      }
     });
   }
 }

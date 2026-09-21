@@ -94,8 +94,8 @@ import { Notification } from '@core/models/notification.model';
     .notif-icon.type-comment { background: rgba(33,150,243,0.12); color: #2196f3; }
     .notif-icon mat-icon { font-size: 20px; width: 20px; height: 20px; }
     .notif-body { flex: 1; }
-    .notif-message { margin: 0 0 4px; font-size: 14px; line-height: 1.4; }
-    .notif-time { font-size: 12px; color: var(--color-text-secondary); }
+    .notif-message { margin: 0 0 4px; font-size: var(--font-size-base); line-height: 1.4; }
+    .notif-time { font-size: var(--font-size-xs); color: var(--color-text-secondary); }
     .unread-dot {
       width: 8px; height: 8px; border-radius: 50%;
       background: var(--color-primary); flex-shrink: 0;

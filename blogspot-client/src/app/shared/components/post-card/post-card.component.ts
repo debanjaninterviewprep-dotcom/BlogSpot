@@ -280,7 +280,7 @@ import { BlogPost, ReactionType } from '@core/models/blog.model';
       background: var(--color-primary);
       color: #fff;
       font-size: 9px;
-      font-weight: 700;
+      font-weight: var(--font-weight-bold);
       line-height: 1;
       padding: 2px 4px;
       border-radius: 8px;
@@ -292,7 +292,7 @@ import { BlogPost, ReactionType } from '@core/models/blog.model';
     @media (max-width: 600px) {
       .post-card { padding: 12px; }
       .author-avatar { width: 38px; height: 38px; }
-      .post-title { font-size: 16px; }
+      .post-title { font-size: var(--font-size-md); }
       .post-images { gap: 4px; }
       .post-image { width: 160px; height: 110px; }
       .action-icon-wrap { width: 30px; height: 30px; }
