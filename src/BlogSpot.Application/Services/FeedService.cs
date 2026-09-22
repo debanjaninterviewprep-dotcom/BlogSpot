@@ -44,35 +44,48 @@ public class FeedService : IFeedService
         }
         else
         {
-            // Followed posts first, then fill with popular posts not from followed users
-            var followedQuery = GetFullPostQuery()
+            // Followed activity = own posts by followed authors + reposts by followed users, merged by activity time
+            var followedPostActivity = await _uow.BlogPosts.Query()
                 .Where(p => p.IsPublished && followingIds.Contains(p.AuthorId))
-                .OrderByDescending(p => p.CreatedAt);
+                .Select(p => new FeedActivity { PostId = p.Id, ActivityAt = p.CreatedAt, RepostedByUserId = null })
+                .ToListAsync(ct);
 
-            var followedCount = await followedQuery.CountAsync(ct);
+            var followedRepostActivity = await _uow.Reposts.Query()
+                .Where(r => followingIds.Contains(r.UserId) && r.BlogPost.IsPublished && r.BlogPost.AuthorId != userId)
+                .Select(r => new FeedActivity { PostId = r.BlogPostId, ActivityAt = r.CreatedAt, RepostedByUserId = r.UserId })
+                .ToListAsync(ct);
+
+            var followedActivity = followedPostActivity.Concat(followedRepostActivity)
+                .OrderByDescending(a => a.ActivityAt)
+                .ThenBy(a => a.PostId)
+                .ToList();
+
+            var followedCount = followedActivity.Count;
             var skip = (pagination.Page - 1) * pagination.PageSize;
 
             if (skip < followedCount)
             {
-                // Still have followed posts on this page — return followed posts, fill remainder with others
-                var followedPosts = await followedQuery.Skip(skip).Take(pagination.PageSize).ToListAsync(ct);
+                // Still have followed activity on this page — return it, fill remainder with others
+                var pageActivity = followedActivity.Skip(skip).Take(pagination.PageSize).ToList();
+                var items = await HydrateFeedActivityAsync(pageActivity, userId, ct);
 
-                if (followedPosts.Count < pagination.PageSize)
+                if (items.Count < pagination.PageSize)
                 {
-                    var needed = pagination.PageSize - followedPosts.Count;
-                    var followedPostIds = followedPosts.Select(p => p.Id).ToList();
+                    var needed = pagination.PageSize - items.Count;
+                    var usedPostIds = pageActivity.Select(a => a.PostId).ToList();
                     var otherPosts = await GetFullPostQuery()
-                        .Where(p => p.IsPublished && !followingIds.Contains(p.AuthorId) && !followedPostIds.Contains(p.Id))
+                        .Where(p => p.IsPublished && !followingIds.Contains(p.AuthorId) && !usedPostIds.Contains(p.Id))
                         .OrderByDescending(p => p.ViewCount + (p.Reactions.Count * 3))
                         .ThenByDescending(p => p.CreatedAt)
                         .ThenBy(p => p.Id)
                         .Take(needed)
                         .ToListAsync(ct);
 
-                    var combined = followedPosts.Concat(otherPosts).ToList();
+                    items.AddRange(otherPosts.Select(p => MapToDto(p, userId)));
+
                     return new PagedResult<BlogPostDto>
                     {
-                        Items = combined.Select(p => MapToDto(p, userId)).ToList(),
+                        Items = items,
                         TotalCount = followedCount + await GetFullPostQuery().Where(p => p.IsPublished && !followingIds.Contains(p.AuthorId)).CountAsync(ct),
                         Page = pagination.Page,
                         PageSize = pagination.PageSize
@@ -81,7 +94,7 @@ public class FeedService : IFeedService
 
                 return new PagedResult<BlogPostDto>
                 {
-                    Items = followedPosts.Select(p => MapToDto(p, userId)).ToList(),
+                    Items = items,
                     TotalCount = followedCount,
                     Page = pagination.Page,
                     PageSize = pagination.PageSize
@@ -89,8 +102,7 @@ public class FeedService : IFeedService
             }
             else
             {
-                // Past followed posts — show popular posts from non-followed users
-                var adjustedSkip = skip - followedCount;
+                // Past followed activity — show popular posts from non-followed users
                 var otherQuery = GetFullPostQuery()
                     .Where(p => p.IsPublished && !followingIds.Contains(p.AuthorId))
                     .OrderByDescending(p => p.ViewCount + (p.Reactions.Count * 3) + (p.Comments.Count * 5))
@@ -155,7 +167,56 @@ public class FeedService : IFeedService
             .Include(p => p.Comments)
             .Include(p => p.Reactions)
             .Include(p => p.Bookmarks)
+            .Include(p => p.Reposts)
             .Include(p => p.BlogPostTags).ThenInclude(bt => bt.Tag);
+    }
+
+    // Hydrates a chronologically-ordered list of feed activity (own posts + reposts by followed users)
+    // into fully-mapped BlogPostDtos, preserving the activity order and attaching FeedRepost info.
+    private async Task<List<BlogPostDto>> HydrateFeedActivityAsync(List<FeedActivity> activity, Guid userId, CancellationToken ct)
+    {
+        if (activity.Count == 0) return new List<BlogPostDto>();
+
+        var postIds = activity.Select(a => a.PostId).Distinct().ToList();
+        var posts = await GetFullPostQuery().Where(p => postIds.Contains(p.Id)).ToListAsync(ct);
+        var postsById = posts.ToDictionary(p => p.Id);
+
+        var reposterIds = activity.Where(a => a.RepostedByUserId.HasValue).Select(a => a.RepostedByUserId!.Value).Distinct().ToList();
+        var reposters = reposterIds.Count > 0
+            ? await _uow.Users.Query().Include(u => u.Profile).Where(u => reposterIds.Contains(u.Id)).ToDictionaryAsync(u => u.Id, ct)
+            : new Dictionary<Guid, User>();
+
+        var items = new List<BlogPostDto>();
+        foreach (var entry in activity)
+        {
+            if (!postsById.TryGetValue(entry.PostId, out var post)) continue;
+
+            var dto = MapToDto(post, userId);
+
+            if (entry.RepostedByUserId.HasValue && reposters.TryGetValue(entry.RepostedByUserId.Value, out var reposter))
+            {
+                dto.FeedRepost = new FeedRepostInfoDto
+                {
+                    UserId = reposter.Id,
+                    UserName = reposter.UserName,
+                    DisplayName = reposter.Profile?.DisplayName,
+                    ProfilePictureUrl = reposter.Profile?.ProfilePictureUrl,
+                    Quote = post.Reposts?.FirstOrDefault(r => r.UserId == entry.RepostedByUserId.Value)?.Quote,
+                    RepostedAt = entry.ActivityAt
+                };
+            }
+
+            items.Add(dto);
+        }
+
+        return items;
+    }
+
+    private class FeedActivity
+    {
+        public Guid PostId { get; set; }
+        public DateTime ActivityAt { get; set; }
+        public Guid? RepostedByUserId { get; set; }
     }
 
     private async Task<PagedResult<BlogPostDto>> PaginateAsync(
@@ -209,6 +270,9 @@ public class FeedService : IFeedService
             CurrentUserReaction = currentUserId.HasValue
                 ? post.Reactions?.FirstOrDefault(r => r.UserId == currentUserId.Value)?.Type.ToString()
                 : null,
+            RepostCount = post.Reposts?.Count ?? 0,
+            IsRepostedByCurrentUser = currentUserId.HasValue && (post.Reposts?.Any(r => r.UserId == currentUserId.Value) ?? false),
+            CurrentUserRepostQuote = currentUserId.HasValue ? post.Reposts?.FirstOrDefault(r => r.UserId == currentUserId.Value)?.Quote : null,
             Tags = post.BlogPostTags?.Select(bt => bt.Tag.Name).ToList() ?? new(),
             Images = post.Images?.Select(i => new PostImageDto
             {

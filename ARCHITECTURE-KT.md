@@ -333,8 +333,8 @@ blogspot-client/src/app/
 | **Follow** | User-to-user social relationship |
 | **Tag** | Content categorization label |
 | **DraftBlog** | Auto-saved draft before publishing |
-| **Notification** | Follow, reaction, comment, mention alerts |
-| **EmailQueue** | Outbound emails (welcome, moderation, reports) |
+| **Notification** | Follow, reaction, comment, mention, repost alerts |
+| **EmailQueue** | Outbound emails (welcome, moderation, reports, new repost) |
 | **OtpVerification** | Email verification codes |
 | **ActivityLog** | System event audit trail |
 
@@ -650,7 +650,7 @@ app.Run()
 
 | Method | Route | Auth | Output | Purpose |
 |--------|-------|------|--------|---------|
-| GET | `/home` | Yes | `PagedResult<BlogPostDto>` | Personalized feed (followed + trending fill) |
+| GET | `/home` | Yes | `PagedResult<BlogPostDto>` | Personalized feed (followed authors' posts + reposts by followed users, merged by activity time, then trending fill) |
 | GET | `/trending` | No | `PagedResult<BlogPostDto>` | Top trending (5-min cache, 7-day window) |
 | GET | `/latest` | No | `PagedResult<BlogPostDto>` | Newest posts |
 
@@ -689,7 +689,7 @@ app.Run()
 |---------|---------------------|
 | **BlogService** | Post CRUD, slug generation, HTML sanitization (Ganss.XSS), reading time calc (~200 wpm), tag sync, reactions (add/change/remove), bookmarks, reposts (toggle, with optional quote), polls (create on post create/update, single-choice voting with one-vote-per-poll enforcement), threaded comments, comment likes, image management, draft CRUD, full-text search (posts + users + tags), post scheduling (1-hour min lead time, IST confirmation email showing a 20-min publish window, list scheduled posts) |
 | **UserService** | Profile CRUD, picture/cover upload, follow toggle with notification, follower removal, paginated followers/following, suggested users (top-5 by follower count), user search, creator analytics (views, reactions, comments, followers growth 30d, daily stats, top posts), notification preference management |
-| **FeedService** | Home feed (followed + trending fill), trending (MemoryCache 5 min, score = Views + Reactions×3 + Comments×5, 7-day window), latest (newest first) |
+| **FeedService** | Home feed (followed authors' posts merged with reposts by followed users, sorted by activity time, then trending fill), trending (MemoryCache 5 min, score = Views + Reactions×3 + Comments×5, 7-day window), latest (newest first) |
 | **AdminService** | Paginated admin views, toggle user status (email notification), change role (email notification), admin delete post/comment (soft delete + email), seed 30 Indian demo users + 40 posts + follows + likes + comments, format plain text posts to HTML |
 | **NotificationService** | Create notification (respects user preferences, no self-notify), paginated retrieval, unread count, mark read/all read |
 | **ReadingListService** | Named/public-or-private post collections: CRUD, add/remove posts, list a user's reading lists (private ones hidden from non-owners), follow/unfollow a public list (with owner notification) |
@@ -772,7 +772,7 @@ PostStatus:       Draft = 0, Scheduled = 1, Published = 2, Archived = 3
 | DTO | Properties |
 |-----|-----------|
 | **AuthResponseDto** | Token, RefreshToken, Expiration, UserInfoDto (Id, UserName, Email, Role, ProfilePictureUrl, DisplayName) |
-| **BlogPostDto** | Full post data with author info, aggregates (likeCount, commentCount, viewCount), reactionCounts, currentUserReaction, tags, images, isLikedByCurrentUser, isBookmarkedByCurrentUser, repostCount, isRepostedByCurrentUser, currentUserRepostQuote, `poll` (nullable `PollDto`) |
+| **BlogPostDto** | Full post data with author info, aggregates (likeCount, commentCount, viewCount), reactionCounts, currentUserReaction, tags, images, isLikedByCurrentUser, isBookmarkedByCurrentUser, repostCount, isRepostedByCurrentUser, currentUserRepostQuote, `poll` (nullable `PollDto`), `feedRepost` (nullable `FeedRepostInfoDto` — set only by `FeedService.GetHomeFeedAsync` on entries representing a repost by a followed user; carries the reposter's id/username/display name/avatar, optional quote, and repost timestamp) |
 | **RepostDto** | Id, Quote, CreatedAt, reposting user's info (UserId/UserName/DisplayName/Avatar), nested `Post` (BlogPostDto of the original post) — used for the profile "Reposts" tab |
 | **ReadingListDto** / **ReadingListDetailDto** | Id, Name, Description, IsPublic, owner info, ItemCount, FollowerCount, IsFollowedByCurrentUser; Detail variant adds `Posts[]` (BlogPostDto, in the order added) |
 | **PollDto** | Id, Question, ExpiresAt, IsExpired, TotalVotes, CurrentUserVotedOptionId (nullable), Options[] (`PollOptionDto`: Id, Text, SortOrder, VoteCount, VotePercentage) |
@@ -1517,13 +1517,15 @@ FeedController.cs → GetHomeFeed() → extracts userId from claims
     ↓
 FeedService.cs → GetHomeFeedAsync(userId, pagination)
     ↓
-UnitOfWork → Query BlogPosts (followed users + trending fill)
+UnitOfWork → Query BlogPosts by followed authors + Reposts by followed users (lightweight id+timestamp projections)
+    ↓
+Merge both activity sources by timestamp in C# → hydrate the page's post ids into full BlogPostDtos, attach FeedRepost info → fill remainder with trending fallback
     ↓
 AppDbContext → EF Core SQL query → PostgreSQL/SQL Server
     ↓
 Maps to PagedResult<BlogPostDto> → JSON response
     ↓
-feed.component.ts renders PostCardComponent[] → post-card.component.ts
+feed.component.ts renders PostCardComponent[] → post-card.component.ts (shows a "X reposted" banner when feedRepost is set)
     ↓
 Sidebar: user.service.ts → getSuggestedUsers → GET /api/user/suggested
 ```
@@ -1663,7 +1665,7 @@ Table row updates in-place
 
 | Area | Issue | Impact | Recommendation |
 |------|-------|--------|----------------|
-| **Feed queries** | Home feed does 2 queries + merging in C# | Moderate latency | Use `sp_GetHomeFeed` stored procedure instead of EF LINQ |
+| **Feed queries** | Home feed does lightweight id+timestamp projections for followed-authors' posts and followed-users' reposts, merges them in C#, then hydrates only the current page's post ids into full entities (plus a trending-fill query when short) | Moderate latency, several round trips | Use `sp_GetHomeFeed` stored procedure instead of EF LINQ |
 | **Cartesian Includes** | ~~Multi-collection `Include` cross-joins duplicated `BlogPost.Content` per child combination~~ | ~~Exhausted Neon Free egress (4 GB/18 days on a 35 MB DB)~~ | **FIXED** — global `QuerySplittingBehavior.SplitQuery` in `Infrastructure/DependencyInjection.cs`. See Phase 4 § 5 |
 | **N+1 queries** | Comment loading with nested replies can cause multiple DB trips | Slow comments on popular posts | Eager load with `.Include().ThenInclude()` or limit nesting depth |
 | **List DTO payload** | `MapToDto` returns full `Content` HTML for feed/search/bookmark list views that only render `Summary` | Egress + JSON size, ~10× larger than needed | Project `Content` only on detail endpoints — deferred (changes the `BlogPostDto` contract) |

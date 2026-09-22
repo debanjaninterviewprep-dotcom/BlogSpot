@@ -607,6 +607,27 @@ public class BlogService : IBlogService
                     post.AuthorId, userId, "Repost",
                     $"{actor?.UserName} reposted your post",
                     postId, ct);
+
+                var author = await _uow.Users.GetByIdAsync(post.AuthorId, ct);
+                if (!string.IsNullOrWhiteSpace(author?.Email))
+                {
+                    var safeActorName = WebUtility.HtmlEncode(actor?.UserName ?? "Someone");
+                    var safeTitle = WebUtility.HtmlEncode(post.Title);
+                    var quoteHtml = string.IsNullOrWhiteSpace(quote)
+                        ? string.Empty
+                        : $"<p style='color:#0f1419;font-style:italic'>\"{WebUtility.HtmlEncode(quote)}\"</p>";
+
+                    await _emailQueueService.EnqueueAsync(
+                        author!.Email,
+                        $"{safeActorName} reposted your post",
+                        $@"<div style='font-family:sans-serif;max-width:600px;margin:0 auto;padding:32px'>
+                            <h2 style='color:#1d9bf0'>Your post was reposted!</h2>
+                            <h3>{safeTitle}</h3>
+                            <p style='color:#536471'>{safeActorName} reposted your post.</p>
+                            {quoteHtml}
+                        </div>",
+                        ct);
+                }
             }
         }
 

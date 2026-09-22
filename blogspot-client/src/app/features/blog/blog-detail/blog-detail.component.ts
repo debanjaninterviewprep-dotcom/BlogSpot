@@ -10,6 +10,7 @@ import { BlogPost, Comment, ReactionType, ReactionSummaryDto, Poll } from '@core
 import { UserProfile } from '@core/models/user.model';
 import { PostLikersDialogComponent } from '../../../shared/components/post-likers-dialog/post-likers-dialog.component';
 import { AddToReadingListDialogComponent } from '../../../shared/components/add-to-reading-list-dialog/add-to-reading-list-dialog.component';
+import { RepostDialogComponent } from '../../../shared/components/repost-dialog/repost-dialog.component';
 
 @Component({
   selector: 'app-blog-detail',
@@ -143,6 +144,28 @@ import { AddToReadingListDialogComponent } from '../../../shared/components/add-
           </div>
 
           <div class="post-actions-secondary">
+            <button mat-icon-button class="repost-btn" *ngIf="authService.isLoggedIn"
+                    [class.active]="post.isRepostedByCurrentUser"
+                    [matMenuTriggerFor]="repostMenu"
+                    [attr.aria-label]="post.isRepostedByCurrentUser ? 'Undo repost' : 'Repost'"
+                    [matTooltip]="post.isRepostedByCurrentUser ? 'Reposted — click for options' : 'Repost'">
+              <mat-icon>repeat</mat-icon>
+            </button>
+            <mat-menu #repostMenu="matMenu">
+              <ng-container *ngIf="!post.isRepostedByCurrentUser; else repostedMenuItems">
+                <button mat-menu-item (click)="toggleRepost()">
+                  <mat-icon>repeat</mat-icon><span>Repost</span>
+                </button>
+                <button mat-menu-item (click)="openQuoteRepost()">
+                  <mat-icon>format_quote</mat-icon><span>Quote Repost</span>
+                </button>
+              </ng-container>
+              <ng-template #repostedMenuItems>
+                <button mat-menu-item (click)="toggleRepost()">
+                  <mat-icon>close</mat-icon><span>Remove Repost</span>
+                </button>
+              </ng-template>
+            </mat-menu>
             <button mat-icon-button (click)="toggleBookmark()"
                     [matTooltip]="post.isBookmarkedByCurrentUser ? 'Remove bookmark' : 'Save post'"
                     [attr.aria-label]="post.isBookmarkedByCurrentUser ? 'Remove bookmark' : 'Save post'">
@@ -441,6 +464,8 @@ import { AddToReadingListDialogComponent } from '../../../shared/components/add-
     .like-count-btn { margin-left: -8px; }
     .like-count-btn:hover { text-decoration: underline; }
     .post-actions-secondary { display: flex; align-items: center; gap: 4px; }
+    .repost-btn:hover { color: var(--color-success); }
+    .repost-btn.active { color: var(--color-success); }
     .emoji-reactions { display: flex; align-items: center; gap: 4px; }
     .reaction-btn { width: 36px; height: 36px; position: relative; display: inline-flex; align-items: center; justify-content: center; }
     .reaction-btn.active { background: var(--color-primary-light); border-radius: 50%; }
@@ -747,6 +772,31 @@ export class BlogDetailComponent implements OnInit {
           this.snackBar.open(result.bookmarked ? 'Post saved!' : 'Bookmark removed', 'Close', { duration: 2000 });
         }
       }
+    });
+  }
+
+  toggleRepost(quote?: string): void {
+    if (!this.post || !this.authService.isLoggedIn) return;
+    this.blogService.toggleRepost(this.post.id, quote).subscribe({
+      next: (result) => {
+        if (this.post) {
+          this.post.repostCount = result.repostCount;
+          this.post.isRepostedByCurrentUser = result.isRepostedByCurrentUser;
+          this.post.currentUserRepostQuote = result.currentUserQuote;
+        }
+        this.snackBar.open(result.isRepostedByCurrentUser ? 'Post reposted!' : 'Repost removed', 'Close', { duration: 2000 });
+      },
+      error: () => {
+        this.snackBar.open('Failed to repost. Please try again.', 'Close', { duration: 3000 });
+      }
+    });
+  }
+
+  openQuoteRepost(): void {
+    if (!this.post) return;
+    const ref = this.dialog.open(RepostDialogComponent, { data: { post: this.post }, width: '480px' });
+    ref.afterClosed().subscribe(quote => {
+      if (quote !== undefined) this.toggleRepost(quote || undefined);
     });
   }
 

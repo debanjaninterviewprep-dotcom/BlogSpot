@@ -43,11 +43,24 @@ public class BlogPostDto
     // Poll (null when this post has no poll)
     public PollDto? Poll { get; set; }
 
+    // Feed-only: set when this entry represents a repost by someone you follow, rather than an original post
+    public FeedRepostInfoDto? FeedRepost { get; set; }
+
     // Tags
     public List<string> Tags { get; set; } = new();
 
     // Images
     public List<PostImageDto> Images { get; set; } = new();
+}
+
+public class FeedRepostInfoDto
+{
+    public Guid UserId { get; set; }
+    public string UserName { get; set; } = string.Empty;
+    public string? DisplayName { get; set; }
+    public string? ProfilePictureUrl { get; set; }
+    public string? Quote { get; set; }
+    public DateTime RepostedAt { get; set; }
 }
 
 public class PostImageDto

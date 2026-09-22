@@ -28,9 +28,20 @@ export interface BlogPost {
   repostCount: number;
   isRepostedByCurrentUser: boolean;
   currentUserRepostQuote?: string;
+  /** Feed-only: set when this entry represents a repost by someone you follow, rather than an original post. */
+  feedRepost?: FeedRepostInfo;
   poll?: Poll;
   tags: string[];
   images: PostImage[];
+}
+
+export interface FeedRepostInfo {
+  userId: string;
+  userName: string;
+  displayName?: string;
+  profilePictureUrl?: string;
+  quote?: string;
+  repostedAt: string;
 }
 
 export interface PostImage {

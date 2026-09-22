@@ -7,6 +7,15 @@ import { RepostDialogComponent } from '../repost-dialog/repost-dialog.component'
   selector: 'app-post-card',
   template: `
     <article class="post-card" *ngIf="post">
+      <div class="repost-banner" *ngIf="post.feedRepost">
+        <mat-icon>repeat</mat-icon>
+        <a [routerLink]="['/profile', post.feedRepost.userName]" class="repost-banner-name">
+          {{ post.feedRepost.displayName || post.feedRepost.userName }}
+        </a>
+        <span>reposted</span>
+      </div>
+      <p class="repost-banner-quote" *ngIf="post.feedRepost?.quote">{{ post.feedRepost?.quote }}</p>
+
       <div class="post-header">
         <a [routerLink]="['/profile', post.authorUserName]" class="author-avatar-link">
           <img [src]="(post.authorProfilePictureUrl | imageUrl) || 'assets/default-avatar.svg'"
@@ -60,22 +69,28 @@ import { RepostDialogComponent } from '../repost-dialog/repost-dialog.component'
         </button>
 
         <button class="action-btn repost-btn" [class.active]="post.isRepostedByCurrentUser"
-                [matMenuTriggerFor]="post.isRepostedByCurrentUser ? null : repostMenu"
-                (click)="post.isRepostedByCurrentUser && toggleRepost()"
+                [matMenuTriggerFor]="repostMenu"
                 [attr.aria-label]="post.isRepostedByCurrentUser ? 'Undo repost' : 'Repost'"
-                [matTooltip]="post.isRepostedByCurrentUser ? 'Undo repost' : 'Repost'">
+                [matTooltip]="post.isRepostedByCurrentUser ? 'Reposted — click for options' : 'Repost'">
           <span class="action-icon-wrap">
             <mat-icon>repeat</mat-icon>
           </span>
           <span class="action-count" *ngIf="post.repostCount">{{ post.repostCount }}</span>
         </button>
         <mat-menu #repostMenu="matMenu">
-          <button mat-menu-item (click)="toggleRepost()">
-            <mat-icon>repeat</mat-icon><span>Repost</span>
-          </button>
-          <button mat-menu-item (click)="openQuoteRepost()">
-            <mat-icon>format_quote</mat-icon><span>Quote Repost</span>
-          </button>
+          <ng-container *ngIf="!post.isRepostedByCurrentUser; else repostedMenuItems">
+            <button mat-menu-item (click)="toggleRepost()">
+              <mat-icon>repeat</mat-icon><span>Repost</span>
+            </button>
+            <button mat-menu-item (click)="openQuoteRepost()">
+              <mat-icon>format_quote</mat-icon><span>Quote Repost</span>
+            </button>
+          </ng-container>
+          <ng-template #repostedMenuItems>
+            <button mat-menu-item (click)="toggleRepost()">
+              <mat-icon>close</mat-icon><span>Remove Repost</span>
+            </button>
+          </ng-template>
         </mat-menu>
 
         <div class="reaction-group">
@@ -130,6 +145,24 @@ import { RepostDialogComponent } from '../repost-dialog/repost-dialog.component'
       box-shadow: var(--card-hover-shadow);
       position: relative;
       z-index: 1;
+    }
+    .repost-banner {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: var(--font-size-xs);
+      color: var(--color-text-secondary);
+      font-weight: var(--font-weight-medium);
+      margin-bottom: 8px;
+    }
+    .repost-banner mat-icon { font-size: 16px; width: 16px; height: 16px; color: var(--color-success); }
+    .repost-banner-name { color: var(--color-text-secondary); font-weight: var(--font-weight-bold); text-decoration: none; }
+    .repost-banner-name:hover { text-decoration: underline; }
+    .repost-banner-quote {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-primary);
+      margin: 0 0 8px;
+      font-style: italic;
     }
     .post-header {
       display: flex;
