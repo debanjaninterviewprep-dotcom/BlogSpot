@@ -78,19 +78,15 @@ import { RepostDialogComponent } from '../repost-dialog/repost-dialog.component'
           <span class="action-count" *ngIf="post.repostCount">{{ post.repostCount }}</span>
         </button>
         <mat-menu #repostMenu="matMenu">
-          <ng-container *ngIf="!post.isRepostedByCurrentUser; else repostedMenuItems">
-            <button mat-menu-item (click)="toggleRepost()">
-              <mat-icon>repeat</mat-icon><span>Repost</span>
-            </button>
-            <button mat-menu-item (click)="openQuoteRepost()">
-              <mat-icon>format_quote</mat-icon><span>Quote Repost</span>
-            </button>
-          </ng-container>
-          <ng-template #repostedMenuItems>
-            <button mat-menu-item (click)="toggleRepost()">
-              <mat-icon>close</mat-icon><span>Remove Repost</span>
-            </button>
-          </ng-template>
+          <button mat-menu-item *ngIf="!post.isRepostedByCurrentUser" (click)="toggleRepost()">
+            <mat-icon>repeat</mat-icon><span>Repost</span>
+          </button>
+          <button mat-menu-item *ngIf="!post.isRepostedByCurrentUser" (click)="openQuoteRepost()">
+            <mat-icon>format_quote</mat-icon><span>Quote Repost</span>
+          </button>
+          <button mat-menu-item *ngIf="post.isRepostedByCurrentUser" (click)="toggleRepost()">
+            <mat-icon>close</mat-icon><span>Remove Repost</span>
+          </button>
         </mat-menu>
 
         <div class="reaction-group">

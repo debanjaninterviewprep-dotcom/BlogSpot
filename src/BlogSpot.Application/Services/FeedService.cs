@@ -50,8 +50,11 @@ public class FeedService : IFeedService
                 .Select(p => new FeedActivity { PostId = p.Id, ActivityAt = p.CreatedAt, RepostedByUserId = null })
                 .ToListAsync(ct);
 
+            // Your own reposts belong in your own feed too, so include yourself alongside everyone you follow.
+            var reposterIds = followingIds.Append(userId).ToList();
+
             var followedRepostActivity = await _uow.Reposts.Query()
-                .Where(r => followingIds.Contains(r.UserId) && r.BlogPost.IsPublished && r.BlogPost.AuthorId != userId)
+                .Where(r => reposterIds.Contains(r.UserId) && r.BlogPost.IsPublished)
                 .Select(r => new FeedActivity { PostId = r.BlogPostId, ActivityAt = r.CreatedAt, RepostedByUserId = r.UserId })
                 .ToListAsync(ct);
 

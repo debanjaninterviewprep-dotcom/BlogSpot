@@ -175,6 +175,19 @@ html.dark-theme {
   --mdc-radio-selected-pressed-icon-color: var(--color-primary) !important;
 }
 
+/* The prebuilt theme hardcodes near-black label ink on these controls, which disappears against
+   the dark background; bind it to the theme-aware token so labels stay readable in both modes. */
+.mat-mdc-slide-toggle,
+.mat-mdc-radio-button,
+.mat-mdc-checkbox {
+  --mdc-form-field-label-text-color: var(--color-text-primary) !important;
+}
+.mat-mdc-slide-toggle .mdc-label,
+.mat-mdc-radio-button .mdc-label,
+.mat-mdc-checkbox .mdc-label {
+  color: var(--color-text-primary) !important;
+}
+
 /* =============================
    LIGHT MODE ENHANCEMENTS
    ============================= */
@@ -227,6 +240,8 @@ html.dark-theme {
 .comment-btn:hover { color: var(--color-primary) !important; }
 .bookmark-btn:hover { color: var(--color-accent) !important; }
 .bookmark-btn.active { color: var(--color-accent) !important; }
+.repost-btn:hover, .repost-btn:hover mat-icon { color: var(--color-success) !important; }
+.repost-btn.active, .repost-btn.active mat-icon { color: var(--color-success) !important; }
 
 /* Follow button gradient */
 .follow-btn:not(.following) {
@@ -368,6 +383,8 @@ body.dark-theme {
   .comment-btn:hover { color: var(--color-primary) !important; }
   .bookmark-btn:hover { color: var(--color-accent) !important; }
   .bookmark-btn.active { color: var(--color-accent) !important; }
+  .repost-btn:hover, .repost-btn:hover mat-icon { color: var(--color-success) !important; }
+  .repost-btn.active, .repost-btn.active mat-icon { color: var(--color-success) !important; }
   .reaction-btn:hover { background: rgba(108, 92, 231, 0.1) !important; }
   .reaction-btn.active { background: rgba(108, 92, 231, 0.2) !important; }
 

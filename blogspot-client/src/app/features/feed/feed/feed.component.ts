@@ -439,6 +439,10 @@ export class FeedComponent implements OnInit {
           post.isRepostedByCurrentUser = result.isRepostedByCurrentUser;
           post.currentUserRepostQuote = result.currentUserQuote;
         }
+        this.snackBar.open(result.isRepostedByCurrentUser ? 'Post reposted!' : 'Repost removed', 'Close', { duration: 2000 });
+      },
+      error: () => {
+        this.snackBar.open('Failed to repost. Please try again.', 'Close', { duration: 3000 });
       }
     });
   }

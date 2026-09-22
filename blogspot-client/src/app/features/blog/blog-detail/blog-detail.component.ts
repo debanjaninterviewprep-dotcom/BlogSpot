@@ -152,19 +152,15 @@ import { RepostDialogComponent } from '../../../shared/components/repost-dialog/
               <mat-icon>repeat</mat-icon>
             </button>
             <mat-menu #repostMenu="matMenu">
-              <ng-container *ngIf="!post.isRepostedByCurrentUser; else repostedMenuItems">
-                <button mat-menu-item (click)="toggleRepost()">
-                  <mat-icon>repeat</mat-icon><span>Repost</span>
-                </button>
-                <button mat-menu-item (click)="openQuoteRepost()">
-                  <mat-icon>format_quote</mat-icon><span>Quote Repost</span>
-                </button>
-              </ng-container>
-              <ng-template #repostedMenuItems>
-                <button mat-menu-item (click)="toggleRepost()">
-                  <mat-icon>close</mat-icon><span>Remove Repost</span>
-                </button>
-              </ng-template>
+              <button mat-menu-item *ngIf="!post.isRepostedByCurrentUser" (click)="toggleRepost()">
+                <mat-icon>repeat</mat-icon><span>Repost</span>
+              </button>
+              <button mat-menu-item *ngIf="!post.isRepostedByCurrentUser" (click)="openQuoteRepost()">
+                <mat-icon>format_quote</mat-icon><span>Quote Repost</span>
+              </button>
+              <button mat-menu-item *ngIf="post.isRepostedByCurrentUser" (click)="toggleRepost()">
+                <mat-icon>close</mat-icon><span>Remove Repost</span>
+              </button>
             </mat-menu>
             <button mat-icon-button (click)="toggleBookmark()"
                     [matTooltip]="post.isBookmarkedByCurrentUser ? 'Remove bookmark' : 'Save post'"
