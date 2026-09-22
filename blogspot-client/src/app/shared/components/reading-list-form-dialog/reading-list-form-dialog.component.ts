@@ -28,7 +28,7 @@ export interface ReadingListFormResult {
       </mat-form-field>
 
       <div class="visibility-row">
-        <mat-slide-toggle [(ngModel)]="isPublic">Public</mat-slide-toggle>
+        <mat-slide-toggle [(ngModel)]="isPublic" color="primary">Public</mat-slide-toggle>
         <span class="visibility-hint">{{ isPublic ? 'Anyone can view and follow this list' : 'Only you can see this list' }}</span>
       </div>
     </mat-dialog-content>

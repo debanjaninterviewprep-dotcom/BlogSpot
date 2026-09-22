@@ -116,7 +116,7 @@ import { MatChipInputEvent } from '@angular/material/chips';
             <!-- Poll -->
             <div class="poll-section">
               <mat-slide-toggle [checked]="includePoll" (change)="onPollToggle($event.checked)"
-                                 [disabled]="existingPollHasVotes">
+                                 [disabled]="existingPollHasVotes" color="primary">
                 Add a poll
               </mat-slide-toggle>
 
