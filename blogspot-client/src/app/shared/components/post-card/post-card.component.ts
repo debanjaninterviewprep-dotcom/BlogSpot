@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { BlogPost, ReactionType } from '@core/models/blog.model';
-import { RepostDialogComponent } from '../repost-dialog/repost-dialog.component';
+import { RepostDialogComponent, RepostDialogResult } from '../repost-dialog/repost-dialog.component';
 
 @Component({
   selector: 'app-post-card',
@@ -389,10 +389,9 @@ export class PostCardComponent {
 
   openQuoteRepost(): void {
     const ref = this.dialog.open(RepostDialogComponent, { data: { post: this.post }, width: '480px' });
-    ref.afterClosed().subscribe((quote: string | undefined) => {
-      if (quote !== undefined) {
-        this.onRepost.emit({ postId: this.post.id, quote: quote || undefined });
-      }
+    ref.afterClosed().subscribe((result: RepostDialogResult | undefined) => {
+      if (!result) return;
+      this.onRepost.emit({ postId: this.post.id, quote: result.quote || undefined });
     });
   }
 }

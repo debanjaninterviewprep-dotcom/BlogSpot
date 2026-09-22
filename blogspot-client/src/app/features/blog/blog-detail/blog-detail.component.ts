@@ -10,7 +10,7 @@ import { BlogPost, Comment, ReactionType, ReactionSummaryDto, Poll } from '@core
 import { UserProfile } from '@core/models/user.model';
 import { PostLikersDialogComponent } from '../../../shared/components/post-likers-dialog/post-likers-dialog.component';
 import { AddToReadingListDialogComponent } from '../../../shared/components/add-to-reading-list-dialog/add-to-reading-list-dialog.component';
-import { RepostDialogComponent } from '../../../shared/components/repost-dialog/repost-dialog.component';
+import { RepostDialogComponent, RepostDialogResult } from '../../../shared/components/repost-dialog/repost-dialog.component';
 
 @Component({
   selector: 'app-blog-detail',
@@ -791,8 +791,8 @@ export class BlogDetailComponent implements OnInit {
   openQuoteRepost(): void {
     if (!this.post) return;
     const ref = this.dialog.open(RepostDialogComponent, { data: { post: this.post }, width: '480px' });
-    ref.afterClosed().subscribe(quote => {
-      if (quote !== undefined) this.toggleRepost(quote || undefined);
+    ref.afterClosed().subscribe((result: RepostDialogResult | undefined) => {
+      if (result) this.toggleRepost(result.quote || undefined);
     });
   }
 

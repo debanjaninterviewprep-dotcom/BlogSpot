@@ -6,6 +6,11 @@ export interface RepostDialogData {
   post: BlogPost;
 }
 
+/** Object (not a bare string) so an empty quote is still distinguishable from a cancel. */
+export interface RepostDialogResult {
+  quote: string;
+}
+
 @Component({
   selector: 'app-repost-dialog',
   template: `
@@ -27,7 +32,7 @@ export interface RepostDialogData {
       </mat-form-field>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>Cancel</button>
+      <button mat-button (click)="dialogRef.close()">Cancel</button>
       <button mat-raised-button color="primary" (click)="submit()">Repost</button>
     </mat-dialog-actions>
   `,
@@ -63,6 +68,6 @@ export class RepostDialogComponent {
   ) {}
 
   submit(): void {
-    this.dialogRef.close(this.quote.trim() || '');
+    this.dialogRef.close({ quote: this.quote.trim() });
   }
 }

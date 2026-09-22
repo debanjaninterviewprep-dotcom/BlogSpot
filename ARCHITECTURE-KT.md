@@ -1037,7 +1037,7 @@ Components use optimistic updates for likes/follows/bookmarks.
 | Component | Inputs | Outputs | Usage |
 |-----------|--------|---------|-------|
 | `PostCardComponent` | `post: BlogPost` | `onLike`, `onBookmark`, `onReaction`, `onRepost` | Feed, Search, Bookmarks, Profile posts/reposts tabs |
-| `RepostDialogComponent` | `data: { post: BlogPost }` (MAT_DIALOG_DATA) | Closes with quote string (or undefined if cancelled) | Quote-repost text entry, opened from `PostCardComponent`'s repost menu |
+| `RepostDialogComponent` | `data: { post: BlogPost }` (MAT_DIALOG_DATA) | Closes with `RepostDialogResult` (`{ quote: string }`), or `undefined` if cancelled — an object rather than a bare string so an empty quote stays distinguishable from a cancel | Quote-repost text entry, opened from `PostCardComponent`'s repost menu |
 | `UserCardComponent` | `user: UserProfile`, `showRemove?: boolean` | `onFollow`, `onRemove` | Followers, Following, Suggested Users, Search |
 | `LoadingSpinnerComponent` | `inline?: boolean` | — | Full-page overlay or inline spinner |
 | `ErrorStateComponent` | `title?, message?` | `onRetry` | Error recovery in any list view |
