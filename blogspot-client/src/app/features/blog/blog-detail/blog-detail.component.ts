@@ -87,18 +87,18 @@ import { RepostDialogComponent, RepostDialogResult } from '../../../shared/compo
           </ng-container>
 
           <ng-template #pollResults>
-            <div class="poll-option-result" *ngFor="let option of poll.options">
+            <div class="poll-option-result" *ngFor="let option of poll.options"
+                 [class.voted]="poll.currentUserVotedOptionId === option.id">
               <div class="poll-result-row">
                 <span class="poll-result-text">
-                  {{ option.text }}
                   <mat-icon *ngIf="poll.currentUserVotedOptionId === option.id" class="poll-your-vote-icon"
                             matTooltip="Your vote">check_circle</mat-icon>
+                  {{ option.text }}
                 </span>
                 <span class="poll-result-pct">{{ option.votePercentage }}%</span>
               </div>
               <div class="poll-result-bar-bg">
-                <div class="poll-result-bar-fill" [class.your-vote]="poll.currentUserVotedOptionId === option.id"
-                     [style.width.%]="option.votePercentage"></div>
+                <div class="poll-result-bar-fill" [style.width.%]="option.votePercentage"></div>
               </div>
             </div>
           </ng-template>
@@ -417,6 +417,7 @@ import { RepostDialogComponent, RepostDialogResult } from '../../../shared/compo
       margin-bottom: 8px;
       border: 1px solid var(--color-border);
       border-radius: 8px;
+      color: var(--color-text-primary);
       cursor: pointer;
       transition: background 0.15s ease, border-color 0.15s ease;
     }
@@ -424,32 +425,47 @@ import { RepostDialogComponent, RepostDialogResult } from '../../../shared/compo
     .poll-option-choice.selected {
       border-color: var(--color-primary);
       background: var(--color-primary-light);
+      color: var(--color-primary);
     }
     .poll-vote-btn { margin-top: 4px; }
-    .poll-option-result { margin-bottom: 12px; }
+    .poll-option-result {
+      margin-bottom: 10px;
+      padding: 8px 10px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      transition: background 0.2s ease, border-color 0.2s ease;
+    }
+    .poll-option-result.voted {
+      border-color: var(--color-primary);
+      background: var(--color-primary-light);
+    }
     .poll-result-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 12px;
       font-size: var(--font-size-base);
-      margin-bottom: 4px;
+      color: var(--color-text-primary);
+      margin-bottom: 6px;
     }
-    .poll-result-text { display: flex; align-items: center; gap: 6px; }
-    .poll-your-vote-icon { font-size: 16px; width: 16px; height: 16px; color: var(--color-primary); }
-    .poll-result-pct { font-weight: var(--font-weight-medium); color: var(--color-text-secondary); }
+    .poll-result-text { display: flex; align-items: center; gap: 6px; min-width: 0; word-break: break-word; }
+    .poll-option-result.voted .poll-result-text,
+    .poll-option-result.voted .poll-result-pct { color: var(--color-primary); font-weight: var(--font-weight-bold); }
+    .poll-your-vote-icon { font-size: 16px; width: 16px; height: 16px; color: var(--color-primary); flex-shrink: 0; }
+    .poll-result-pct { font-weight: var(--font-weight-semibold); color: var(--color-text-secondary); flex-shrink: 0; }
     .poll-result-bar-bg {
       height: 8px;
       border-radius: 4px;
-      background: var(--color-border);
+      background: var(--poll-bar-track);
       overflow: hidden;
     }
     .poll-result-bar-fill {
       height: 100%;
-      background: var(--color-text-secondary);
+      background: var(--poll-bar-fill);
       border-radius: 4px;
       transition: width 0.3s ease;
     }
-    .poll-result-bar-fill.your-vote { background: var(--color-primary); }
+    .poll-option-result.voted .poll-result-bar-fill { background: var(--color-primary); }
     .poll-meta {
       font-size: var(--font-size-xs);
       color: var(--color-text-secondary);

@@ -35,6 +35,8 @@
   --glow-primary: 0 0 20px rgba(108, 92, 231, 0.3);
   --glow-accent: 0 0 20px rgba(0, 206, 201, 0.3);
   --skeleton-bg: #e5e7f0;
+  --poll-bar-track: #dcdfee;
+  --poll-bar-fill: #9b9ab3;
 
   /* Typography scale */
   --font-size-xs: 12px;
@@ -310,6 +312,8 @@ body.dark-theme {
   --glow-primary: 0 0 25px rgba(108, 92, 231, 0.25);
   --glow-accent: 0 0 25px rgba(0, 206, 201, 0.2);
   --skeleton-bg: #1e1e3a;
+  --poll-bar-track: #272750;
+  --poll-bar-fill: #6d6c8e;
 
   background-color: #0a0a1a;
   color: #e8e6f0;
