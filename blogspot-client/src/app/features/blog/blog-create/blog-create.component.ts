@@ -470,11 +470,12 @@ export class BlogCreateComponent implements OnInit, OnDestroy {
   includePoll = false;
   pollQuestion = '';
   pollOptions: string[] = ['', ''];
-  pollDurationDays: number | null = null;
+  // 0 = no expiry. mat-select deselects any option whose value is null, so it can't be used here.
+  pollDurationDays = 0;
   existingPollHasVotes = false;
   existingPollExpiresAt: string | null = null;
-  pollDurationOptions: { label: string; value: number | null }[] = [
-    { label: 'No expiry', value: null },
+  pollDurationOptions: { label: string; value: number }[] = [
+    { label: 'No expiry', value: 0 },
     { label: '1 day', value: 1 },
     { label: '3 days', value: 3 },
     { label: '7 days', value: 7 },
