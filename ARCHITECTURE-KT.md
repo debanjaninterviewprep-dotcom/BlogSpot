@@ -493,6 +493,9 @@ Sets Status = Published, IsPublished = true, ScheduledPublishAt = null
        ↓
 "Your post is now live" email queued to each author
        ↓
+If the author is an Admin → "New Post on BlogSpot" bulk email queued to all other active users
+(same announcement an immediately-published admin post sends at create time)
+       ↓
 Author can review upcoming posts anytime at /blog/scheduled
 ```
 
@@ -687,7 +690,7 @@ app.Run()
 
 | Service | Key Responsibilities |
 |---------|---------------------|
-| **BlogService** | Post CRUD, slug generation, HTML sanitization (Ganss.XSS), reading time calc (~200 wpm), tag sync, reactions (add/change/remove), bookmarks, reposts (toggle, with optional quote), polls (create on post create/update, single-choice voting with one-vote-per-poll enforcement), threaded comments, comment likes, image management, draft CRUD, full-text search (posts + users + tags), post scheduling (1-hour min lead time, IST confirmation email showing a 20-min publish window, list scheduled posts) |
+| **BlogService** | Post CRUD, slug generation, HTML sanitization (Ganss.XSS), reading time calc (~200 wpm), tag sync, reactions (add/change/remove), bookmarks, reposts (toggle, with optional quote), polls (create on post create/update, single-choice voting with one-vote-per-poll enforcement), threaded comments, comment likes, image management, draft CRUD, full-text search (posts + users + tags), post scheduling (1-hour min lead time, IST confirmation email showing a 20-min publish window, list scheduled posts), admin-post announcement email to all active users (fired on immediate publish **and** on scheduler auto-publish) |
 | **UserService** | Profile CRUD, picture/cover upload, follow toggle with notification, follower removal, paginated followers/following, suggested users (top-5 by follower count), user search, creator analytics (views, reactions, comments, followers growth 30d, daily stats, top posts), notification preference management |
 | **FeedService** | Home feed (followed authors' posts merged with reposts by followed users, sorted by activity time, then trending fill), trending (MemoryCache 5 min, score = Views + Reactions×3 + Comments×5, 7-day window), latest (newest first) |
 | **AdminService** | Paginated admin views, toggle user status (email notification), change role (email notification), admin delete post/comment (soft delete + email), seed 30 Indian demo users + 40 posts + follows + likes + comments, format plain text posts to HTML |
@@ -698,7 +701,7 @@ app.Run()
 | **EmailQueueService** (Infra) | Enqueue single/bulk emails, process queue (Brevo API, 50/batch, 3 retries), send OTP (6-digit, 10-min expiry), verify OTP |
 | **FileStorageService** (Infra) | Upload to Cloudinary (if configured) or local wwwroot/uploads, delete from Cloudinary or local |
 | **EmailProcessorJob** (Infra) | BackgroundService, configurable interval via `Email:JobIntervalMinutes` (15 min in prod), batches queued emails (50/batch, 3 retries), calls ProcessQueueAsync() |
-| **PostSchedulerService** (App) | BackgroundService, configurable interval via `PostScheduler:JobIntervalMinutes` (15 min configured), publishes due scheduled posts (Status=Scheduled, ScheduledPublishAt ≤ now) and emails authors "now live" |
+| **PostSchedulerService** (App) | BackgroundService, configurable interval via `PostScheduler:JobIntervalMinutes` (15 min configured), delegates to `BlogService.PublishDuePostsAsync` which publishes due scheduled posts (Status=Scheduled, ScheduledPublishAt ≤ now), emails authors "now live", and broadcasts the all-users announcement when the author is an Admin |
 
 ## 5. Repositories
 

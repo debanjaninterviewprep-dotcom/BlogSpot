@@ -135,27 +135,8 @@ public class BlogService : IBlogService
                 ct);
         }
 
-        if (author?.Role == Domain.Enums.UserRole.Admin && post.IsPublished)
-        {
-            var allEmails = await _uow.Users.Query()
-                .Where(u => u.IsActive && u.Id != userId)
-                .Select(u => u.Email)
-                .ToListAsync(ct);
-
-            if (allEmails.Any())
-            {
-                await _emailQueueService.EnqueueBulkAsync(
-                    allEmails,
-                    $"New Post on BlogSpot: {post.Title}",
-                    $@"<div style='font-family:sans-serif;max-width:600px;margin:0 auto;padding:32px'>
-                        <h2 style='color:#1d9bf0'>New Post on BlogSpot</h2>
-                        <h3>{post.Title}</h3>
-                        <p style='color:#536471'>{post.Summary}...</p>
-                        <p style='color:#536471;font-size:13px'>Posted by {author.UserName}</p>
-                    </div>",
-                    ct);
-            }
-        }
+        if (post.IsPublished && author != null)
+            await NotifyAllUsersOfAdminPostAsync(post, author, ct);
 
         return await GetPostByIdAsync(post.Id, userId, ct)
             ?? throw new InvalidOperationException("Failed to retrieve created post.");
@@ -1015,6 +996,9 @@ public class BlogService : IBlogService
                     </div>",
                     ct);
             }
+
+            if (post.Author != null)
+                await NotifyAllUsersOfAdminPostAsync(post, post.Author, ct);
         }
 
         return duePosts.Count;
@@ -1316,5 +1300,36 @@ public class BlogService : IBlogService
                 $"{actor?.UserName} mentioned you in a {context}",
                 postId, ct);
         }
+    }
+
+    /// <summary>
+    /// Announces a newly published admin post to every other active user. No-op for non-admin authors.
+    /// Called both on immediate publish and when the scheduler publishes a due post.
+    /// </summary>
+    private async Task NotifyAllUsersOfAdminPostAsync(BlogPost post, User author, CancellationToken ct)
+    {
+        if (author.Role != UserRole.Admin) return;
+
+        var allEmails = await _uow.Users.Query()
+            .Where(u => u.IsActive && u.Id != author.Id)
+            .Select(u => u.Email)
+            .ToListAsync(ct);
+
+        if (allEmails.Count == 0) return;
+
+        var title = WebUtility.HtmlEncode(post.Title);
+        var summary = WebUtility.HtmlEncode(post.Summary ?? string.Empty);
+        var userName = WebUtility.HtmlEncode(author.UserName);
+
+        await _emailQueueService.EnqueueBulkAsync(
+            allEmails,
+            $"New Post on BlogSpot: {post.Title}",
+            $@"<div style='font-family:sans-serif;max-width:600px;margin:0 auto;padding:32px'>
+                <h2 style='color:#1d9bf0'>New Post on BlogSpot</h2>
+                <h3>{title}</h3>
+                <p style='color:#536471'>{summary}...</p>
+                <p style='color:#536471;font-size:13px'>Posted by {userName}</p>
+            </div>",
+            ct);
     }
 }
