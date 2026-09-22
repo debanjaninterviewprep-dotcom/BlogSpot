@@ -1,5 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { BlogPost, ReactionType } from '@core/models/blog.model';
+import { RepostDialogComponent } from '../repost-dialog/repost-dialog.component';
 
 @Component({
   selector: 'app-post-card',
@@ -56,6 +58,25 @@ import { BlogPost, ReactionType } from '@core/models/blog.model';
           </span>
           <span class="action-count" *ngIf="post.commentCount">{{ post.commentCount }}</span>
         </button>
+
+        <button class="action-btn repost-btn" [class.active]="post.isRepostedByCurrentUser"
+                [matMenuTriggerFor]="post.isRepostedByCurrentUser ? null : repostMenu"
+                (click)="post.isRepostedByCurrentUser && toggleRepost()"
+                [attr.aria-label]="post.isRepostedByCurrentUser ? 'Undo repost' : 'Repost'"
+                [matTooltip]="post.isRepostedByCurrentUser ? 'Undo repost' : 'Repost'">
+          <span class="action-icon-wrap">
+            <mat-icon>repeat</mat-icon>
+          </span>
+          <span class="action-count" *ngIf="post.repostCount">{{ post.repostCount }}</span>
+        </button>
+        <mat-menu #repostMenu="matMenu">
+          <button mat-menu-item (click)="toggleRepost()">
+            <mat-icon>repeat</mat-icon><span>Repost</span>
+          </button>
+          <button mat-menu-item (click)="openQuoteRepost()">
+            <mat-icon>format_quote</mat-icon><span>Quote Repost</span>
+          </button>
+        </mat-menu>
 
         <div class="reaction-group">
           <button class="action-btn reaction-btn" *ngFor="let r of reactionTypes"
@@ -264,6 +285,11 @@ import { BlogPost, ReactionType } from '@core/models/blog.model';
     .bookmark-btn:hover .action-icon-wrap { background: var(--color-primary-light); }
     .bookmark-btn.active { color: var(--color-primary); }
 
+    /* Repost */
+    .repost-btn:hover { color: var(--color-success); }
+    .repost-btn:hover .action-icon-wrap { background: rgba(0, 184, 148, 0.1); }
+    .repost-btn.active { color: var(--color-success); }
+
     /* View */
     .view-btn { cursor: default; }
 
@@ -304,6 +330,9 @@ export class PostCardComponent {
   @Output() onLike = new EventEmitter<string>();
   @Output() onBookmark = new EventEmitter<string>();
   @Output() onReaction = new EventEmitter<{ postId: string; type: ReactionType }>();
+  @Output() onRepost = new EventEmitter<{ postId: string; quote?: string }>();
+
+  constructor(private dialog: MatDialog) {}
 
   reactionTypes = [
     { type: 'Love' as ReactionType, emoji: '❤️' },
@@ -323,5 +352,18 @@ export class PostCardComponent {
     if (this.post.isLikedByCurrentUser) return; // only burst when going from unliked -> liked
     this.justLiked = true;
     setTimeout(() => this.justLiked = false, 500);
+  }
+
+  toggleRepost(): void {
+    this.onRepost.emit({ postId: this.post.id });
+  }
+
+  openQuoteRepost(): void {
+    const ref = this.dialog.open(RepostDialogComponent, { data: { post: this.post }, width: '480px' });
+    ref.afterClosed().subscribe((quote: string | undefined) => {
+      if (quote !== undefined) {
+        this.onRepost.emit({ postId: this.post.id, quote: quote || undefined });
+      }
+    });
   }
 }

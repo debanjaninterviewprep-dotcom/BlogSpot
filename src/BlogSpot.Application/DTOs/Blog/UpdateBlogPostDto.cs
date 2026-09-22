@@ -22,4 +22,10 @@ public class UpdateBlogPostDto
 
     /// <summary>Update scheduled publish time. Clear by passing null.</summary>
     public DateTime? ScheduledPublishAt { get; set; }
+
+    /// <summary>
+    /// Optional poll to attach/replace. Leave null to keep the post's existing poll (if any) untouched.
+    /// Throws if the post already has a poll with votes.
+    /// </summary>
+    public CreatePollDto? Poll { get; set; }
 }

@@ -25,4 +25,7 @@ public class User : BaseEntity
     public ICollection<DraftBlog> Drafts { get; set; } = new List<DraftBlog>();
     public ICollection<Follow> Followers { get; set; } = new List<Follow>();   // People who follow this user
     public ICollection<Follow> Following { get; set; } = new List<Follow>();   // People this user follows
+    public ICollection<Repost> Reposts { get; set; } = new List<Repost>();
+    public ICollection<ReadingList> ReadingLists { get; set; } = new List<ReadingList>();
+    public ICollection<ReadingListFollow> ReadingListFollows { get; set; } = new List<ReadingListFollow>();
 }

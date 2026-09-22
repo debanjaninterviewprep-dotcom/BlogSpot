@@ -30,4 +30,8 @@ public static class ActivityActions
     public const string OtpSent = "OtpSent";
     public const string OtpVerified = "OtpVerified";
     public const string TokenRefreshed = "TokenRefreshed";
+    public const string Repost = "Repost";
+    public const string ReadingList = "ReadingList";
+    public const string ReadingListFollow = "ReadingListFollow";
+    public const string PollVote = "PollVote";
 }

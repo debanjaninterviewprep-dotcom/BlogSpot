@@ -177,6 +177,9 @@ import { User } from '../../models/auth.model';
             <button mat-menu-item routerLink="/blog/scheduled">
               <mat-icon>schedule</mat-icon><span>My Scheduled Posts</span>
             </button>
+            <button mat-menu-item routerLink="/blog/reading-lists">
+              <mat-icon>collections_bookmark</mat-icon><span>My Reading Lists</span>
+            </button>
             <button mat-menu-item routerLink="/profile/analytics">
               <mat-icon>analytics</mat-icon><span>Analytics</span>
             </button>
@@ -701,6 +704,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
       case 'Comment': return 'comment';
       case 'PostPublished': return 'article';
       case 'Mention': return 'alternate_email';
+      case 'Repost': return 'repeat';
       default: return 'notifications';
     }
   }

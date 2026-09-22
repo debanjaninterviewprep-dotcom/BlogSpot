@@ -14,6 +14,9 @@ public interface IBlogService
     Task<BlogPostDto?> GetPostBySlugAsync(string slug, Guid? currentUserId = null, CancellationToken ct = default);
     Task<PagedResult<BlogPostDto>> GetPostsByUserAsync(Guid userId, PaginationParams pagination, Guid? currentUserId = null, CancellationToken ct = default);    Task<PagedResult<BlogPostDto>> SearchPostsAsync(string query, PaginationParams pagination, Guid? currentUserId = null, CancellationToken ct = default);
 
+    /// <summary>Batch-fetches posts by id (preserves no particular order); used by ReadingListService to embed post data.</summary>
+    Task<List<BlogPostDto>> GetPostsByIdsAsync(List<Guid> postIds, Guid? currentUserId = null, CancellationToken ct = default);
+
     // Likes (legacy)
     Task<bool> ToggleLikeAsync(Guid userId, Guid postId, CancellationToken ct = default);
     Task<PagedResult<UserProfileDto>> GetPostLikersAsync(Guid postId, PaginationParams pagination, Guid? currentUserId = null, CancellationToken ct = default);
@@ -25,6 +28,13 @@ public interface IBlogService
     // Bookmarks
     Task<bool> ToggleBookmarkAsync(Guid userId, Guid postId, CancellationToken ct = default);
     Task<PagedResult<BlogPostDto>> GetBookmarkedPostsAsync(Guid userId, PaginationParams pagination, CancellationToken ct = default);
+
+    // Reposts
+    Task<RepostSummaryDto> ToggleRepostAsync(Guid userId, Guid postId, string? quote, CancellationToken ct = default);
+    Task<PagedResult<RepostDto>> GetRepostsByUserAsync(Guid userId, PaginationParams pagination, Guid? currentUserId = null, CancellationToken ct = default);
+
+    // Polls
+    Task<PollDto> VoteOnPollAsync(Guid userId, Guid pollId, Guid optionId, CancellationToken ct = default);
 
     // Comments
     Task<CommentDto> AddCommentAsync(Guid userId, Guid postId, CreateCommentDto dto, CancellationToken ct = default);

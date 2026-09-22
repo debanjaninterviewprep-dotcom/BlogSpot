@@ -96,6 +96,10 @@ public class BlogService : IBlogService
         if (dto.Tags.Any())
             await SyncTagsAsync(post.Id, dto.Tags, ct);
 
+        // Handle poll
+        if (dto.Poll != null)
+            await CreatePollAsync(post.Id, dto.Poll, ct);
+
         // If admin posts, email all users
         var author = await _uow.Users.GetByIdAsync(userId, ct);
 
@@ -206,6 +210,26 @@ public class BlogService : IBlogService
 
         // Sync tags
         await SyncTagsAsync(post.Id, dto.Tags, ct);
+
+        // Handle poll (only touched if explicitly provided in the request)
+        if (dto.Poll != null)
+        {
+            var existingPoll = await _uow.Polls.Query()
+                .Include(p => p.Options).ThenInclude(o => o.Votes)
+                .FirstOrDefaultAsync(p => p.BlogPostId == post.Id, ct);
+
+            if (existingPoll != null)
+            {
+                if (existingPoll.Options.Any(o => o.Votes.Count > 0))
+                    throw new InvalidOperationException("This post's poll already has votes and cannot be modified.");
+
+                _uow.PollOptions.RemoveRange(existingPoll.Options);
+                _uow.Polls.Remove(existingPoll);
+                await _uow.SaveChangesAsync(ct);
+            }
+
+            await CreatePollAsync(post.Id, dto.Poll, ct);
+        }
 
         var editor = await _uow.Users.GetByIdAsync(userId, ct);
         await _log.Info(ActivityActions.UpdatePost, nameof(BlogService), editor?.UserName, post.Title, ct);
@@ -540,6 +564,133 @@ public class BlogService : IBlogService
             .OrderByDescending(p => p.CreatedAt);
 
         return await PaginateAsync(query, pagination, userId, ct);
+    }
+
+    // --- Reposts ---
+
+    public async Task<List<BlogPostDto>> GetPostsByIdsAsync(List<Guid> postIds, Guid? currentUserId = null, CancellationToken ct = default)
+    {
+        if (postIds.Count == 0) return new List<BlogPostDto>();
+
+        var posts = await GetFullPostQuery().Where(p => postIds.Contains(p.Id)).ToListAsync(ct);
+        return posts.Select(p => MapToDto(p, currentUserId)).ToList();
+    }
+
+    public async Task<RepostSummaryDto> ToggleRepostAsync(Guid userId, Guid postId, string? quote, CancellationToken ct = default)
+    {
+        var actor = await _uow.Users.GetByIdAsync(userId, ct);
+        var existing = (await _uow.Reposts.FindAsync(
+            r => r.UserId == userId && r.BlogPostId == postId, ct)).FirstOrDefault();
+
+        bool isNewRepost = false;
+
+        if (existing != null)
+        {
+            _uow.Reposts.Remove(existing);
+            await _uow.SaveChangesAsync(ct);
+            await _log.Info(ActivityActions.Repost, nameof(BlogService), actor?.UserName, "Removed", ct);
+        }
+        else
+        {
+            await _uow.Reposts.AddAsync(new Repost { UserId = userId, BlogPostId = postId, Quote = quote }, ct);
+            await _uow.SaveChangesAsync(ct);
+            await _log.Info(ActivityActions.Repost, nameof(BlogService), actor?.UserName, "Added", ct);
+            isNewRepost = true;
+        }
+
+        if (isNewRepost)
+        {
+            var post = await _uow.BlogPosts.GetByIdAsync(postId, ct);
+            if (post != null && post.AuthorId != userId)
+            {
+                await _notificationService.CreateNotificationAsync(
+                    post.AuthorId, userId, "Repost",
+                    $"{actor?.UserName} reposted your post",
+                    postId, ct);
+            }
+        }
+
+        var reposts = await _uow.Reposts.Query().Where(r => r.BlogPostId == postId).ToListAsync(ct);
+        var currentUserRepost = reposts.FirstOrDefault(r => r.UserId == userId);
+        return new RepostSummaryDto
+        {
+            RepostCount = reposts.Count,
+            IsRepostedByCurrentUser = currentUserRepost != null,
+            CurrentUserQuote = currentUserRepost?.Quote
+        };
+    }
+
+    public async Task<PagedResult<RepostDto>> GetRepostsByUserAsync(Guid userId, PaginationParams pagination, Guid? currentUserId = null, CancellationToken ct = default)
+    {
+        var query = _uow.Reposts.Query()
+            .Include(r => r.User).ThenInclude(u => u.Profile)
+            .Where(r => r.UserId == userId)
+            .OrderByDescending(r => r.CreatedAt);
+
+        var totalCount = await query.CountAsync(ct);
+        var reposts = await query
+            .Skip((pagination.Page - 1) * pagination.PageSize)
+            .Take(pagination.PageSize)
+            .ToListAsync(ct);
+
+        var postIds = reposts.Select(r => r.BlogPostId).ToList();
+        var posts = await GetFullPostQuery().Where(p => postIds.Contains(p.Id)).ToListAsync(ct);
+        var postsById = posts.ToDictionary(p => p.Id, p => MapToDto(p, currentUserId));
+
+        var items = reposts
+            .Where(r => postsById.ContainsKey(r.BlogPostId))
+            .Select(r => new RepostDto
+            {
+                Id = r.Id,
+                Quote = r.Quote,
+                CreatedAt = r.CreatedAt,
+                UserId = r.UserId,
+                UserName = r.User.UserName,
+                UserDisplayName = r.User.Profile?.DisplayName,
+                UserProfilePictureUrl = r.User.Profile?.ProfilePictureUrl,
+                Post = postsById[r.BlogPostId]
+            })
+            .ToList();
+
+        return new PagedResult<RepostDto>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            Page = pagination.Page,
+            PageSize = pagination.PageSize
+        };
+    }
+
+    // --- Polls ---
+
+    public async Task<PollDto> VoteOnPollAsync(Guid userId, Guid pollId, Guid optionId, CancellationToken ct = default)
+    {
+        var poll = await _uow.Polls.Query()
+            .Include(p => p.Options).ThenInclude(o => o.Votes)
+            .FirstOrDefaultAsync(p => p.Id == pollId, ct)
+            ?? throw new KeyNotFoundException("Poll not found.");
+
+        if (poll.ExpiresAt.HasValue && poll.ExpiresAt.Value <= DateTime.UtcNow)
+            throw new InvalidOperationException("This poll has expired.");
+
+        var option = poll.Options.FirstOrDefault(o => o.Id == optionId)
+            ?? throw new KeyNotFoundException("Poll option not found.");
+
+        var alreadyVoted = poll.Options.SelectMany(o => o.Votes).Any(v => v.UserId == userId);
+        if (alreadyVoted)
+            throw new InvalidOperationException("You have already voted on this poll.");
+
+        await _uow.PollVotes.AddAsync(new PollVote { PollOptionId = option.Id, UserId = userId }, ct);
+        await _uow.SaveChangesAsync(ct);
+
+        var actor = await _uow.Users.GetByIdAsync(userId, ct);
+        await _log.Info(ActivityActions.PollVote, nameof(BlogService), actor?.UserName, poll.Question, ct);
+
+        var updated = await _uow.Polls.Query()
+            .Include(p => p.Options).ThenInclude(o => o.Votes)
+            .FirstAsync(p => p.Id == pollId, ct);
+
+        return MapPollToDto(updated, userId)!;
     }
 
     // --- Comments ---
@@ -892,6 +1043,8 @@ public class BlogService : IBlogService
             .Include(p => p.Comments)
             .Include(p => p.Reactions)
             .Include(p => p.Bookmarks)
+            .Include(p => p.Reposts)
+            .Include(p => p.Poll).ThenInclude(poll => poll!.Options).ThenInclude(o => o.Votes)
             .Include(p => p.BlogPostTags).ThenInclude(bt => bt.Tag);
     }
 
@@ -911,6 +1064,41 @@ public class BlogService : IBlogService
             Page = pagination.Page,
             PageSize = pagination.PageSize
         };
+    }
+
+    /// <summary>Creates a new Poll + PollOptions for a post. Caller is responsible for ensuring no conflicting poll already exists.</summary>
+    private async Task CreatePollAsync(Guid postId, CreatePollDto pollDto, CancellationToken ct)
+    {
+        var optionTexts = pollDto.Options
+            .Select(o => o?.Trim())
+            .Where(o => !string.IsNullOrWhiteSpace(o))
+            .Select(o => o!)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        if (optionTexts.Count < 2 || optionTexts.Count > 6)
+            throw new ArgumentException("A poll must have between 2 and 6 unique, non-empty options.");
+
+        if (pollDto.ExpiresAt.HasValue && pollDto.ExpiresAt.Value <= DateTime.UtcNow)
+            throw new ArgumentException("Poll expiry must be in the future.");
+
+        var poll = new Poll
+        {
+            Question = pollDto.Question.Trim(),
+            ExpiresAt = pollDto.ExpiresAt,
+            BlogPostId = postId
+        };
+        await _uow.Polls.AddAsync(poll, ct);
+        await _uow.SaveChangesAsync(ct);
+
+        var options = optionTexts.Select((text, index) => new PollOption
+        {
+            Text = text,
+            SortOrder = index,
+            PollId = poll.Id
+        });
+        await _uow.PollOptions.AddRangeAsync(options, ct);
+        await _uow.SaveChangesAsync(ct);
     }
 
     private async Task SyncTagsAsync(Guid postId, List<string> tagNames, CancellationToken ct)
@@ -980,6 +1168,10 @@ public class BlogService : IBlogService
             ReactionCounts = reactionCounts,
             CurrentUserReaction = currentUserReaction,
             CurrentUserReactionCount = currentUserReactionCount,
+            RepostCount = post.Reposts?.Count ?? 0,
+            IsRepostedByCurrentUser = currentUserId.HasValue && (post.Reposts?.Any(r => r.UserId == currentUserId.Value) ?? false),
+            CurrentUserRepostQuote = currentUserId.HasValue ? post.Reposts?.FirstOrDefault(r => r.UserId == currentUserId.Value)?.Quote : null,
+            Poll = MapPollToDto(post.Poll, currentUserId),
             Tags = post.BlogPostTags?.Select(bt => bt.Tag.Name).ToList() ?? new(),
             Images = post.Images?.Select(i => new PostImageDto
             {
@@ -988,6 +1180,38 @@ public class BlogService : IBlogService
                 AltText = i.AltText,
                 SortOrder = i.SortOrder
             }).ToList() ?? new()
+        };
+    }
+
+    private static PollDto? MapPollToDto(Poll? poll, Guid? currentUserId)
+    {
+        if (poll == null) return null;
+
+        var totalVotes = poll.Options.Sum(o => o.Votes.Count);
+        var isExpired = poll.ExpiresAt.HasValue && poll.ExpiresAt.Value <= DateTime.UtcNow;
+
+        Guid? currentUserVotedOptionId = currentUserId.HasValue
+            ? poll.Options.FirstOrDefault(o => o.Votes.Any(v => v.UserId == currentUserId.Value))?.Id
+            : null;
+
+        return new PollDto
+        {
+            Id = poll.Id,
+            Question = poll.Question,
+            ExpiresAt = poll.ExpiresAt,
+            IsExpired = isExpired,
+            TotalVotes = totalVotes,
+            CurrentUserVotedOptionId = currentUserVotedOptionId,
+            Options = poll.Options
+                .OrderBy(o => o.SortOrder)
+                .Select(o => new PollOptionDto
+                {
+                    Id = o.Id,
+                    Text = o.Text,
+                    SortOrder = o.SortOrder,
+                    VoteCount = o.Votes.Count,
+                    VotePercentage = totalVotes > 0 ? Math.Round(o.Votes.Count * 100.0 / totalVotes, 1) : 0
+                }).ToList()
         };
     }
 

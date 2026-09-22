@@ -24,4 +24,7 @@ public class CreateBlogPostDto
 
     /// <summary>If provided, post will be scheduled for future publishing instead of immediate publish.</summary>
     public DateTime? ScheduledPublishAt { get; set; }
+
+    /// <summary>Optional single-choice poll to attach to this post.</summary>
+    public CreatePollDto? Poll { get; set; }
 }

@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '@environments/environment';
 import {
   BlogPost, Comment, CreateBlogPost, CreateComment, PostImage, UpdateBlogPost,
-  ReactionDto, ReactionSummaryDto, DraftBlog, SaveDraft, SearchResult
+  ReactionDto, ReactionSummaryDto, DraftBlog, SaveDraft, SearchResult, Repost, RepostSummary, Poll
 } from '../models/blog.model';
 import { UserProfile } from '../models/user.model';
 import { PagedResult, PaginationParams } from '../models/pagination.model';
@@ -84,6 +84,23 @@ export class BlogService {
   getBookmarkedPosts(pagination: PaginationParams): Observable<PagedResult<BlogPost>> {
     const params = this.buildPaginationParams(pagination);
     return this.http.get<PagedResult<BlogPost>>(`${this.apiUrl}/bookmarks`, { params });
+  }
+
+  // --- Reposts ---
+
+  toggleRepost(postId: string, quote?: string): Observable<RepostSummary> {
+    return this.http.post<RepostSummary>(`${this.apiUrl}/${postId}/repost`, { quote });
+  }
+
+  getRepostsByUser(userId: string, pagination: PaginationParams): Observable<PagedResult<Repost>> {
+    const params = this.buildPaginationParams(pagination);
+    return this.http.get<PagedResult<Repost>>(`${this.apiUrl}/user/${userId}/reposts`, { params });
+  }
+
+  // --- Polls ---
+
+  votePoll(pollId: string, optionId: string): Observable<Poll> {
+    return this.http.post<Poll>(`${this.apiUrl}/polls/${pollId}/vote`, { optionId });
   }
 
   // --- Drafts ---

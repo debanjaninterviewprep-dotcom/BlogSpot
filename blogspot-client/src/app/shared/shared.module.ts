@@ -34,6 +34,9 @@ import { UserCardComponent } from './components/user-card/user-card.component';
 import { LoadingSpinnerComponent } from './components/loading-spinner/loading-spinner.component';
 import { ErrorStateComponent } from './components/error-state/error-state.component';
 import { PostLikersDialogComponent } from './components/post-likers-dialog/post-likers-dialog.component';
+import { RepostDialogComponent } from './components/repost-dialog/repost-dialog.component';
+import { ReadingListFormDialogComponent } from './components/reading-list-form-dialog/reading-list-form-dialog.component';
+import { AddToReadingListDialogComponent } from './components/add-to-reading-list-dialog/add-to-reading-list-dialog.component';
 import { ImageUrlPipe } from './pipes/image-url.pipe';
 import { FormatContentPipe } from './pipes/format-content.pipe';
 import { LinkifyMentionsPipe } from './pipes/linkify-mentions.pipe';
@@ -72,6 +75,9 @@ const materialModules = [
     LoadingSpinnerComponent,
     ErrorStateComponent,
     PostLikersDialogComponent,
+    RepostDialogComponent,
+    ReadingListFormDialogComponent,
+    AddToReadingListDialogComponent,
     ImageUrlPipe,
     FormatContentPipe,
     LinkifyMentionsPipe
@@ -94,6 +100,9 @@ const materialModules = [
     LoadingSpinnerComponent,
     ErrorStateComponent,
     PostLikersDialogComponent,
+    RepostDialogComponent,
+    ReadingListFormDialogComponent,
+    AddToReadingListDialogComponent,
     ImageUrlPipe,
     FormatContentPipe,
     LinkifyMentionsPipe

@@ -471,6 +471,95 @@ namespace BlogSpot.Infrastructure.Migrations
                     b.ToTable("OtpVerifications");
                 });
 
+            modelBuilder.Entity("BlogSpot.Domain.Entities.Poll", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BlogPostId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Question")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BlogPostId")
+                        .IsUnique();
+
+                    b.ToTable("Polls");
+                });
+
+            modelBuilder.Entity("BlogSpot.Domain.Entities.PollOption", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("PollId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PollId");
+
+                    b.ToTable("PollOptions");
+                });
+
+            modelBuilder.Entity("BlogSpot.Domain.Entities.PollVote", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("PollOptionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PollOptionId");
+
+                    b.HasIndex("UserId", "PollOptionId")
+                        .IsUnique();
+
+                    b.ToTable("PollVotes");
+                });
+
             modelBuilder.Entity("BlogSpot.Domain.Entities.PostImage", b =>
                 {
                     b.Property<Guid>("Id")
@@ -597,6 +686,128 @@ namespace BlogSpot.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("Reactions");
+                });
+
+            modelBuilder.Entity("BlogSpot.Domain.Entities.ReadingList", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsPublic")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ReadingLists");
+                });
+
+            modelBuilder.Entity("BlogSpot.Domain.Entities.ReadingListFollow", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("ReadingListId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReadingListId");
+
+                    b.HasIndex("UserId", "ReadingListId")
+                        .IsUnique();
+
+                    b.ToTable("ReadingListFollows");
+                });
+
+            modelBuilder.Entity("BlogSpot.Domain.Entities.ReadingListItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BlogPostId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("ReadingListId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BlogPostId");
+
+                    b.HasIndex("ReadingListId", "BlogPostId")
+                        .IsUnique();
+
+                    b.ToTable("ReadingListItems");
+                });
+
+            modelBuilder.Entity("BlogSpot.Domain.Entities.Repost", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BlogPostId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Quote")
+                        .HasMaxLength(280)
+                        .HasColumnType("nvarchar(280)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BlogPostId");
+
+                    b.HasIndex("UserId", "BlogPostId")
+                        .IsUnique();
+
+                    b.ToTable("Reposts");
                 });
 
             modelBuilder.Entity("BlogSpot.Domain.Entities.Tag", b =>
@@ -843,6 +1054,47 @@ namespace BlogSpot.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("BlogSpot.Domain.Entities.Poll", b =>
+                {
+                    b.HasOne("BlogSpot.Domain.Entities.BlogPost", "BlogPost")
+                        .WithOne("Poll")
+                        .HasForeignKey("BlogSpot.Domain.Entities.Poll", "BlogPostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BlogPost");
+                });
+
+            modelBuilder.Entity("BlogSpot.Domain.Entities.PollOption", b =>
+                {
+                    b.HasOne("BlogSpot.Domain.Entities.Poll", "Poll")
+                        .WithMany("Options")
+                        .HasForeignKey("PollId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Poll");
+                });
+
+            modelBuilder.Entity("BlogSpot.Domain.Entities.PollVote", b =>
+                {
+                    b.HasOne("BlogSpot.Domain.Entities.PollOption", "PollOption")
+                        .WithMany("Votes")
+                        .HasForeignKey("PollOptionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BlogSpot.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("PollOption");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("BlogSpot.Domain.Entities.PostImage", b =>
                 {
                     b.HasOne("BlogSpot.Domain.Entities.BlogPost", "BlogPost")
@@ -884,6 +1136,74 @@ namespace BlogSpot.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("BlogSpot.Domain.Entities.Repost", b =>
+                {
+                    b.HasOne("BlogSpot.Domain.Entities.BlogPost", "BlogPost")
+                        .WithMany("Reposts")
+                        .HasForeignKey("BlogPostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BlogSpot.Domain.Entities.User", "User")
+                        .WithMany("Reposts")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("BlogPost");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("BlogSpot.Domain.Entities.ReadingList", b =>
+                {
+                    b.HasOne("BlogSpot.Domain.Entities.User", "User")
+                        .WithMany("ReadingLists")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("BlogSpot.Domain.Entities.ReadingListFollow", b =>
+                {
+                    b.HasOne("BlogSpot.Domain.Entities.ReadingList", "ReadingList")
+                        .WithMany("Followers")
+                        .HasForeignKey("ReadingListId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BlogSpot.Domain.Entities.User", "User")
+                        .WithMany("ReadingListFollows")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ReadingList");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("BlogSpot.Domain.Entities.ReadingListItem", b =>
+                {
+                    b.HasOne("BlogSpot.Domain.Entities.BlogPost", "BlogPost")
+                        .WithMany("ReadingListItems")
+                        .HasForeignKey("BlogPostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BlogSpot.Domain.Entities.ReadingList", "ReadingList")
+                        .WithMany("Items")
+                        .HasForeignKey("ReadingListId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BlogPost");
+
+                    b.Navigation("ReadingList");
+                });
+
             modelBuilder.Entity("BlogSpot.Domain.Entities.BlogPost", b =>
                 {
                     b.Navigation("BlogPostTags");
@@ -896,7 +1216,13 @@ namespace BlogSpot.Infrastructure.Migrations
 
                     b.Navigation("Likes");
 
+                    b.Navigation("Poll");
+
                     b.Navigation("Reactions");
+
+                    b.Navigation("ReadingListItems");
+
+                    b.Navigation("Reposts");
                 });
 
             modelBuilder.Entity("BlogSpot.Domain.Entities.Comment", b =>
@@ -904,6 +1230,23 @@ namespace BlogSpot.Infrastructure.Migrations
                     b.Navigation("CommentLikes");
 
                     b.Navigation("Replies");
+                });
+
+            modelBuilder.Entity("BlogSpot.Domain.Entities.Poll", b =>
+                {
+                    b.Navigation("Options");
+                });
+
+            modelBuilder.Entity("BlogSpot.Domain.Entities.PollOption", b =>
+                {
+                    b.Navigation("Votes");
+                });
+
+            modelBuilder.Entity("BlogSpot.Domain.Entities.ReadingList", b =>
+                {
+                    b.Navigation("Followers");
+
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("BlogSpot.Domain.Entities.Tag", b =>
@@ -933,6 +1276,12 @@ namespace BlogSpot.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Reactions");
+
+                    b.Navigation("ReadingListFollows");
+
+                    b.Navigation("ReadingLists");
+
+                    b.Navigation("Reposts");
                 });
 #pragma warning restore 612, 618
         }

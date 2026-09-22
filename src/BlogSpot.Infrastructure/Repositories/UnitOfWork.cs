@@ -23,6 +23,13 @@ public class UnitOfWork : IUnitOfWork
     private IRepository<CommentLike>? _commentLikes;
     private IRepository<EmailQueue>? _emailQueues;
     private IRepository<OtpVerification>? _otpVerifications;
+    private IRepository<Repost>? _reposts;
+    private IRepository<ReadingList>? _readingLists;
+    private IRepository<ReadingListItem>? _readingListItems;
+    private IRepository<ReadingListFollow>? _readingListFollows;
+    private IRepository<Poll>? _polls;
+    private IRepository<PollOption>? _pollOptions;
+    private IRepository<PollVote>? _pollVotes;
 
     public UnitOfWork(AppDbContext context)
     {
@@ -70,6 +77,27 @@ public class UnitOfWork : IUnitOfWork
 
     public IRepository<OtpVerification> OtpVerifications
         => _otpVerifications ??= new Repository<OtpVerification>(_context);
+
+    public IRepository<Repost> Reposts
+        => _reposts ??= new Repository<Repost>(_context);
+
+    public IRepository<ReadingList> ReadingLists
+        => _readingLists ??= new Repository<ReadingList>(_context);
+
+    public IRepository<ReadingListItem> ReadingListItems
+        => _readingListItems ??= new Repository<ReadingListItem>(_context);
+
+    public IRepository<ReadingListFollow> ReadingListFollows
+        => _readingListFollows ??= new Repository<ReadingListFollow>(_context);
+
+    public IRepository<Poll> Polls
+        => _polls ??= new Repository<Poll>(_context);
+
+    public IRepository<PollOption> PollOptions
+        => _pollOptions ??= new Repository<PollOption>(_context);
+
+    public IRepository<PollVote> PollVotes
+        => _pollVotes ??= new Repository<PollVote>(_context);
 
     public async Task<int> SaveChangesAsync(CancellationToken ct = default)
         => await _context.SaveChangesAsync(ct);

@@ -24,6 +24,13 @@ public class AppDbContext : DbContext
     public DbSet<EmailQueue> EmailQueues => Set<EmailQueue>();
     public DbSet<OtpVerification> OtpVerifications => Set<OtpVerification>();
     public DbSet<ActivityLog> ActivityLogs => Set<ActivityLog>();
+    public DbSet<Repost> Reposts => Set<Repost>();
+    public DbSet<ReadingList> ReadingLists => Set<ReadingList>();
+    public DbSet<ReadingListItem> ReadingListItems => Set<ReadingListItem>();
+    public DbSet<ReadingListFollow> ReadingListFollows => Set<ReadingListFollow>();
+    public DbSet<Poll> Polls => Set<Poll>();
+    public DbSet<PollOption> PollOptions => Set<PollOption>();
+    public DbSet<PollVote> PollVotes => Set<PollVote>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

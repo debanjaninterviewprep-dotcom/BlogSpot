@@ -10,5 +10,7 @@ public enum NotificationType
     Comment = 2,
     PostPublished = 3,
     CommentLike = 4,
-    Mention = 5
+    Mention = 5,
+    Repost = 6,
+    ReadingListFollow = 7
 }

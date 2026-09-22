@@ -184,6 +184,7 @@ export class NotificationsPageComponent implements OnInit {
       case 'Comment': return 'comment';
       case 'PostPublished': return 'article';
       case 'Mention': return 'alternate_email';
+      case 'Repost': return 'repeat';
       default: return 'notifications';
     }
   }

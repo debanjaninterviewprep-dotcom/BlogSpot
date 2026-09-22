@@ -14,6 +14,7 @@ public static class DependencyInjection
         services.AddScoped<IAdminService, AdminService>();
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<IActivityLogService, ActivityLogService>();
+        services.AddScoped<IReadingListService, ReadingListService>();
 
         return services;
     }

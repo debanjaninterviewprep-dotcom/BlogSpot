@@ -263,6 +263,162 @@ BEGIN
 END
 GO
 
+-- Reposts (sharing another author's post to your own profile, with an optional quote)
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Reposts')
+BEGIN
+    CREATE TABLE [dbo].[Reposts]
+    (
+        [Id]         UNIQUEIDENTIFIER NOT NULL DEFAULT NEWSEQUENTIALID(),
+        [BlogPostId] UNIQUEIDENTIFIER NOT NULL,
+        [UserId]     UNIQUEIDENTIFIER NOT NULL,
+        [Quote]      NVARCHAR(280)    NULL,
+        [CreatedAt]  DATETIME2        NOT NULL DEFAULT SYSUTCDATETIME(),
+        [UpdatedAt]  DATETIME2        NULL,
+
+        CONSTRAINT [PK_Reposts] PRIMARY KEY CLUSTERED ([Id]),
+        CONSTRAINT [FK_Reposts_BlogPosts] FOREIGN KEY ([BlogPostId])
+            REFERENCES [dbo].[BlogPosts]([Id]) ON DELETE CASCADE,
+        CONSTRAINT [FK_Reposts_Users] FOREIGN KEY ([UserId])
+            REFERENCES [dbo].[Users]([Id]) ON DELETE NO ACTION,
+        CONSTRAINT [UQ_Reposts_User_Post] UNIQUE ([UserId], [BlogPostId])
+    );
+
+    CREATE NONCLUSTERED INDEX [IX_Reposts_BlogPostId] ON [dbo].[Reposts]([BlogPostId]);
+END
+GO
+
+-- ReadingLists (named, optionally public collections of posts a user curates)
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'ReadingLists')
+BEGIN
+    CREATE TABLE [dbo].[ReadingLists]
+    (
+        [Id]          UNIQUEIDENTIFIER NOT NULL DEFAULT NEWSEQUENTIALID(),
+        [UserId]      UNIQUEIDENTIFIER NOT NULL,
+        [Name]        NVARCHAR(100)    NOT NULL,
+        [Description] NVARCHAR(500)    NULL,
+        [IsPublic]    BIT              NOT NULL DEFAULT 1,
+        [CreatedAt]   DATETIME2        NOT NULL DEFAULT SYSUTCDATETIME(),
+        [UpdatedAt]   DATETIME2        NULL,
+
+        CONSTRAINT [PK_ReadingLists] PRIMARY KEY CLUSTERED ([Id]),
+        CONSTRAINT [FK_ReadingLists_Users] FOREIGN KEY ([UserId])
+            REFERENCES [dbo].[Users]([Id]) ON DELETE NO ACTION
+    );
+
+    CREATE NONCLUSTERED INDEX [IX_ReadingLists_UserId] ON [dbo].[ReadingLists]([UserId]);
+END
+GO
+
+-- ReadingListItems (posts saved into a reading list)
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'ReadingListItems')
+BEGIN
+    CREATE TABLE [dbo].[ReadingListItems]
+    (
+        [Id]            UNIQUEIDENTIFIER NOT NULL DEFAULT NEWSEQUENTIALID(),
+        [ReadingListId] UNIQUEIDENTIFIER NOT NULL,
+        [BlogPostId]    UNIQUEIDENTIFIER NOT NULL,
+        [CreatedAt]     DATETIME2        NOT NULL DEFAULT SYSUTCDATETIME(),
+        [UpdatedAt]     DATETIME2        NULL,
+
+        CONSTRAINT [PK_ReadingListItems] PRIMARY KEY CLUSTERED ([Id]),
+        CONSTRAINT [FK_ReadingListItems_ReadingLists] FOREIGN KEY ([ReadingListId])
+            REFERENCES [dbo].[ReadingLists]([Id]) ON DELETE CASCADE,
+        CONSTRAINT [FK_ReadingListItems_BlogPosts] FOREIGN KEY ([BlogPostId])
+            REFERENCES [dbo].[BlogPosts]([Id]) ON DELETE CASCADE,
+        CONSTRAINT [UQ_ReadingListItems_List_Post] UNIQUE ([ReadingListId], [BlogPostId])
+    );
+
+    CREATE NONCLUSTERED INDEX [IX_ReadingListItems_BlogPostId] ON [dbo].[ReadingListItems]([BlogPostId]);
+END
+GO
+
+-- ReadingListFollows (users subscribing to another user's public reading list)
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'ReadingListFollows')
+BEGIN
+    CREATE TABLE [dbo].[ReadingListFollows]
+    (
+        [Id]            UNIQUEIDENTIFIER NOT NULL DEFAULT NEWSEQUENTIALID(),
+        [ReadingListId] UNIQUEIDENTIFIER NOT NULL,
+        [UserId]        UNIQUEIDENTIFIER NOT NULL,
+        [CreatedAt]     DATETIME2        NOT NULL DEFAULT SYSUTCDATETIME(),
+        [UpdatedAt]     DATETIME2        NULL,
+
+        CONSTRAINT [PK_ReadingListFollows] PRIMARY KEY CLUSTERED ([Id]),
+        CONSTRAINT [FK_ReadingListFollows_ReadingLists] FOREIGN KEY ([ReadingListId])
+            REFERENCES [dbo].[ReadingLists]([Id]) ON DELETE CASCADE,
+        CONSTRAINT [FK_ReadingListFollows_Users] FOREIGN KEY ([UserId])
+            REFERENCES [dbo].[Users]([Id]) ON DELETE NO ACTION,
+        CONSTRAINT [UQ_ReadingListFollows_User_List] UNIQUE ([UserId], [ReadingListId])
+    );
+
+    CREATE NONCLUSTERED INDEX [IX_ReadingListFollows_ReadingListId] ON [dbo].[ReadingListFollows]([ReadingListId]);
+END
+GO
+
+-- Polls (a single-choice poll embedded in a blog post; one poll per post)
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Polls')
+BEGIN
+    CREATE TABLE [dbo].[Polls]
+    (
+        [Id]         UNIQUEIDENTIFIER NOT NULL DEFAULT NEWSEQUENTIALID(),
+        [BlogPostId] UNIQUEIDENTIFIER NOT NULL,
+        [Question]   NVARCHAR(200)    NOT NULL,
+        [ExpiresAt]  DATETIME2        NULL,
+        [CreatedAt]  DATETIME2        NOT NULL DEFAULT SYSUTCDATETIME(),
+        [UpdatedAt]  DATETIME2        NULL,
+
+        CONSTRAINT [PK_Polls] PRIMARY KEY CLUSTERED ([Id]),
+        CONSTRAINT [FK_Polls_BlogPosts] FOREIGN KEY ([BlogPostId])
+            REFERENCES [dbo].[BlogPosts]([Id]) ON DELETE CASCADE,
+        CONSTRAINT [UQ_Polls_BlogPostId] UNIQUE ([BlogPostId])
+    );
+END
+GO
+
+-- PollOptions (selectable answers within a Poll)
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'PollOptions')
+BEGIN
+    CREATE TABLE [dbo].[PollOptions]
+    (
+        [Id]        UNIQUEIDENTIFIER NOT NULL DEFAULT NEWSEQUENTIALID(),
+        [PollId]    UNIQUEIDENTIFIER NOT NULL,
+        [Text]      NVARCHAR(100)    NOT NULL,
+        [SortOrder] INT              NOT NULL DEFAULT 0,
+        [CreatedAt] DATETIME2        NOT NULL DEFAULT SYSUTCDATETIME(),
+        [UpdatedAt] DATETIME2        NULL,
+
+        CONSTRAINT [PK_PollOptions] PRIMARY KEY CLUSTERED ([Id]),
+        CONSTRAINT [FK_PollOptions_Polls] FOREIGN KEY ([PollId])
+            REFERENCES [dbo].[Polls]([Id]) ON DELETE CASCADE
+    );
+
+    CREATE NONCLUSTERED INDEX [IX_PollOptions_PollId] ON [dbo].[PollOptions]([PollId]);
+END
+GO
+
+-- PollVotes (one user's vote for one PollOption; one-vote-per-poll enforced in application layer)
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'PollVotes')
+BEGIN
+    CREATE TABLE [dbo].[PollVotes]
+    (
+        [Id]           UNIQUEIDENTIFIER NOT NULL DEFAULT NEWSEQUENTIALID(),
+        [PollOptionId] UNIQUEIDENTIFIER NOT NULL,
+        [UserId]       UNIQUEIDENTIFIER NOT NULL,
+        [CreatedAt]    DATETIME2        NOT NULL DEFAULT SYSUTCDATETIME(),
+        [UpdatedAt]    DATETIME2        NULL,
+
+        CONSTRAINT [PK_PollVotes] PRIMARY KEY CLUSTERED ([Id]),
+        CONSTRAINT [FK_PollVotes_PollOptions] FOREIGN KEY ([PollOptionId])
+            REFERENCES [dbo].[PollOptions]([Id]) ON DELETE CASCADE,
+        CONSTRAINT [FK_PollVotes_Users] FOREIGN KEY ([UserId])
+            REFERENCES [dbo].[Users]([Id]) ON DELETE NO ACTION,
+        CONSTRAINT [UQ_PollVotes_User_Option] UNIQUE ([UserId], [PollOptionId])
+    );
+
+    CREATE NONCLUSTERED INDEX [IX_PollVotes_PollOptionId] ON [dbo].[PollVotes]([PollOptionId]);
+END
+GO
+
 -- PostImages
 IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'PostImages')
 BEGIN

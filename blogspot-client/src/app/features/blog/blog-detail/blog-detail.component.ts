@@ -6,9 +6,10 @@ import { MatDialog } from '@angular/material/dialog';
 import { BlogService } from '@core/services/blog.service';
 import { AuthService } from '@core/services/auth.service';
 import { UserService } from '@core/services/user.service';
-import { BlogPost, Comment, ReactionType, ReactionSummaryDto } from '@core/models/blog.model';
+import { BlogPost, Comment, ReactionType, ReactionSummaryDto, Poll } from '@core/models/blog.model';
 import { UserProfile } from '@core/models/user.model';
 import { PostLikersDialogComponent } from '../../../shared/components/post-likers-dialog/post-likers-dialog.component';
+import { AddToReadingListDialogComponent } from '../../../shared/components/add-to-reading-list-dialog/add-to-reading-list-dialog.component';
 
 @Component({
   selector: 'app-blog-detail',
@@ -67,6 +68,47 @@ import { PostLikersDialogComponent } from '../../../shared/components/post-liker
 
         <div class="post-content ql-editor" [innerHTML]="post.content | formatContent"></div>
 
+        <!-- Poll -->
+        <div class="poll-card" *ngIf="post.poll as poll">
+          <p class="poll-question">{{ poll.question }}</p>
+
+          <ng-container *ngIf="!poll.currentUserVotedOptionId && !poll.isExpired && authService.isLoggedIn; else pollResults">
+            <div class="poll-option-choice" *ngFor="let option of poll.options"
+                 [class.selected]="selectedPollOptionId === option.id"
+                 (click)="selectPollOption(option.id)">
+              <mat-icon>{{ selectedPollOptionId === option.id ? 'radio_button_checked' : 'radio_button_unchecked' }}</mat-icon>
+              <span>{{ option.text }}</span>
+            </div>
+            <button mat-raised-button color="primary" class="poll-vote-btn"
+                    [disabled]="!selectedPollOptionId || votingPoll" (click)="submitPollVote(poll.id)">
+              Vote
+            </button>
+          </ng-container>
+
+          <ng-template #pollResults>
+            <div class="poll-option-result" *ngFor="let option of poll.options">
+              <div class="poll-result-row">
+                <span class="poll-result-text">
+                  {{ option.text }}
+                  <mat-icon *ngIf="poll.currentUserVotedOptionId === option.id" class="poll-your-vote-icon"
+                            matTooltip="Your vote">check_circle</mat-icon>
+                </span>
+                <span class="poll-result-pct">{{ option.votePercentage }}%</span>
+              </div>
+              <div class="poll-result-bar-bg">
+                <div class="poll-result-bar-fill" [class.your-vote]="poll.currentUserVotedOptionId === option.id"
+                     [style.width.%]="option.votePercentage"></div>
+              </div>
+            </div>
+          </ng-template>
+
+          <p class="poll-meta">
+            {{ poll.totalVotes }} {{ poll.totalVotes === 1 ? 'vote' : 'votes' }}
+            <span *ngIf="poll.isExpired"> · Poll closed</span>
+            <span *ngIf="!poll.isExpired && poll.expiresAt"> · Closes {{ poll.expiresAt | date:'medium' }}</span>
+          </p>
+        </div>
+
         <mat-divider></mat-divider>
 
         <!-- Engagement: Reactions + Bookmark -->
@@ -104,6 +146,10 @@ import { PostLikersDialogComponent } from '../../../shared/components/post-liker
                   [matTooltip]="post.isBookmarkedByCurrentUser ? 'Remove bookmark' : 'Save post'"
                   [attr.aria-label]="post.isBookmarkedByCurrentUser ? 'Remove bookmark' : 'Save post'">
             <mat-icon>{{ post.isBookmarkedByCurrentUser ? 'bookmark' : 'bookmark_border' }}</mat-icon>
+          </button>
+          <button mat-icon-button *ngIf="authService.isLoggedIn" (click)="openAddToReadingList()"
+                  matTooltip="Save to reading list" aria-label="Save to reading list">
+            <mat-icon>collections_bookmark</mat-icon>
           </button>
         </div>
 
@@ -329,6 +375,65 @@ import { PostLikersDialogComponent } from '../../../shared/components/post-liker
     .post-content a:hover { text-decoration: underline; }
     .post-content strong { font-weight: var(--font-weight-bold); }
     .post-content em { font-style: italic; }
+    .poll-card {
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      padding: 16px;
+      margin: 0 0 24px;
+      background: var(--color-bg-secondary);
+    }
+    .poll-question {
+      font-size: var(--font-size-lg);
+      font-weight: var(--font-weight-bold);
+      margin: 0 0 12px;
+      color: var(--color-text-primary);
+    }
+    .poll-option-choice {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+    .poll-option-choice:hover { background: var(--color-bg-hover, rgba(0,0,0,0.03)); }
+    .poll-option-choice.selected {
+      border-color: var(--color-primary);
+      background: var(--color-primary-light);
+    }
+    .poll-vote-btn { margin-top: 4px; }
+    .poll-option-result { margin-bottom: 12px; }
+    .poll-result-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: var(--font-size-base);
+      margin-bottom: 4px;
+    }
+    .poll-result-text { display: flex; align-items: center; gap: 6px; }
+    .poll-your-vote-icon { font-size: 16px; width: 16px; height: 16px; color: var(--color-primary); }
+    .poll-result-pct { font-weight: var(--font-weight-medium); color: var(--color-text-secondary); }
+    .poll-result-bar-bg {
+      height: 8px;
+      border-radius: 4px;
+      background: var(--color-border);
+      overflow: hidden;
+    }
+    .poll-result-bar-fill {
+      height: 100%;
+      background: var(--color-text-secondary);
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+    .poll-result-bar-fill.your-vote { background: var(--color-primary); }
+    .poll-meta {
+      font-size: var(--font-size-xs);
+      color: var(--color-text-secondary);
+      margin: 8px 0 0;
+    }
     .post-engagement { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; }
     .reaction-bar { display: flex; align-items: center; gap: 12px; }
     .like-count-btn { margin-left: -8px; }
@@ -483,6 +588,10 @@ export class BlogDetailComponent implements OnInit {
     { type: 'Clap' as ReactionType, emoji: '👏' },
   ];
 
+  // Poll
+  selectedPollOptionId: string | null = null;
+  votingPoll = false;
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -595,6 +704,14 @@ export class BlogDetailComponent implements OnInit {
     });
   }
 
+  openAddToReadingList(): void {
+    if (!this.post) return;
+    this.dialog.open(AddToReadingListDialogComponent, {
+      data: { postId: this.post.id },
+      width: '420px'
+    });
+  }
+
   toggleReaction(type: ReactionType): void {
     if (!this.post || !this.authService.isLoggedIn) return;
     this.blogService.toggleReaction(this.post.id, { type }).subscribe({
@@ -626,6 +743,26 @@ export class BlogDetailComponent implements OnInit {
           this.post.isBookmarkedByCurrentUser = result.bookmarked;
           this.snackBar.open(result.bookmarked ? 'Post saved!' : 'Bookmark removed', 'Close', { duration: 2000 });
         }
+      }
+    });
+  }
+
+  selectPollOption(optionId: string): void {
+    this.selectedPollOptionId = optionId;
+  }
+
+  submitPollVote(pollId: string): void {
+    if (!this.selectedPollOptionId || !this.post || this.votingPoll) return;
+    this.votingPoll = true;
+    this.blogService.votePoll(pollId, this.selectedPollOptionId).subscribe({
+      next: (updatedPoll: Poll) => {
+        if (this.post) this.post.poll = updatedPoll;
+        this.selectedPollOptionId = null;
+        this.votingPoll = false;
+      },
+      error: (err) => {
+        this.votingPoll = false;
+        this.snackBar.open(err.error?.message || 'Failed to submit vote', 'Close', { duration: 3000 });
       }
     });
   }

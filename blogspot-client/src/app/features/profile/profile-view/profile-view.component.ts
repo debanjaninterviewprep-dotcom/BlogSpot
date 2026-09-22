@@ -5,7 +5,9 @@ import { BlogService } from '@core/services/blog.service';
 import { AuthService } from '@core/services/auth.service';
 import { AdminService } from '@core/services/admin.service';
 import { UserProfile } from '@core/models/user.model';
-import { BlogPost, ReactionType } from '@core/models/blog.model';
+import { BlogPost, ReactionType, Repost } from '@core/models/blog.model';
+import { ReadingList } from '@core/models/reading-list.model';
+import { ReadingListService } from '@core/services/reading-list.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
@@ -130,7 +132,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
             <app-post-card *ngFor="let post of posts" [post]="post"
                            (onLike)="toggleLike($event)"
                            (onBookmark)="toggleBookmark($event)"
-                           (onReaction)="toggleReaction($event)">
+                           (onReaction)="toggleReaction($event)"
+                           (onRepost)="toggleRepost($event)">
             </app-post-card>
             <div *ngIf="!loadingPosts && !postsLoadError && posts.length === 0" class="empty-state">
               <p>No posts yet</p>
@@ -182,6 +185,47 @@ import { MatSnackBar } from '@angular/material/snack-bar';
             </app-user-card>
             <div *ngIf="!loadingFollowing && !followingLoadError && following.length === 0" class="empty-state">
               <p>Not following anyone yet</p>
+            </div>
+          </div>
+        </mat-tab>
+        <mat-tab label="Reposts">
+          <div class="tab-content">
+            <app-loading-spinner *ngIf="loadingReposts"></app-loading-spinner>
+            <app-error-state *ngIf="repostsLoadError && reposts.length === 0"
+                             message="Failed to load reposts. Please try again."
+                             (onRetry)="loadReposts()">
+            </app-error-state>
+            <div class="repost-item" *ngFor="let repost of reposts">
+              <div class="repost-quote" *ngIf="repost.quote">{{ repost.quote }}</div>
+              <app-post-card [post]="repost.post"
+                             (onLike)="toggleLike($event)"
+                             (onBookmark)="toggleBookmark($event)"
+                             (onReaction)="toggleReaction($event)"
+                             (onRepost)="toggleRepost($event)">
+              </app-post-card>
+            </div>
+            <div *ngIf="!loadingReposts && !repostsLoadError && reposts.length === 0" class="empty-state">
+              <p>No reposts yet</p>
+            </div>
+          </div>
+        </mat-tab>
+        <mat-tab label="Reading Lists">
+          <div class="tab-content">
+            <app-loading-spinner *ngIf="loadingReadingLists"></app-loading-spinner>
+            <app-error-state *ngIf="readingListsLoadError && readingLists.length === 0"
+                             message="Failed to load reading lists. Please try again."
+                             (onRetry)="loadReadingLists()">
+            </app-error-state>
+            <a class="reading-list-item" *ngFor="let list of readingLists" [routerLink]="['/blog/reading-lists', list.id]">
+              <div class="reading-list-info">
+                <span class="reading-list-name">{{ list.name }}</span>
+                <span class="reading-list-desc" *ngIf="list.description">{{ list.description }}</span>
+                <span class="reading-list-stats">{{ list.itemCount }} posts &middot; {{ list.followerCount }} followers</span>
+              </div>
+              <mat-icon>chevron_right</mat-icon>
+            </a>
+            <div *ngIf="!loadingReadingLists && !readingListsLoadError && readingLists.length === 0" class="empty-state">
+              <p>No reading lists yet</p>
             </div>
           </div>
         </mat-tab>
@@ -316,6 +360,20 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     .tab-content { padding: 0; }
     .user-skeleton-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; }
     .user-skeleton-row .skeleton-lines { flex: 1; }
+    .repost-item { padding: 12px 16px; border-bottom: 1px solid var(--color-border); }
+    .repost-item .post-card { padding: 0; }
+    .repost-item .post-card::after { display: none; }
+    .repost-quote { font-size: var(--font-size-base); color: var(--color-text-primary); margin-bottom: 8px; white-space: pre-wrap; word-break: break-word; }
+    .reading-list-item {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 14px 16px; border-bottom: 1px solid var(--color-border);
+      text-decoration: none; color: inherit;
+    }
+    .reading-list-item:hover { background: var(--color-bg-hover); }
+    .reading-list-info { display: flex; flex-direction: column; min-width: 0; }
+    .reading-list-name { font-weight: var(--font-weight-bold); color: var(--color-text-primary); }
+    .reading-list-desc { font-size: var(--font-size-sm); color: var(--color-text-secondary); }
+    .reading-list-stats { font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-top: 2px; }
     .empty-state { text-align: center; padding: 48px 24px; color: var(--color-text-secondary); font-size: var(--font-size-base); }
     @media (max-width: 600px) {
       .profile-container { border: none; }
@@ -335,13 +393,19 @@ export class ProfileViewComponent implements OnInit {
   posts: BlogPost[] = [];
   followers: UserProfile[] = [];
   following: UserProfile[] = [];
+  reposts: Repost[] = [];
+  readingLists: ReadingList[] = [];
   loading = true;
   loadingPosts = false;
   loadingFollowers = false;
   loadingFollowing = false;
+  loadingReposts = false;
+  loadingReadingLists = false;
   postsLoadError = false;
   followersLoadError = false;
   followingLoadError = false;
+  repostsLoadError = false;
+  readingListsLoadError = false;
   adminRole = '';
   adminIsActive = true;
   private adminUserId = '';
@@ -351,6 +415,7 @@ export class ProfileViewComponent implements OnInit {
     private router: Router,
     private userService: UserService,
     private blogService: BlogService,
+    private readingListService: ReadingListService,
     public authService: AuthService,
     private adminService: AdminService,
     private snackBar: MatSnackBar
@@ -380,6 +445,8 @@ export class ProfileViewComponent implements OnInit {
         this.loadUserPosts();
         this.loadFollowers();
         this.loadFollowing();
+        this.loadReposts();
+        this.loadReadingLists();
         this.loadAdminData();
       },
       error: () => {
@@ -460,6 +527,26 @@ export class ProfileViewComponent implements OnInit {
     });
   }
 
+  loadReposts(): void {
+    if (!this.profile) return;
+    this.loadingReposts = true;
+    this.repostsLoadError = false;
+    this.blogService.getRepostsByUser(this.profile.id, { page: 1, pageSize: 20 }).subscribe({
+      next: (result) => { this.reposts = result.items; this.loadingReposts = false; },
+      error: () => { this.loadingReposts = false; this.repostsLoadError = true; }
+    });
+  }
+
+  loadReadingLists(): void {
+    if (!this.profile) return;
+    this.loadingReadingLists = true;
+    this.readingListsLoadError = false;
+    this.readingListService.getByUser(this.profile.id, { page: 1, pageSize: 20 }).subscribe({
+      next: (result) => { this.readingLists = result.items; this.loadingReadingLists = false; },
+      error: () => { this.loadingReadingLists = false; this.readingListsLoadError = true; }
+    });
+  }
+
   toggleFollow(): void {
     if (!this.profile) return;
     this.userService.toggleFollow(this.profile.id).subscribe({
@@ -526,6 +613,28 @@ export class ProfileViewComponent implements OnInit {
           post.reactionCounts = result.counts;
           post.currentUserReaction = result.currentUserReaction;
           post.currentUserReactionCount = result.currentUserReactionCount;
+        }
+      }
+    });
+  }
+
+  toggleRepost(event: { postId: string; quote?: string }): void {
+    this.blogService.toggleRepost(event.postId, event.quote).subscribe({
+      next: (result) => {
+        const post = this.posts.find(p => p.id === event.postId);
+        if (post) {
+          post.repostCount = result.repostCount;
+          post.isRepostedByCurrentUser = result.isRepostedByCurrentUser;
+          post.currentUserRepostQuote = result.currentUserQuote;
+        }
+        if (!result.isRepostedByCurrentUser) {
+          this.reposts = this.reposts.filter(r => r.post.id !== event.postId);
+        } else {
+          const repostEntry = this.reposts.find(r => r.post.id === event.postId);
+          if (repostEntry) {
+            repostEntry.post.repostCount = result.repostCount;
+            repostEntry.quote = result.currentUserQuote;
+          }
         }
       }
     });

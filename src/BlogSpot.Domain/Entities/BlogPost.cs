@@ -35,4 +35,7 @@ public class BlogPost : BaseEntity
     public ICollection<Reaction> Reactions { get; set; } = new List<Reaction>();
     public ICollection<Bookmark> Bookmarks { get; set; } = new List<Bookmark>();
     public ICollection<BlogPostTag> BlogPostTags { get; set; } = new List<BlogPostTag>();
+    public ICollection<Repost> Reposts { get; set; } = new List<Repost>();
+    public ICollection<ReadingListItem> ReadingListItems { get; set; } = new List<ReadingListItem>();
+    public Poll? Poll { get; set; }
 }

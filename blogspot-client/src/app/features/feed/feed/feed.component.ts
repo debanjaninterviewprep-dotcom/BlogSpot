@@ -65,7 +65,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
                          [post]="post"
                          (onLike)="toggleLike($event)"
                          (onBookmark)="toggleBookmark($event)"
-                         (onReaction)="toggleReaction($event)">
+                         (onReaction)="toggleReaction($event)"
+                         (onRepost)="toggleRepost($event)">
           </app-post-card>
           <!-- Inline suggestions after 3rd post (or after last if < 3) -->
           <ng-container *ngIf="suggestedUsers.length > 0 && authService.isLoggedIn &&
@@ -424,6 +425,20 @@ export class FeedComponent implements OnInit {
       next: (result: any) => {
         const post = this.posts.find(p => p.id === event.postId);
         if (post) { post.reactionCounts = result.counts; post.currentUserReaction = result.currentUserReaction; post.currentUserReactionCount = result.currentUserReactionCount; }
+      }
+    });
+  }
+
+  toggleRepost(event: { postId: string; quote?: string }): void {
+    if (!this.authService.isLoggedIn) return;
+    this.blogService.toggleRepost(event.postId, event.quote).subscribe({
+      next: (result) => {
+        const post = this.posts.find(p => p.id === event.postId);
+        if (post) {
+          post.repostCount = result.repostCount;
+          post.isRepostedByCurrentUser = result.isRepostedByCurrentUser;
+          post.currentUserRepostQuote = result.currentUserQuote;
+        }
       }
     });
   }

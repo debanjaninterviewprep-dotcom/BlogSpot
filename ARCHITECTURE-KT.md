@@ -122,7 +122,7 @@ Clean Architecture (.NET 8 backend) + Angular 17 SPA frontend, communicating ove
                           │
 ┌─────────────────────────▼──────────────────────────────────────────┐
 │  DATABASE (PostgreSQL / SQL Server)                                 │
-│  17 Tables │ 7 Stored Procedures │ 50+ Indexes                     │
+│  21 Tables │ 7 Stored Procedures │ 50+ Indexes                     │
 └────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -143,7 +143,7 @@ Angular SPA ──HTTP──► .NET API Controller
     │                                       │
     │                                  EF Core DbContext
     │                                       │
-    │                                  Database (17 tables)
+    │                                  Database (21 tables)
     │
     ├──HTTP──► LanguageTool API (grammar)
     │
@@ -599,6 +599,9 @@ app.Run()
 | GET | `/{id}/reactions` | No | — | `ReactionSummaryDto` | Get reaction counts |
 | POST | `/{id}/bookmark` | Yes | — | bool | Toggle bookmark |
 | GET | `/bookmarks` | Yes | pagination | `PagedResult<BlogPostDto>` | Bookmarked posts |
+| POST | `/{id}/repost` | Yes | `ToggleRepostDto` (optional Quote) | `RepostSummaryDto` | Toggle repost (share to profile, with optional quote) |
+| GET | `/user/{userId}/reposts` | No | pagination | `PagedResult<RepostDto>` | User's reposts (for profile "Reposts" tab) |
+| POST | `/polls/{pollId}/vote` | Yes | `VotePollDto` (OptionId) | `PollDto` | Cast a vote on a post's poll (one vote per user per poll, no changing) |
 | POST | `/{id}/comments` | Yes | `CreateCommentDto` | `CommentDto` | Add comment/reply |
 | GET | `/{id}/comments` | No | pagination | `PagedResult<CommentDto>` | Get threaded comments |
 | POST | `/comments/{id}/like` | Yes | — | bool | Like comment |
@@ -629,6 +632,19 @@ app.Run()
 | GET | `/analytics` | Yes | — | `CreatorAnalyticsDto` | Creator dashboard data |
 | GET | `/notification-preferences` | Yes | — | `NotificationPreferencesDto` | Get notification prefs |
 | PUT | `/notification-preferences` | Yes | `NotificationPreferencesDto` | `NotificationPreferencesDto` | Update prefs |
+
+### ReadingListController (`api/readinglist`)
+
+| Method | Route | Auth | Input DTO | Output | Purpose |
+|--------|-------|------|-----------|--------|---------|
+| POST | `/` | Yes | `CreateReadingListDto` | `ReadingListDto` | Create a reading list |
+| PUT | `/{id}` | Yes | `UpdateReadingListDto` | `ReadingListDto` | Update (owner only) |
+| DELETE | `/{id}` | Yes | — | message | Delete (owner only) |
+| GET | `/{id}` | No | — | `ReadingListDetailDto` | Get one with its posts (404 if private + not owner) |
+| GET | `/user/{userId}` | No | pagination | `PagedResult<ReadingListDto>` | A user's lists (private ones only shown to the owner) |
+| POST | `/{id}/posts/{postId}` | Yes | — | — | Add a post to the list (owner only) |
+| DELETE | `/{id}/posts/{postId}` | Yes | — | — | Remove a post from the list (owner only) |
+| POST | `/{id}/follow` | Yes | — | bool | Toggle following a public list (can't follow your own) |
 
 ### FeedController (`api/feed`)
 
@@ -671,11 +687,12 @@ app.Run()
 
 | Service | Key Responsibilities |
 |---------|---------------------|
-| **BlogService** | Post CRUD, slug generation, HTML sanitization (Ganss.XSS), reading time calc (~200 wpm), tag sync, reactions (add/change/remove), bookmarks, threaded comments, comment likes, image management, draft CRUD, full-text search (posts + users + tags), post scheduling (1-hour min lead time, IST confirmation email showing a 20-min publish window, list scheduled posts) |
+| **BlogService** | Post CRUD, slug generation, HTML sanitization (Ganss.XSS), reading time calc (~200 wpm), tag sync, reactions (add/change/remove), bookmarks, reposts (toggle, with optional quote), polls (create on post create/update, single-choice voting with one-vote-per-poll enforcement), threaded comments, comment likes, image management, draft CRUD, full-text search (posts + users + tags), post scheduling (1-hour min lead time, IST confirmation email showing a 20-min publish window, list scheduled posts) |
 | **UserService** | Profile CRUD, picture/cover upload, follow toggle with notification, follower removal, paginated followers/following, suggested users (top-5 by follower count), user search, creator analytics (views, reactions, comments, followers growth 30d, daily stats, top posts), notification preference management |
 | **FeedService** | Home feed (followed + trending fill), trending (MemoryCache 5 min, score = Views + Reactions×3 + Comments×5, 7-day window), latest (newest first) |
 | **AdminService** | Paginated admin views, toggle user status (email notification), change role (email notification), admin delete post/comment (soft delete + email), seed 30 Indian demo users + 40 posts + follows + likes + comments, format plain text posts to HTML |
 | **NotificationService** | Create notification (respects user preferences, no self-notify), paginated retrieval, unread count, mark read/all read |
+| **ReadingListService** | Named/public-or-private post collections: CRUD, add/remove posts, list a user's reading lists (private ones hidden from non-owners), follow/unfollow a public list (with owner notification) |
 | **ActivityLogService** | `Info()`, `Warn()`, `Error()` → writes to ActivityLog table with action, logger class name, level, message, username |
 | **AuthService** (Infra) | Register (BCrypt hash, create user+profile, welcome email), login (email or username lookup, verify BCrypt), JWT token generation (HS256, claims: UserId/Name/Email/Role/Jti), refresh token (7-day, validates expired JWT), logout logging |
 | **EmailQueueService** (Infra) | Enqueue single/bulk emails, process queue (Brevo API, 50/batch, 3 retries), send OTP (6-digit, 10-min expiry), verify OTP |
@@ -694,8 +711,8 @@ All entities use a single generic repository implementation:
 - `Query()` → `IQueryable<T>` for LINQ composition
 
 ### UnitOfWork
-Exposes typed `IRepository<T>` for all 15 entities:
-`Users`, `Profiles`, `BlogPosts`, `Comments`, `Likes`, `PostImages`, `Reactions`, `Bookmarks`, `Notifications`, `Drafts`, `Tags`, `CommentLikes`, `EmailQueues`, `OtpVerifications`
+Exposes typed `IRepository<T>` for 21 entities:
+`Users`, `Profiles`, `BlogPosts`, `Comments`, `Likes`, `PostImages`, `Reactions`, `Bookmarks`, `Notifications`, `Drafts`, `Tags`, `CommentLikes`, `EmailQueues`, `OtpVerifications`, `Reposts`, `ReadingLists`, `ReadingListItems`, `ReadingListFollows`, `Polls`, `PollOptions`, `PollVotes`
 Plus `SaveChangesAsync()`.
 
 ### Query Splitting (global default)
@@ -718,12 +735,19 @@ Rules for new code:
 | Entity | Key Properties |
 |--------|---------------|
 | **BaseEntity** | Id (Guid), CreatedAt, UpdatedAt |
-| **User** | UserName (50, unique), Email (256, unique), PasswordHash, Role (enum), IsActive, RefreshToken, RefreshTokenExpiry. Nav: Profile (1:1), BlogPosts, Comments, Likes, Reactions, Bookmarks, Notifications, Drafts, Followers, Following |
+| **User** | UserName (50, unique), Email (256, unique), PasswordHash, Role (enum), IsActive, RefreshToken, RefreshTokenExpiry. Nav: Profile (1:1), BlogPosts, Comments, Likes, Reactions, Bookmarks, Reposts, Notifications, Drafts, Followers, Following |
 | **Profile** | DisplayName, Bio, ProfilePictureUrl, CoverPhotoUrl, Website, Location, SocialLinks (JSON), Skills (CSV), NotificationPreferences (JSON), UserId (FK, cascade) |
-| **BlogPost** | Title (200), Content, Summary (500), Slug (250, unique), Status (PostStatus enum), ScheduledPublishAt (nullable — auto-publish time), IsPublished, IsDraft, IsDeleted (query filter), ViewCount, ReadingTimeMinutes, Category (100), FeaturedImageUrl, AuthorId (FK). Nav: Images, Comments, Likes, Reactions, Bookmarks, BlogPostTags |
+| **BlogPost** | Title (200), Content, Summary (500), Slug (250, unique), Status (PostStatus enum), ScheduledPublishAt (nullable — auto-publish time), IsPublished, IsDraft, IsDeleted (query filter), ViewCount, ReadingTimeMinutes, Category (100), FeaturedImageUrl, AuthorId (FK). Nav: Images, Comments, Likes, Reactions, Bookmarks, BlogPostTags, Reposts, ReadingListItems, Poll (1:0..1) |
 | **Comment** | Content, IsEdited, IsDeleted, ParentCommentId (self-ref for nesting), UserId (FK, restrict), BlogPostId (FK, cascade). Nav: Replies, CommentLikes |
 | **Reaction** | Type (enum: Like/Love/Fire/Clap), Count (int, default 1 — lets Clap be clicked repeatedly up to 50 like Medium), UserId (FK), BlogPostId (FK) |
 | **Bookmark** | UserId (FK), BlogPostId (FK) |
+| **Repost** | Quote (280, nullable — optional commentary), UserId (FK, restrict), BlogPostId (FK, cascade). One repost per user per post (unique index); reposting again toggles it off |
+| **ReadingList** | Name (100), Description (500, nullable), IsPublic (bool), UserId (FK, restrict). Nav: Items, Followers |
+| **ReadingListItem** | ReadingListId (FK, cascade), BlogPostId (FK, cascade). One post per list (unique index) |
+| **ReadingListFollow** | ReadingListId (FK, cascade), UserId (FK, restrict). One follow per user per list (unique index); can't follow your own list |
+| **Poll** | Question (200), ExpiresAt (nullable), BlogPostId (FK, cascade, unique — one poll per post). Nav: Options |
+| **PollOption** | Text (100), SortOrder (int), PollId (FK, cascade). Nav: Votes |
+| **PollVote** | PollOptionId (FK, cascade), UserId (FK, restrict). One vote per user per option (unique index); one-vote-per-poll (across sibling options) enforced in `BlogService`, not the DB, since no `PollId` FK exists on `PollVote` (avoids an EF Core multi-cascade-path conflict) |
 | **Follow** | FollowerId (FK), FollowingId (FK), composite PK |
 | **Tag** | Name, NormalizedName (uppercase). Nav: BlogPostTags |
 | **DraftBlog** | Title, Content, Summary, Category, Tags (CSV), BlogPostId (FK, nullable), AuthorId (FK, cascade) |
@@ -737,7 +761,7 @@ Rules for new code:
 ```
 UserRole:         User = 0, Admin = 1
 ReactionType:     Like = 0, Love = 1, Fire = 2, Clap = 3
-NotificationType: Follow = 0, Reaction = 1, Comment = 2, PostPublished = 3, CommentLike = 4, Mention = 5
+NotificationType: Follow = 0, Reaction = 1, Comment = 2, PostPublished = 3, CommentLike = 4, Mention = 5, Repost = 6, ReadingListFollow = 7
 EmailStatus:      Queued = 0, Sent = 1, Failed = 2
 LogLevel:         Info = 0, Error = 1, Warning = 2
 PostStatus:       Draft = 0, Scheduled = 1, Published = 2, Archived = 3
@@ -748,7 +772,11 @@ PostStatus:       Draft = 0, Scheduled = 1, Published = 2, Archived = 3
 | DTO | Properties |
 |-----|-----------|
 | **AuthResponseDto** | Token, RefreshToken, Expiration, UserInfoDto (Id, UserName, Email, Role, ProfilePictureUrl, DisplayName) |
-| **BlogPostDto** | Full post data with author info, aggregates (likeCount, commentCount, viewCount), reactionCounts, currentUserReaction, tags, images, isLikedByCurrentUser, isBookmarkedByCurrentUser |
+| **BlogPostDto** | Full post data with author info, aggregates (likeCount, commentCount, viewCount), reactionCounts, currentUserReaction, tags, images, isLikedByCurrentUser, isBookmarkedByCurrentUser, repostCount, isRepostedByCurrentUser, currentUserRepostQuote, `poll` (nullable `PollDto`) |
+| **RepostDto** | Id, Quote, CreatedAt, reposting user's info (UserId/UserName/DisplayName/Avatar), nested `Post` (BlogPostDto of the original post) — used for the profile "Reposts" tab |
+| **ReadingListDto** / **ReadingListDetailDto** | Id, Name, Description, IsPublic, owner info, ItemCount, FollowerCount, IsFollowedByCurrentUser; Detail variant adds `Posts[]` (BlogPostDto, in the order added) |
+| **PollDto** | Id, Question, ExpiresAt, IsExpired, TotalVotes, CurrentUserVotedOptionId (nullable), Options[] (`PollOptionDto`: Id, Text, SortOrder, VoteCount, VotePercentage) |
+| **CreatePollDto** / **VotePollDto** | Create: Question, Options (2-6 strings), ExpiresAt — embedded as an optional `Poll` field on `CreateBlogPostDto`/`UpdateBlogPostDto`. Vote: OptionId — body of the vote endpoint |
 | **CommentDto** | Id, Content, IsEdited, CreatedAt, User details, ParentCommentId, LikeCount, IsLikedByCurrentUser, Replies[] (nested) |
 | **UserProfileDto** | Id, UserName, DisplayName, Bio, Avatar, Cover, Website, Location, SocialLinks, Skills[], JoinedAt, FollowersCount, FollowingCount, PostsCount, IsFollowedByCurrentUser |
 | **CreatorAnalyticsDto** | TotalViews, TotalReactions, TotalComments, TotalFollowers, FollowersGrowthLast30Days, TopPosts[], DailyStats[] |
@@ -766,6 +794,7 @@ Program.cs
 │   ├── IAdminService         → AdminService         (Scoped)
 │   ├── INotificationService  → NotificationService  (Scoped)
 │   ├── IActivityLogService   → ActivityLogService   (Scoped)
+│   ├── IReadingListService   → ReadingListService   (Scoped)
 │   └── PostSchedulerService                          (HostedService — registered in Program.cs)
 │
 └── AddInfrastructure(config)
@@ -822,6 +851,12 @@ IAdminService:
 INotificationService:
   - GetNotificationsAsync, GetUnreadCountAsync
   - MarkAsReadAsync, MarkAllAsReadAsync, CreateNotificationAsync
+
+IReadingListService:
+  - CreateAsync, UpdateAsync, DeleteAsync
+  - GetByIdAsync (null if private + not owner), GetByUserAsync
+  - AddPostAsync, RemovePostAsync (owner-only)
+  - ToggleFollowAsync (public lists only, notifies owner)
 
 IActivityLogService:
   - Info(), Warn(), Error(), GetLogsAsync()
@@ -943,8 +978,8 @@ AppComponent template: <app-navbar> + <router-outlet> with @routeFade animation
 | **LoginComponent** | Auth | Login form | Email/username + password, validation, redirect to returnUrl |
 | **RegisterComponent** | Auth | Registration form | 3-step OTP flow, password strength validator (8+ chars, upper/lower/digit/special), real-time validation checkmarks |
 | **FeedComponent** | Feed | Content feed | 3 tabs, infinite scroll (load more), post cards with engagement, sidebar with suggested users (logged in) or guest promo card |
-| **BlogCreateComponent** | Blog | Rich text editor | Quill editor (ngx-quill), grammar check (LanguageTool), tags input (Enter/comma), category dropdown, save-as-draft, publish now / schedule (Material calendar + time, 1-hour min lead time) |
-| **BlogDetailComponent** | Blog | Post viewer | Read progress bar, author info, engagement bar (like burst animation, emoji reactions, bookmark), threaded comments with replies |
+| **BlogCreateComponent** | Blog | Rich text editor | Quill editor (ngx-quill), grammar check (LanguageTool), tags input (Enter/comma), category dropdown, save-as-draft, publish now / schedule (Material calendar + time, 1-hour min lead time), optional poll authoring (question + 2-6 options + duration select, locked once votes exist) |
+| **BlogDetailComponent** | Blog | Post viewer | Read progress bar, author info, poll display (vote UI or percentage-bar results), engagement bar (like burst animation, emoji reactions, bookmark), threaded comments with replies |
 | **BlogSearchComponent** | Blog | Search results | Two tabs (Posts + People), full-text search, pagination |
 | **BookmarksComponent** | Blog | Saved posts | Paginated bookmarked posts |
 | **DraftsComponent** | Blog | Draft management | Cards with preview, continue editing, delete |
@@ -960,7 +995,8 @@ AppComponent template: <app-navbar> + <router-outlet> with @routeFade animation
 | Angular Service | Backend Controller | Key Methods |
 |----------------|-------------------|-------------|
 | `AuthService` | AuthController | register, login, sendOtp, verifyOtp, refreshToken, logout |
-| `BlogService` | BlogController | createPost, updatePost, deletePost, getBySlug, toggleReaction, addComment, saveDraft, getScheduledPosts, uploadImage, fullTextSearch |
+| `BlogService` | BlogController | createPost, updatePost, deletePost, getBySlug, toggleReaction, toggleRepost, getRepostsByUser, votePoll, addComment, saveDraft, getScheduledPosts, uploadImage, fullTextSearch |
+| `ReadingListService` | ReadingListController | create, update, delete, getById, getByUser, addPost, removePost, toggleFollow |
 | `UserService` | UserController | getProfile, updateProfile, toggleFollow, getFollowers, getSuggestedUsers, getCreatorAnalytics, notification prefs |
 | `FeedService` | FeedController | getHomeFeed, getTrending, getLatest |
 | `NotificationService` | NotificationController | getNotifications, getUnreadCount, markAsRead, markAllAsRead |
@@ -1000,7 +1036,8 @@ Components use optimistic updates for likes/follows/bookmarks.
 
 | Component | Inputs | Outputs | Usage |
 |-----------|--------|---------|-------|
-| `PostCardComponent` | `post: BlogPost` | `onLike`, `onBookmark`, `onReaction` | Feed, Search, Bookmarks, Profile posts tab |
+| `PostCardComponent` | `post: BlogPost` | `onLike`, `onBookmark`, `onReaction`, `onRepost` | Feed, Search, Bookmarks, Profile posts/reposts tabs |
+| `RepostDialogComponent` | `data: { post: BlogPost }` (MAT_DIALOG_DATA) | Closes with quote string (or undefined if cancelled) | Quote-repost text entry, opened from `PostCardComponent`'s repost menu |
 | `UserCardComponent` | `user: UserProfile`, `showRemove?: boolean` | `onFollow`, `onRemove` | Followers, Following, Suggested Users, Search |
 | `LoadingSpinnerComponent` | `inline?: boolean` | — | Full-page overlay or inline spinner |
 | `ErrorStateComponent` | `title?, message?` | `onRetry` | Error recovery in any list view |
@@ -1061,7 +1098,7 @@ Components use optimistic updates for likes/follows/bookmarks.
    └────────────────┘   └───────────────────┘
 ```
 
-## Tables (17 total)
+## Tables (21 total)
 
 ### Users
 | Column | Type | Constraints |
@@ -1156,6 +1193,13 @@ Components use optimistic updates for likes/follows/bookmarks.
 |-------|-------------|---------|
 | **Likes** | UserId, BlogPostId/CommentId (XOR) | Legacy like system |
 | **Bookmarks** | UserId, BlogPostId (unique pair) | Saved posts |
+| **Reposts** | UserId, BlogPostId (unique pair), Quote (nullable, 280) | Share a post to your profile, with an optional quote |
+| **ReadingLists** | UserId, Name (100), Description (500, nullable), IsPublic | Named, optionally-public curated post collections |
+| **ReadingListItems** | ReadingListId, BlogPostId (unique pair) | Posts saved into a reading list |
+| **ReadingListFollows** | UserId, ReadingListId (unique pair) | Subscribing to someone else's public reading list |
+| **Polls** | BlogPostId (unique, FK cascade), Question (200), ExpiresAt (nullable) | One single-choice poll per post |
+| **PollOptions** | PollId (FK cascade), Text (100), SortOrder | Selectable answers within a poll |
+| **PollVotes** | PollOptionId (FK cascade), UserId (unique pair with PollOptionId) | One user's vote for one option; one-vote-per-poll enforced in `BlogService` |
 | **CommentLikes** | UserId, CommentId | Comment engagement |
 | **Follows** | FollowerId, FollowingId (unique pair, CHECK ≠) | Social graph |
 | **Tags** | Name, NormalizedName (unique) | Content labels |
@@ -1811,7 +1855,7 @@ Clean Architecture provides maximum separation of concerns. The domain layer has
                              │
                     ┌────────▼────────┐
                     │    Database     │
-                    │ 17 Tables / 7 SP│
+                    │ 21 Tables / 7 SP│
                     └─────────────────┘
 ```
 

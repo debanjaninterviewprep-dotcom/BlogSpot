@@ -215,6 +215,134 @@ CREATE TABLE IF NOT EXISTS "Bookmarks"
 
 CREATE INDEX IF NOT EXISTS "IX_Bookmarks_BlogPostId" ON "Bookmarks"("BlogPostId");
 
+-- Reposts (sharing another author's post to your own profile, with an optional quote)
+CREATE TABLE IF NOT EXISTS "Reposts"
+(
+    "Id"         uuid          NOT NULL DEFAULT gen_random_uuid(),
+    "BlogPostId" uuid          NOT NULL,
+    "UserId"     uuid          NOT NULL,
+    "Quote"      varchar(280)  NULL,
+    "CreatedAt"  timestamp     NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
+    "UpdatedAt"  timestamp     NULL,
+
+    CONSTRAINT "PK_Reposts" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_Reposts_BlogPosts" FOREIGN KEY ("BlogPostId")
+        REFERENCES "BlogPosts"("Id") ON DELETE CASCADE,
+    CONSTRAINT "FK_Reposts_Users" FOREIGN KEY ("UserId")
+        REFERENCES "Users"("Id") ON DELETE NO ACTION,
+    CONSTRAINT "UQ_Reposts_User_Post" UNIQUE ("UserId", "BlogPostId")
+);
+
+CREATE INDEX IF NOT EXISTS "IX_Reposts_BlogPostId" ON "Reposts"("BlogPostId");
+
+-- ReadingLists (named, optionally public collections of posts a user curates)
+CREATE TABLE IF NOT EXISTS "ReadingLists"
+(
+    "Id"          uuid         NOT NULL DEFAULT gen_random_uuid(),
+    "UserId"      uuid         NOT NULL,
+    "Name"        varchar(100) NOT NULL,
+    "Description" varchar(500) NULL,
+    "IsPublic"    boolean      NOT NULL DEFAULT true,
+    "CreatedAt"   timestamp    NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
+    "UpdatedAt"   timestamp    NULL,
+
+    CONSTRAINT "PK_ReadingLists" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_ReadingLists_Users" FOREIGN KEY ("UserId")
+        REFERENCES "Users"("Id") ON DELETE NO ACTION
+);
+
+CREATE INDEX IF NOT EXISTS "IX_ReadingLists_UserId" ON "ReadingLists"("UserId");
+
+-- ReadingListItems (posts saved into a reading list)
+CREATE TABLE IF NOT EXISTS "ReadingListItems"
+(
+    "Id"            uuid      NOT NULL DEFAULT gen_random_uuid(),
+    "ReadingListId" uuid      NOT NULL,
+    "BlogPostId"    uuid      NOT NULL,
+    "CreatedAt"     timestamp NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
+    "UpdatedAt"     timestamp NULL,
+
+    CONSTRAINT "PK_ReadingListItems" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_ReadingListItems_ReadingLists" FOREIGN KEY ("ReadingListId")
+        REFERENCES "ReadingLists"("Id") ON DELETE CASCADE,
+    CONSTRAINT "FK_ReadingListItems_BlogPosts" FOREIGN KEY ("BlogPostId")
+        REFERENCES "BlogPosts"("Id") ON DELETE CASCADE,
+    CONSTRAINT "UQ_ReadingListItems_List_Post" UNIQUE ("ReadingListId", "BlogPostId")
+);
+
+CREATE INDEX IF NOT EXISTS "IX_ReadingListItems_BlogPostId" ON "ReadingListItems"("BlogPostId");
+
+-- ReadingListFollows (users subscribing to another user's public reading list)
+CREATE TABLE IF NOT EXISTS "ReadingListFollows"
+(
+    "Id"            uuid      NOT NULL DEFAULT gen_random_uuid(),
+    "ReadingListId" uuid      NOT NULL,
+    "UserId"        uuid      NOT NULL,
+    "CreatedAt"     timestamp NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
+    "UpdatedAt"     timestamp NULL,
+
+    CONSTRAINT "PK_ReadingListFollows" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_ReadingListFollows_ReadingLists" FOREIGN KEY ("ReadingListId")
+        REFERENCES "ReadingLists"("Id") ON DELETE CASCADE,
+    CONSTRAINT "FK_ReadingListFollows_Users" FOREIGN KEY ("UserId")
+        REFERENCES "Users"("Id") ON DELETE NO ACTION,
+    CONSTRAINT "UQ_ReadingListFollows_User_List" UNIQUE ("UserId", "ReadingListId")
+);
+
+CREATE INDEX IF NOT EXISTS "IX_ReadingListFollows_ReadingListId" ON "ReadingListFollows"("ReadingListId");
+
+-- Polls (a single-choice poll embedded in a blog post; one poll per post)
+CREATE TABLE IF NOT EXISTS "Polls"
+(
+    "Id"         uuid          NOT NULL DEFAULT gen_random_uuid(),
+    "BlogPostId" uuid          NOT NULL,
+    "Question"   varchar(200)  NOT NULL,
+    "ExpiresAt"  timestamp     NULL,
+    "CreatedAt"  timestamp     NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
+    "UpdatedAt"  timestamp     NULL,
+
+    CONSTRAINT "PK_Polls" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_Polls_BlogPosts" FOREIGN KEY ("BlogPostId")
+        REFERENCES "BlogPosts"("Id") ON DELETE CASCADE,
+    CONSTRAINT "UQ_Polls_BlogPostId" UNIQUE ("BlogPostId")
+);
+
+-- PollOptions (selectable answers within a Poll)
+CREATE TABLE IF NOT EXISTS "PollOptions"
+(
+    "Id"        uuid         NOT NULL DEFAULT gen_random_uuid(),
+    "PollId"    uuid         NOT NULL,
+    "Text"      varchar(100) NOT NULL,
+    "SortOrder" integer      NOT NULL DEFAULT 0,
+    "CreatedAt" timestamp    NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
+    "UpdatedAt" timestamp    NULL,
+
+    CONSTRAINT "PK_PollOptions" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_PollOptions_Polls" FOREIGN KEY ("PollId")
+        REFERENCES "Polls"("Id") ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS "IX_PollOptions_PollId" ON "PollOptions"("PollId");
+
+-- PollVotes (one user's vote for one PollOption; one-vote-per-poll enforced in application layer)
+CREATE TABLE IF NOT EXISTS "PollVotes"
+(
+    "Id"           uuid      NOT NULL DEFAULT gen_random_uuid(),
+    "PollOptionId" uuid      NOT NULL,
+    "UserId"       uuid      NOT NULL,
+    "CreatedAt"    timestamp NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
+    "UpdatedAt"    timestamp NULL,
+
+    CONSTRAINT "PK_PollVotes" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_PollVotes_PollOptions" FOREIGN KEY ("PollOptionId")
+        REFERENCES "PollOptions"("Id") ON DELETE CASCADE,
+    CONSTRAINT "FK_PollVotes_Users" FOREIGN KEY ("UserId")
+        REFERENCES "Users"("Id") ON DELETE NO ACTION,
+    CONSTRAINT "UQ_PollVotes_User_Option" UNIQUE ("UserId", "PollOptionId")
+);
+
+CREATE INDEX IF NOT EXISTS "IX_PollVotes_PollOptionId" ON "PollVotes"("PollOptionId");
+
 -- PostImages
 CREATE TABLE IF NOT EXISTS "PostImages"
 (

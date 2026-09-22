@@ -113,6 +113,55 @@ import { MatChipInputEvent } from '@angular/material/chips';
               </div>
             </div>
 
+            <!-- Poll -->
+            <div class="poll-section">
+              <mat-slide-toggle [checked]="includePoll" (change)="onPollToggle($event.checked)"
+                                 [disabled]="existingPollHasVotes">
+                Add a poll
+              </mat-slide-toggle>
+
+              <div class="poll-fields" *ngIf="includePoll">
+                <p class="poll-locked-hint" *ngIf="existingPollHasVotes">
+                  <mat-icon>lock</mat-icon>
+                  This poll already has votes, so it can't be edited.
+                </p>
+
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Poll question</mat-label>
+                  <input matInput [(ngModel)]="pollQuestion" [ngModelOptions]="{ standalone: true }"
+                         [disabled]="existingPollHasVotes" maxlength="200" placeholder="Ask a question...">
+                </mat-form-field>
+
+                <div class="poll-option-row" *ngFor="let option of pollOptions; let i = index">
+                  <mat-form-field appearance="outline" class="poll-option-field">
+                    <mat-label>Option {{ i + 1 }}</mat-label>
+                    <input matInput [(ngModel)]="pollOptions[i]" [ngModelOptions]="{ standalone: true }"
+                           [disabled]="existingPollHasVotes" maxlength="100">
+                  </mat-form-field>
+                  <button mat-icon-button type="button" color="warn" *ngIf="pollOptions.length > 2 && !existingPollHasVotes"
+                          (click)="removePollOption(i)" aria-label="Remove option">
+                    <mat-icon>close</mat-icon>
+                  </button>
+                </div>
+
+                <button mat-stroked-button type="button" class="add-option-btn"
+                        *ngIf="pollOptions.length < 6 && !existingPollHasVotes" (click)="addPollOption()">
+                  <mat-icon>add</mat-icon> Add option
+                </button>
+
+                <mat-form-field appearance="outline" class="full-width" *ngIf="!existingPollHasVotes">
+                  <mat-label>Poll duration</mat-label>
+                  <mat-select [(ngModel)]="pollDurationDays" [ngModelOptions]="{ standalone: true }">
+                    <mat-option *ngFor="let opt of pollDurationOptions" [value]="opt.value">{{ opt.label }}</mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <p class="poll-expiry-hint" *ngIf="existingPollExpiresAt && !existingPollHasVotes">
+                  <mat-icon>info</mat-icon>
+                  Currently expires {{ existingPollExpiresAt | date:'medium' }}. Saving will apply the duration selected above instead.
+                </p>
+              </div>
+            </div>
+
             <!-- Publishing Options -->
             <div class="publish-section">
               <label class="section-label">Publishing Options</label>
@@ -269,6 +318,40 @@ import { MatChipInputEvent } from '@angular/material/chips';
       line-height: 24px !important;
       color: var(--color-primary);
     }
+    .poll-section {
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      padding: 16px;
+      margin: 8px 0;
+    }
+    .poll-fields {
+      margin-top: 16px;
+      display: flex;
+      flex-direction: column;
+    }
+    .poll-locked-hint {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: var(--font-size-sm);
+      color: var(--color-text-secondary);
+      margin: 0 0 8px;
+    }
+    .poll-option-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .poll-option-field { flex: 1; }
+    .add-option-btn { align-self: flex-start; margin: 4px 0 12px; }
+    .poll-expiry-hint {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: var(--font-size-xs);
+      color: var(--color-text-secondary);
+      margin-top: -8px;
+    }
     .publish-section {
       border: 1px solid var(--color-border);
       border-radius: 8px;
@@ -383,6 +466,21 @@ export class BlogCreateComponent implements OnInit, OnDestroy {
   // PostSchedulerService only polls every 15 min, so confirmations show a window instead of a false-precise exact time.
   private readonly publishWindowMinutes = 20;
 
+  // Poll
+  includePoll = false;
+  pollQuestion = '';
+  pollOptions: string[] = ['', ''];
+  pollDurationDays: number | null = null;
+  existingPollHasVotes = false;
+  existingPollExpiresAt: string | null = null;
+  pollDurationOptions: { label: string; value: number | null }[] = [
+    { label: 'No expiry', value: null },
+    { label: '1 day', value: 1 },
+    { label: '3 days', value: 3 },
+    { label: '7 days', value: 7 },
+    { label: '30 days', value: 30 }
+  ];
+
   constructor(
     private fb: FormBuilder,
     private blogService: BlogService,
@@ -405,6 +503,21 @@ export class BlogCreateComponent implements OnInit, OnDestroy {
 
   setMinScheduleDate(): void {
     this.minDate = new Date();
+  }
+
+  onPollToggle(checked: boolean): void {
+    this.includePoll = checked;
+    if (checked && this.pollOptions.length === 0) {
+      this.pollOptions = ['', ''];
+    }
+  }
+
+  addPollOption(): void {
+    if (this.pollOptions.length < 6) this.pollOptions.push('');
+  }
+
+  removePollOption(index: number): void {
+    if (this.pollOptions.length > 2) this.pollOptions.splice(index, 1);
   }
 
   private formatPublishWindow(scheduled: Date): string {
@@ -455,6 +568,16 @@ export class BlogCreateComponent implements OnInit, OnDestroy {
         // Set publish mode based on post status
         if (post.status === 1) this.publishMode = 'later';
         else this.publishMode = 'now';
+
+        if (post.poll) {
+          this.includePoll = true;
+          this.pollQuestion = post.poll.question;
+          this.pollOptions = [...post.poll.options]
+            .sort((a, b) => a.sortOrder - b.sortOrder)
+            .map(o => o.text);
+          this.existingPollHasVotes = post.poll.totalVotes > 0;
+          this.existingPollExpiresAt = post.poll.expiresAt || null;
+        }
       },
       error: () => {
         this.snackBar.open('Failed to load post', 'Close', { duration: 3000 });
@@ -580,6 +703,28 @@ export class BlogCreateComponent implements OnInit, OnDestroy {
       scheduledDate = scheduled;
     }
 
+    // Validate and build poll payload (skip entirely if the existing poll already has votes — it's locked)
+    let pollPayload: { question: string; options: string[]; expiresAt?: string } | undefined;
+    if (this.includePoll && !this.existingPollHasVotes) {
+      const trimmedQuestion = this.pollQuestion.trim();
+      const trimmedOptions = this.pollOptions.map(o => o.trim()).filter(o => o.length > 0);
+      const uniqueOptions = new Set(trimmedOptions.map(o => o.toLowerCase()));
+
+      if (trimmedQuestion.length < 3) {
+        this.snackBar.open('Poll question must be at least 3 characters', 'Close', { duration: 3000 });
+        return;
+      }
+      if (trimmedOptions.length < 2 || uniqueOptions.size < trimmedOptions.length) {
+        this.snackBar.open('A poll needs at least 2 unique, non-empty options', 'Close', { duration: 3000 });
+        return;
+      }
+
+      pollPayload = { question: trimmedQuestion, options: trimmedOptions };
+      if (this.pollDurationDays) {
+        pollPayload.expiresAt = new Date(Date.now() + this.pollDurationDays * 86400000).toISOString();
+      }
+    }
+
     this.isLoading = true;
     const formVal = this.postForm.value;
     
@@ -595,6 +740,11 @@ export class BlogCreateComponent implements OnInit, OnDestroy {
     // Add scheduling if selected
     if (scheduledIso) {
       payload.scheduledPublishAt = scheduledIso;
+    }
+
+    // Add poll if configured
+    if (pollPayload) {
+      payload.poll = pollPayload;
     }
 
     const request = this.isEditing

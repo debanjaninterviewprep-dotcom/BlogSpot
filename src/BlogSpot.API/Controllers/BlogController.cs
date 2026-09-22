@@ -161,6 +161,36 @@ public class BlogController : ControllerBase
         return Ok(result);
     }
 
+    // --- Reposts ---
+
+    [Authorize]
+    [HttpPost("{id:guid}/repost")]
+    public async Task<ActionResult<RepostSummaryDto>> ToggleRepost(Guid id, [FromBody] ToggleRepostDto? dto, CancellationToken ct)
+    {
+        var userId = GetCurrentUserId()!.Value;
+        var result = await _blogService.ToggleRepostAsync(userId, id, dto?.Quote, ct);
+        return Ok(result);
+    }
+
+    [HttpGet("user/{userId:guid}/reposts")]
+    public async Task<ActionResult<PagedResult<RepostDto>>> GetRepostsByUser(
+        Guid userId, [FromQuery] PaginationParams pagination, CancellationToken ct)
+    {
+        var result = await _blogService.GetRepostsByUserAsync(userId, pagination, GetCurrentUserId(), ct);
+        return Ok(result);
+    }
+
+    // --- Polls ---
+
+    [Authorize]
+    [HttpPost("polls/{pollId:guid}/vote")]
+    public async Task<ActionResult<PollDto>> VoteOnPoll(Guid pollId, [FromBody] VotePollDto dto, CancellationToken ct)
+    {
+        var userId = GetCurrentUserId()!.Value;
+        var result = await _blogService.VoteOnPollAsync(userId, pollId, dto.OptionId, ct);
+        return Ok(result);
+    }
+
     // --- Drafts ---
 
     [Authorize]

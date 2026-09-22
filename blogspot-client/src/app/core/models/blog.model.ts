@@ -25,6 +25,10 @@ export interface BlogPost {
   reactionCounts: { [key: string]: number };
   currentUserReaction?: string;
   currentUserReactionCount?: number;
+  repostCount: number;
+  isRepostedByCurrentUser: boolean;
+  currentUserRepostQuote?: string;
+  poll?: Poll;
   tags: string[];
   images: PostImage[];
 }
@@ -43,6 +47,7 @@ export interface CreateBlogPost {
   category?: string;
   tags?: string[];
   isDraft?: boolean;
+  poll?: CreatePoll;
 }
 
 export interface UpdateBlogPost {
@@ -52,6 +57,7 @@ export interface UpdateBlogPost {
   category?: string;
   tags?: string[];
   isDraft?: boolean;
+  poll?: CreatePoll;
 }
 
 export interface Comment {
@@ -116,6 +122,49 @@ export interface SearchResult {
   posts: PagedBlogPosts;
   users: UserSearchResult[];
   tags: string[];
+}
+
+// Reposts
+export interface Repost {
+  id: string;
+  quote?: string;
+  createdAt: string;
+  userId: string;
+  userName: string;
+  userDisplayName?: string;
+  userProfilePictureUrl?: string;
+  post: BlogPost;
+}
+
+export interface RepostSummary {
+  repostCount: number;
+  isRepostedByCurrentUser: boolean;
+  currentUserQuote?: string;
+}
+
+// Polls
+export interface Poll {
+  id: string;
+  question: string;
+  expiresAt?: string;
+  isExpired: boolean;
+  totalVotes: number;
+  currentUserVotedOptionId?: string;
+  options: PollOption[];
+}
+
+export interface PollOption {
+  id: string;
+  text: string;
+  sortOrder: number;
+  voteCount: number;
+  votePercentage: number;
+}
+
+export interface CreatePoll {
+  question: string;
+  options: string[];
+  expiresAt?: string;
 }
 
 export interface PagedBlogPosts {

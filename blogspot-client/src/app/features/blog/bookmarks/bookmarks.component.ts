@@ -27,7 +27,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
                      [post]="post"
                      (onLike)="toggleLike($event)"
                      (onBookmark)="toggleBookmark($event)"
-                     (onReaction)="toggleReaction($event)">
+                     (onReaction)="toggleReaction($event)"
+                     (onRepost)="toggleRepost($event)">
       </app-post-card>
 
       <button mat-stroked-button class="full-width mt-2"
@@ -111,6 +112,19 @@ export class BookmarksComponent implements OnInit {
           post.reactionCounts = result.counts;
           post.currentUserReaction = result.currentUserReaction;
           post.currentUserReactionCount = result.currentUserReactionCount;
+        }
+      }
+    });
+  }
+
+  toggleRepost(event: { postId: string; quote?: string }): void {
+    this.blogService.toggleRepost(event.postId, event.quote).subscribe({
+      next: result => {
+        const post = this.posts.find(p => p.id === event.postId);
+        if (post) {
+          post.repostCount = result.repostCount;
+          post.isRepostedByCurrentUser = result.isRepostedByCurrentUser;
+          post.currentUserRepostQuote = result.currentUserQuote;
         }
       }
     });

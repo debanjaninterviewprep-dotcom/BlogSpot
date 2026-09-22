@@ -8,6 +8,8 @@ import { BlogSearchComponent } from './blog-search/blog-search.component';
 import { BookmarksComponent } from './bookmarks/bookmarks.component';
 import { DraftsComponent } from './drafts/drafts.component';
 import { ScheduledPostsComponent } from './scheduled/scheduled-posts.component';
+import { ReadingListsComponent } from './reading-lists/reading-lists.component';
+import { ReadingListDetailComponent } from './reading-lists/reading-list-detail.component';
 import { QuillModule } from 'ngx-quill';
 
 const routes: Routes = [
@@ -16,6 +18,8 @@ const routes: Routes = [
   { path: 'bookmarks', component: BookmarksComponent, canActivate: [AuthGuard] },
   { path: 'drafts', component: DraftsComponent, canActivate: [AuthGuard] },
   { path: 'scheduled', component: ScheduledPostsComponent, canActivate: [AuthGuard] },
+  { path: 'reading-lists', component: ReadingListsComponent, canActivate: [AuthGuard] },
+  { path: 'reading-lists/:id', component: ReadingListDetailComponent },
   { path: 'search', component: BlogSearchComponent },
   { path: ':slug', component: BlogDetailComponent }
 ];
@@ -27,7 +31,9 @@ const routes: Routes = [
     BlogSearchComponent,
     BookmarksComponent,
     DraftsComponent,
-    ScheduledPostsComponent
+    ScheduledPostsComponent,
+    ReadingListsComponent,
+    ReadingListDetailComponent
   ],
   imports: [
     SharedModule,
