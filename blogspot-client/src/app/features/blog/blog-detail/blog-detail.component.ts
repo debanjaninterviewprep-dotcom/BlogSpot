@@ -142,15 +142,17 @@ import { AddToReadingListDialogComponent } from '../../../shared/components/add-
             </span>
           </div>
 
-          <button mat-icon-button (click)="toggleBookmark()"
-                  [matTooltip]="post.isBookmarkedByCurrentUser ? 'Remove bookmark' : 'Save post'"
-                  [attr.aria-label]="post.isBookmarkedByCurrentUser ? 'Remove bookmark' : 'Save post'">
-            <mat-icon>{{ post.isBookmarkedByCurrentUser ? 'bookmark' : 'bookmark_border' }}</mat-icon>
-          </button>
-          <button mat-icon-button *ngIf="authService.isLoggedIn" (click)="openAddToReadingList()"
-                  matTooltip="Save to reading list" aria-label="Save to reading list">
-            <mat-icon>collections_bookmark</mat-icon>
-          </button>
+          <div class="post-actions-secondary">
+            <button mat-icon-button (click)="toggleBookmark()"
+                    [matTooltip]="post.isBookmarkedByCurrentUser ? 'Remove bookmark' : 'Save post'"
+                    [attr.aria-label]="post.isBookmarkedByCurrentUser ? 'Remove bookmark' : 'Save post'">
+              <mat-icon>{{ post.isBookmarkedByCurrentUser ? 'bookmark' : 'bookmark_border' }}</mat-icon>
+            </button>
+            <button mat-icon-button *ngIf="authService.isLoggedIn" (click)="openAddToReadingList()"
+                    matTooltip="Save to reading list" aria-label="Save to reading list">
+              <mat-icon>collections_bookmark</mat-icon>
+            </button>
+          </div>
         </div>
 
         <mat-divider></mat-divider>
@@ -438,10 +440,11 @@ import { AddToReadingListDialogComponent } from '../../../shared/components/add-
     .reaction-bar { display: flex; align-items: center; gap: 12px; }
     .like-count-btn { margin-left: -8px; }
     .like-count-btn:hover { text-decoration: underline; }
-    .emoji-reactions { display: flex; gap: 4px; }
-    .reaction-btn { width: 36px; height: 36px; position: relative; }
+    .post-actions-secondary { display: flex; align-items: center; gap: 4px; }
+    .emoji-reactions { display: flex; align-items: center; gap: 4px; }
+    .reaction-btn { width: 36px; height: 36px; position: relative; display: inline-flex; align-items: center; justify-content: center; }
     .reaction-btn.active { background: var(--color-primary-light); border-radius: 50%; }
-    .reaction-emoji { font-size: 18px; }
+    .reaction-emoji { font-size: 18px; line-height: 1; }
     .clap-count-badge {
       position: absolute;
       top: 0;

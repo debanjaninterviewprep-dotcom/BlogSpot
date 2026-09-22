@@ -567,6 +567,20 @@ body.dark-theme {
   /* MDC hardcodes near-black label ink (same issue as Quill's toolbar), invisible on a dark background. */
   .mat-mdc-radio-button .mdc-label { color: #e8e6f0 !important; }
 
+  /* Slide Toggle */
+  /* color="primary" resolves to the prebuilt theme's indigo, which is too low-contrast against this near-black background. */
+  .mat-mdc-slide-toggle.mat-primary .mdc-switch {
+    --mdc-switch-selected-track-color: var(--color-primary) !important;
+    --mdc-switch-selected-hover-track-color: var(--color-primary) !important;
+    --mdc-switch-selected-pressed-track-color: var(--color-primary-hover) !important;
+    --mdc-switch-selected-focus-track-color: var(--color-primary) !important;
+    --mdc-switch-selected-handle-color: var(--color-primary) !important;
+    --mdc-switch-selected-hover-handle-color: var(--color-primary) !important;
+    --mdc-switch-selected-pressed-handle-color: var(--color-primary-hover) !important;
+    --mdc-switch-selected-focus-handle-color: var(--color-primary) !important;
+    --mdc-switch-selected-icon-color: #fff !important;
+  }
+
   /* Chips */
   .mat-mdc-chip:not(.mat-mdc-chip-disabled) {
     background-color: rgba(108, 92, 231, 0.15) !important;
