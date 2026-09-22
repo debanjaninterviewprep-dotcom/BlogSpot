@@ -188,6 +188,20 @@ html.dark-theme {
   color: var(--color-text-primary) !important;
 }
 
+/* Dialog headings/body carry the same hardcoded near-black ink as the form-control labels. */
+.mat-mdc-dialog-container {
+  --mdc-dialog-subhead-color: var(--color-text-primary) !important;
+  --mdc-dialog-supporting-text-color: var(--color-text-primary) !important;
+}
+
+/* Selected day should use the app's brand colour, not the prebuilt theme's indigo. */
+.mat-datepicker-content {
+  --mat-datepicker-calendar-date-selected-state-background-color: var(--color-primary) !important;
+  --mat-datepicker-calendar-date-selected-state-text-color: #fff !important;
+  --mat-datepicker-calendar-date-focus-state-background-color: var(--color-primary-light) !important;
+  --mat-datepicker-calendar-date-hover-state-background-color: var(--color-primary-light) !important;
+}
+
 /* =============================
    LIGHT MODE ENHANCEMENTS
    ============================= */
@@ -639,6 +653,40 @@ body.dark-theme {
     color: #e8e6f0 !important;
     border: 1px solid var(--color-border);
   }
+
+  /* Datepicker */
+  /* The calendar renders in an overlay and keeps the prebuilt theme's white surface + near-black ink.
+     Tokens are set for correctness and the element rules below guarantee it regardless of token names. */
+  .mat-datepicker-content {
+    --mat-datepicker-calendar-container-background-color: #0f0f25 !important;
+    --mat-datepicker-calendar-container-text-color: #e8e6f0 !important;
+    --mat-datepicker-calendar-date-text-color: #e8e6f0 !important;
+    --mat-datepicker-calendar-body-label-text-color: #8b8aa0 !important;
+    --mat-datepicker-calendar-header-text-color: #8b8aa0 !important;
+    --mat-datepicker-calendar-period-button-text-color: #e8e6f0 !important;
+    --mat-datepicker-calendar-period-button-icon-color: #b0afc5 !important;
+    --mat-datepicker-calendar-navigation-button-icon-color: #b0afc5 !important;
+    --mat-datepicker-calendar-date-disabled-state-text-color: #55536b !important;
+    --mat-datepicker-calendar-header-divider-color: var(--color-border) !important;
+    background-color: #0f0f25 !important;
+    color: #e8e6f0 !important;
+    border: 1px solid var(--color-border);
+  }
+  .mat-calendar-body-cell-content { color: #e8e6f0 !important; }
+  .mat-calendar-body-label,
+  .mat-calendar-table-header th { color: #8b8aa0 !important; }
+  .mat-calendar-period-button,
+  .mat-calendar-previous-button,
+  .mat-calendar-next-button { color: #e8e6f0 !important; }
+  .mat-calendar-arrow { fill: #e8e6f0 !important; }
+  .mat-calendar-table-header-divider::after { background: var(--color-border) !important; }
+  .mat-calendar-body-cell-content.mat-calendar-body-selected {
+    background-color: var(--color-primary) !important;
+    color: #fff !important;
+  }
+  .mat-calendar-body-today:not(.mat-calendar-body-selected) { border-color: var(--color-primary) !important; }
+  .mat-calendar-body-disabled > .mat-calendar-body-cell-content:not(.mat-calendar-body-selected) { color: #55536b !important; }
+  .mat-datepicker-toggle { color: #b0afc5 !important; }
 
   /* List */
   .mat-mdc-list-item { color: #e8e6f0 !important; }

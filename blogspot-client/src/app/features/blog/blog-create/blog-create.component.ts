@@ -132,7 +132,7 @@ import { MatChipInputEvent } from '@angular/material/chips';
                          [disabled]="existingPollHasVotes" maxlength="200" placeholder="Ask a question...">
                 </mat-form-field>
 
-                <div class="poll-option-row" *ngFor="let option of pollOptions; let i = index">
+                <div class="poll-option-row" *ngFor="let option of pollOptions; let i = index; trackBy: trackByIndex">
                   <mat-form-field appearance="outline" class="poll-option-field">
                     <mat-label>Option {{ i + 1 }}</mat-label>
                     <input matInput [(ngModel)]="pollOptions[i]" [ngModelOptions]="{ standalone: true }"
@@ -518,6 +518,12 @@ export class BlogCreateComponent implements OnInit, OnDestroy {
 
   removePollOption(index: number): void {
     if (this.pollOptions.length > 2) this.pollOptions.splice(index, 1);
+  }
+
+  // Options are plain strings, so the default identity tracking treats two equal values as the same
+  // row and reshuffles the inputs mid-edit.
+  trackByIndex(index: number): number {
+    return index;
   }
 
   private formatPublishWindow(scheduled: Date): string {
