@@ -70,7 +70,7 @@ public class EmailQueueService : IEmailQueueService
         {
             try
             {
-                await SendEmailAsync(email.ToEmail, email.Subject, email.Body);
+                await SendEmailAsync(email.ToEmail, email.Subject, email.Body, ct);
                 email.Status = EmailStatus.Sent;
                 email.SentAt = DateTime.UtcNow;
                 email.Error = null;
@@ -142,21 +142,28 @@ public class EmailQueueService : IEmailQueueService
             ExpiresAt = DateTime.UtcNow.AddMinutes(10)
         }, ct);
 
-        // Queue the OTP email
-        await _uow.EmailQueues.AddAsync(new EmailQueue
+        await _uow.SaveChangesAsync(ct);
+
+        // OTP is time-critical, so it is delivered inline rather than through the queue + background job.
+        try
         {
-            ToEmail = email,
-            Subject = "BlogSpot - Verify your email",
-            Body = $@"<div style='font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px'>
+            await SendEmailAsync(
+                email,
+                "BlogSpot - Verify your email",
+                $@"<div style='font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px'>
                 <h2 style='color:#1d9bf0'>BlogSpot Email Verification</h2>
                 <p>Your verification code is:</p>
                 <div style='font-size:32px;font-weight:700;letter-spacing:8px;background:#f7f9f9;padding:16px 24px;border-radius:12px;text-align:center;margin:16px 0'>{otp}</div>
                 <p style='color:#536471;font-size:14px'>This code expires in 10 minutes. If you didn't request this, ignore this email.</p>
             </div>",
-            Status = EmailStatus.Queued
-        }, ct);
+                ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send OTP email to {Email}", email);
+            throw new InvalidOperationException("Could not send the verification code. Please try again.");
+        }
 
-        await _uow.SaveChangesAsync(ct);
         return otp;
     }
 
@@ -175,7 +182,7 @@ public class EmailQueueService : IEmailQueueService
         return true;
     }
 
-    private async Task SendEmailAsync(string to, string subject, string body)
+    private async Task SendEmailAsync(string to, string subject, string body, CancellationToken ct = default)
     {
         var apiKey = _config["Email:BrevoApiKey"] ?? "";
         var fromEmail = _config["Email:FromEmail"] ?? "";
@@ -201,11 +208,11 @@ public class EmailQueueService : IEmailQueueService
         var json = JsonSerializer.Serialize(payload);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-        var response = await client.PostAsync("https://api.brevo.com/v3/smtp/email", content);
+        var response = await client.PostAsync("https://api.brevo.com/v3/smtp/email", content, ct);
 
         if (!response.IsSuccessStatusCode)
         {
-            var errorBody = await response.Content.ReadAsStringAsync();
+            var errorBody = await response.Content.ReadAsStringAsync(ct);
             throw new Exception($"Brevo API error ({response.StatusCode}): {errorBody}");
         }
     }

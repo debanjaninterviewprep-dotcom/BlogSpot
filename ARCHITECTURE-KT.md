@@ -305,7 +305,12 @@ blogspot-client/src/app/
 │   │   ├── post-card/                   ← Blog post card with engagement actions
 │   │   ├── user-card/                   ← User card with follow button
 │   │   ├── loading-spinner/             ← Full-page and inline spinners
-│   │   └── error-state/                 ← Retry error display
+│   │   ├── error-state/                 ← Retry error display
+│   │   ├── post-likers-dialog/          ← Paginated list of a post's likers
+│   │   ├── repost-dialog/               ← Quote-repost text entry
+│   │   ├── reading-list-form-dialog/    ← Create/edit a reading list
+│   │   ├── reading-list-followers-dialog/ ← Paginated followers of a reading list
+│   │   └── add-to-reading-list-dialog/  ← Save a post into one of your lists
 │   ├── pipes/
 │   │   ├── image-url.pipe.ts            ← Resolves relative → absolute image URLs
 │   │   └── format-content.pipe.ts       ← Markdown-like → HTML conversion
@@ -353,7 +358,7 @@ AuthController.SendOtp → EmailQueueService.SendOtpAsync
        ↓
 OtpVerification table (6-digit code, 10-min expiry)
        ↓
-Brevo API sends email (via EmailProcessorJob background)
+Brevo API sends email immediately (inline — bypasses EmailQueue + EmailProcessorJob)
        ↓
 User enters OTP code
        ↓
@@ -576,7 +581,7 @@ app.Run()
 
 | Method | Route | Auth | Rate Limit | Input DTO | Output | Purpose |
 |--------|-------|------|-----------|-----------|--------|---------|
-| POST | `/send-otp` | No | otp-send (5/10min) | `SendOtpRequest` | message | Send 6-digit OTP to email |
+| POST | `/send-otp` | No | otp-send (5/10min) | `SendOtpRequest` | message | Send 6-digit OTP to email (sent inline via Brevo during the request, not queued; 400 if delivery fails) |
 | POST | `/verify-otp` | No | otp-verify (10/10min) | `VerifyOtpRequest` | success bool | Verify OTP code |
 | POST | `/register` | No | auth-register (5/10min) | `RegisterDto` | `AuthResponseDto` | Create account |
 | POST | `/login` | No | 10 fails/5min (in-memory) | `LoginDto` | `AuthResponseDto` | JWT + refresh token |
@@ -648,6 +653,9 @@ app.Run()
 | POST | `/{id}/posts/{postId}` | Yes | — | — | Add a post to the list (owner only) |
 | DELETE | `/{id}/posts/{postId}` | Yes | — | — | Remove a post from the list (owner only) |
 | POST | `/{id}/follow` | Yes | — | bool | Toggle following a public list (can't follow your own) |
+| GET | `/{id}/followers` | No | pagination | `PagedResult<UserProfileDto>` | Users following the list (401 if private + not owner) |
+| GET | `/search?q=` | No | pagination | `PagedResult<ReadingListDto>` | Search public lists by name/description (plus your own private ones); powers the navbar search |
+| GET | `/followed/{userId}` | No | pagination | `PagedResult<ReadingListDto>` | Public lists that a user follows; powers the profile "Followed Lists" tab |
 
 ### FeedController (`api/feed`)
 
@@ -695,12 +703,12 @@ app.Run()
 | **FeedService** | Home feed (followed authors' posts merged with reposts by followed users, sorted by activity time, then trending fill), trending (MemoryCache 5 min, score = Views + Reactions×3 + Comments×5, 7-day window), latest (newest first) |
 | **AdminService** | Paginated admin views, toggle user status (email notification), change role (email notification), admin delete post/comment (soft delete + email), seed 30 Indian demo users + 40 posts + follows + likes + comments, format plain text posts to HTML |
 | **NotificationService** | Create notification (respects user preferences, no self-notify), paginated retrieval, unread count, mark read/all read |
-| **ReadingListService** | Named/public-or-private post collections: CRUD, add/remove posts, list a user's reading lists (private ones hidden from non-owners), follow/unfollow a public list (with owner notification) |
+| **ReadingListService** | Named/public-or-private post collections: CRUD, add/remove posts, list a user's reading lists (private ones hidden from non-owners), follow/unfollow a public list (with owner notification), paginated follower list per public list, name/description search across public lists, lists a given user follows |
 | **ActivityLogService** | `Info()`, `Warn()`, `Error()` → writes to ActivityLog table with action, logger class name, level, message, username |
 | **AuthService** (Infra) | Register (BCrypt hash, create user+profile, welcome email), login (email or username lookup, verify BCrypt), JWT token generation (HS256, claims: UserId/Name/Email/Role/Jti), refresh token (7-day, validates expired JWT), logout logging |
-| **EmailQueueService** (Infra) | Enqueue single/bulk emails, process queue (Brevo API, 50/batch, 3 retries), send OTP (6-digit, 10-min expiry), verify OTP |
+| **EmailQueueService** (Infra) | Enqueue single/bulk emails, process queue (Brevo API, 50/batch, 3 retries), send OTP (6-digit, 10-min expiry — delivered **inline** via Brevo, deliberately bypassing the queue/job so the code can't arrive after it expires; a send failure throws `InvalidOperationException` → HTTP 400), verify OTP |
 | **FileStorageService** (Infra) | Upload to Cloudinary (if configured) or local wwwroot/uploads, delete from Cloudinary or local |
-| **EmailProcessorJob** (Infra) | BackgroundService, configurable interval via `Email:JobIntervalMinutes` (15 min in prod), batches queued emails (50/batch, 3 retries), calls ProcessQueueAsync() |
+| **EmailProcessorJob** (Infra) | BackgroundService, configurable interval via `Email:JobIntervalMinutes` (15 min in prod), batches queued emails (50/batch, 3 retries), calls ProcessQueueAsync(). OTP emails never reach this job — they are sent inline by `SendOtpAsync` |
 | **PostSchedulerService** (App) | BackgroundService, configurable interval via `PostScheduler:JobIntervalMinutes` (15 min configured), delegates to `BlogService.PublishDuePostsAsync` which publishes due scheduled posts (Status=Scheduled, ScheduledPublishAt ≤ now), emails authors "now live", and broadcasts the all-users announcement when the author is an Admin |
 
 ## 5. Repositories
@@ -860,6 +868,9 @@ IReadingListService:
   - GetByIdAsync (null if private + not owner), GetByUserAsync
   - AddPostAsync, RemovePostAsync (owner-only)
   - ToggleFollowAsync (public lists only, notifies owner)
+  - GetFollowersAsync (public lists, or owner on a private one)
+  - GetFollowedByUserAsync (public lists a user follows)
+  - SearchAsync (public lists + the caller's own private ones)
 
 IActivityLogService:
   - Info(), Warn(), Error(), GetLogsAsync()
@@ -869,7 +880,7 @@ IFileStorageService:
 
 IEmailQueueService:
   - EnqueueAsync, EnqueueBulkAsync, ProcessQueueAsync
-  - GetEmailQueueAsync, SendOtpAsync, VerifyOtpAsync
+  - GetEmailQueueAsync, SendOtpAsync (sends inline, not queued), VerifyOtpAsync
 ```
 
 ### Domain Repository Interfaces
@@ -977,7 +988,7 @@ AppComponent template: <app-navbar> + <router-outlet> with @routeFade animation
 
 | Component | Module | Purpose | Key Features |
 |-----------|--------|---------|-------------|
-| **NavbarComponent** | Core | Global navigation | Logo, search with live autocomplete (250ms debounce), notifications dropdown with SignalR toasts, theme toggle, user menu, mobile "More" menu |
+| **NavbarComponent** | Core | Global navigation | Logo, search with live autocomplete (250ms debounce) over three sections — Bloggers, Blogs, Reading Lists — with arrow-key navigation across all of them, notifications dropdown with SignalR toasts, theme toggle, user menu, mobile "More" menu |
 | **LoginComponent** | Auth | Login form | Email/username + password, validation, redirect to returnUrl |
 | **RegisterComponent** | Auth | Registration form | 3-step OTP flow, password strength validator (8+ chars, upper/lower/digit/special), real-time validation checkmarks |
 | **FeedComponent** | Feed | Content feed | 3 tabs, infinite scroll (load more), post cards with engagement, sidebar with suggested users (logged in) or guest promo card |
@@ -987,11 +998,11 @@ AppComponent template: <app-navbar> + <router-outlet> with @routeFade animation
 | **BookmarksComponent** | Blog | Saved posts | Paginated bookmarked posts |
 | **DraftsComponent** | Blog | Draft management | Cards with preview, continue editing, delete |
 | **ScheduledPostsComponent** | Blog | Scheduled posts list | Cards showing publish time (`date:'medium'`), edit/reschedule button, empty state |
-| **ProfileViewComponent** | Profile | User profile | Cover photo, avatar, stats, social links, tabs (Posts/Followers/Following), admin controls on others |
+| **ProfileViewComponent** | Profile | User profile | Cover photo, avatar, stats, social links, admin controls on others. 6 tabs: Posts / Followers / Following / Reposts / Reading Lists (lists the user owns) / Followed Lists (public lists the user follows). Each tab label is an `ng-template mat-tab-label` with an icon + text; below 600px the text is hidden so the tab strip is icon-only and fits without paging arrows |
 | **ProfileEditComponent** | Profile | Edit profile | Upload avatar/cover, bio/skills/social links, notification preference toggles |
 | **AnalyticsComponent** | Profile | Creator analytics | Stat cards (views/reactions/comments/followers), top posts table |
 | **NotificationsPageComponent** | Profile | Full notification list | Unread highlight, mark all read, click-to-navigate by type, load more |
-| **AdminDashboardComponent** | Admin | Admin panel | Left sidebar with 3 sections — Data Management (Users/Posts/Comments/Emails tabs, inline edit, export to Excel), Data Tools (dropdown + submit: seed data or format posts), Job Runner (manually trigger email queue, post scheduler, health check) |
+| **AdminDashboardComponent** | Admin | Admin panel | Left sidebar with 3 sections — Data Management (Users/Posts/Comments/Emails tabs, inline edit, export to Excel), Data Tools (dropdown + submit: seed data or format posts), Job Runner (manually trigger email queue, post scheduler, health check). Responsive: sidebar collapses to a wrapped button row ≤1024px; below 768px all four `mat-table`s switch to a stacked card layout (`.responsive-table` — `thead` hidden, each row a card, each cell a `data-label` / value line) instead of squeezing 6-8 columns onto a phone |
 
 ## 5. Services API Mapping
 
@@ -999,14 +1010,14 @@ AppComponent template: <app-navbar> + <router-outlet> with @routeFade animation
 |----------------|-------------------|-------------|
 | `AuthService` | AuthController | register, login, sendOtp, verifyOtp, refreshToken, logout |
 | `BlogService` | BlogController | createPost, updatePost, deletePost, getBySlug, toggleReaction, toggleRepost, getRepostsByUser, votePoll, addComment, saveDraft, getScheduledPosts, uploadImage, fullTextSearch |
-| `ReadingListService` | ReadingListController | create, update, delete, getById, getByUser, addPost, removePost, toggleFollow |
+| `ReadingListService` | ReadingListController | create, update, delete, getById, getByUser, addPost, removePost, toggleFollow, getFollowers, search, getFollowedByUser |
 | `UserService` | UserController | getProfile, updateProfile, toggleFollow, getFollowers, getSuggestedUsers, getCreatorAnalytics, notification prefs |
 | `FeedService` | FeedController | getHomeFeed, getTrending, getLatest |
 | `NotificationService` | NotificationController | getNotifications, getUnreadCount, markAsRead, markAllAsRead |
 | `AdminService` | AdminController | getUsers, toggleStatus, changeRole, deletePost, deleteComment, seedData, getEmails, runJob(email-queue/post-scheduler/health-check) |
 | `SignalRService` | NotificationHub | WebSocket connection, ReceiveNotification listener |
 | `GrammarService` | LanguageTool (external) | checkGrammar → strips HTML, calls API, returns matches |
-| `SearchCacheService` | FeedService (indirect) | Pre-loads 150 posts, local filtering for navbar search |
+| `SearchCacheService` | FeedService (indirect) | Pre-loads 150 posts, local filtering for navbar search; users and reading lists are fetched live per keystroke (`UserService.searchUsers` + `ReadingListService.search`, issued in parallel via `forkJoin`) |
 | `ExportService` | — (client-only) | Excel export via xlsx library |
 | `ThemeService` | — (client-only) | Dark/light toggle via CSS variables + localStorage |
 
@@ -1041,6 +1052,9 @@ Components use optimistic updates for likes/follows/bookmarks.
 |-----------|--------|---------|-------|
 | `PostCardComponent` | `post: BlogPost` | `onLike`, `onBookmark`, `onReaction`, `onRepost` | Feed, Search, Bookmarks, Profile posts/reposts tabs |
 | `RepostDialogComponent` | `data: { post: BlogPost }` (MAT_DIALOG_DATA) | Closes with `RepostDialogResult` (`{ quote: string }`), or `undefined` if cancelled — an object rather than a bare string so an empty quote stays distinguishable from a cancel | Quote-repost text entry, opened from `PostCardComponent`'s repost menu |
+| `ReadingListFollowersDialogComponent` | `data: { listId, listName }` (MAT_DIALOG_DATA) | — (closes with no value) | Paginated follower list of a reading list, opened by clicking the follower count on the My Reading Lists page or a list's detail header. Closes itself on `NavigationStart` so tapping a profile link works |
+| `AddToReadingListDialogComponent` | `data: { postId }` (MAT_DIALOG_DATA) | — (closes with no value) | Save a post into one of your lists, with an inline "New Reading List" shortcut. Once added, the row swaps the Add button for a green check + "Added" label rather than a disabled button (a disabled Material button's ink is theme-hardcoded and was invisible in dark mode) |
+| `ReadingListFormDialogComponent` | `data: { list? }` (MAT_DIALOG_DATA) | Closes with `ReadingListFormResult` (`{ name, description?, isPublic }`), or `undefined` if cancelled | Create/edit a reading list; reused by the My Reading Lists page, the list detail header, and the add-to-list dialog |
 | `UserCardComponent` | `user: UserProfile`, `showRemove?: boolean` | `onFollow`, `onRemove` | Followers, Following, Suggested Users, Search |
 | `LoadingSpinnerComponent` | `inline?: boolean` | — | Full-page overlay or inline spinner |
 | `ErrorStateComponent` | `title?, message?` | `onRetry` | Error recovery in any list view |
@@ -1568,9 +1582,11 @@ POST /api/auth/send-otp [Rate limited: 5/10min]
     ↓
 AuthController.cs → EmailQueueService.cs → SendOtpAsync
     ↓
-Generate 6-digit OTP → save OtpVerification (10-min expiry) → queue email
+Generate 6-digit OTP → save OtpVerification (10-min expiry)
     ↓
-EmailProcessorJob.cs (configurable cycle, 15 min in prod) → Brevo API sends OTP email
+Brevo API called inline in the same request → OTP email sent immediately
+(NOT queued — EmailProcessorJob is not involved; a Brevo failure returns HTTP 400
+ "Could not send the verification code. Please try again.")
     ↓
 Step 2: Enter OTP → auth.service.ts → verifyOtp(email, code)
     ↓
@@ -1703,7 +1719,7 @@ Table row updates in-place
 - `blogspot-client/src/app/core/services/blog.service.ts` — frontend API calls
 - `blogspot-client/src/app/features/feed/feed.component.ts` — feed UI changes
 - `blogspot-client/src/app/features/blog/blog-detail/blog-detail.component.ts` — post viewer
-- `blogspot-client/src/styles.scss` — global theming
+- `blogspot-client/src/styles.scss` — global theming. The prebuilt `indigo-pink` Material theme hardcodes near-black ink on several components, so `body.dark-theme` carries explicit overrides for each one (buttons — including the **disabled** raised/outlined/stroked/text variants — chips, tabs, dialogs, menus, select and datepicker overlays, form-field and radio/toggle labels). When a control "isn't visible in dark mode", check whether its selector is missing from that block before looking anywhere else
 
 ## Critical Business Flows
 1. Registration with OTP verification

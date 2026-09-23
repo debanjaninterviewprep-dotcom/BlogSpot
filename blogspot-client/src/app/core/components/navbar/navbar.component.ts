@@ -28,7 +28,7 @@ import { User } from '../../models/auth.model';
               <mat-icon>arrow_back</mat-icon>
             </button>
             <mat-icon class="search-icon">search</mat-icon>
-            <input type="text" placeholder="Search posts &amp; bloggers..." class="search-input"
+            <input type="text" placeholder="Search posts, bloggers &amp; lists..." class="search-input"
                    [(ngModel)]="searchQuery"
                    (input)="onSearchInput($event)"
                    (focus)="searchActive = true"
@@ -46,7 +46,7 @@ import { User } from '../../models/auth.model';
               <mat-icon>autorenew</mat-icon> Loading suggestions...
             </div>
             <!-- No results -->
-            <div class="search-empty" *ngIf="!cacheLoading && searchQuery.length >= 1 && searchedUsers.length === 0 && searchedPosts.length === 0">
+            <div class="search-empty" *ngIf="!cacheLoading && searchQuery.length >= 1 && searchedUsers.length === 0 && searchedPosts.length === 0 && searchedReadingLists.length === 0">
               No results for "{{ searchQuery }}"
             </div>
             <!-- Bloggers FIRST -->
@@ -83,9 +83,26 @@ import { User } from '../../models/auth.model';
                 </div>
               </a>
             </div>
+            <!-- Reading lists THIRD -->
+            <div class="search-section" *ngIf="searchedReadingLists.length > 0">
+              <div class="search-section-header"><mat-icon>collections_bookmark</mat-icon> Reading Lists</div>
+              <a *ngFor="let list of searchedReadingLists; let i = index"
+                 class="search-item list-item"
+                 [class.highlighted]="selectedIndex === (searchedUsers.length + searchedPosts.length + i)"
+                 [routerLink]="['/blog/reading-lists', list.id]"
+                 (mousedown)="$event.preventDefault()"
+                 (click)="onSearchItemClick()"
+                 (mouseenter)="selectedIndex = searchedUsers.length + searchedPosts.length + i">
+                <span class="search-post-icon-wrap"><mat-icon class="search-post-icon">collections_bookmark</mat-icon></span>
+                <div class="search-item-info">
+                  <span class="search-item-name" [innerHTML]="list.highlightedName || list.name"></span>
+                  <span class="search-item-sub">{{ list.itemCount }} posts &middot; by {{ list.userDisplayName || list.userName }}</span>
+                </div>
+              </a>
+            </div>
             <!-- View all -->
             <a class="search-view-all" href="javascript:void(0)"
-               *ngIf="searchQuery.length >= 1 && (searchedUsers.length > 0 || searchedPosts.length > 0)"
+               *ngIf="searchQuery.length >= 1 && (searchedUsers.length > 0 || searchedPosts.length > 0 || searchedReadingLists.length > 0)"
                (mousedown)="viewAllResults()">
               See all results for "{{ searchQuery }}"
             </a>
@@ -481,6 +498,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   mobileSearchOpen = false;
   searchedUsers: any[] = [];
   searchedPosts: any[] = [];
+  searchedReadingLists: any[] = [];
   selectedIndex = -1; // For keyboard navigation
   cacheLoading = false;
   private destroy$ = new Subject<void>();
@@ -554,6 +572,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
         if (!query || query.length < 1) {
           this.searchedUsers = [];
           this.searchedPosts = [];
+          this.searchedReadingLists = [];
           return of(null);
         }
 
@@ -565,6 +584,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
       if (results) {
         this.searchedUsers = results.bloggers;
         this.searchedPosts = results.blogs;
+        this.searchedReadingLists = results.readingLists;
       }
     });
   }
@@ -598,7 +618,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
    * Handle keyboard navigation in search dropdown
    */
   onSearchKeydown(event: KeyboardEvent): void {
-    const totalResults = this.searchedUsers.length + this.searchedPosts.length;
+    const totalResults = this.searchedUsers.length + this.searchedPosts.length + this.searchedReadingLists.length;
 
     if (event.key === 'ArrowDown') {
       event.preventDefault();
@@ -624,12 +644,18 @@ export class NavbarComponent implements OnInit, OnDestroy {
       const user = this.searchedUsers[this.selectedIndex];
       this.onSearchItemClick();
       this.router.navigate(['/profile', user.userName]);
-    } else {
+    } else if (this.selectedIndex < this.searchedUsers.length + this.searchedPosts.length) {
       // Selected item is in blogs section
       const blogIndex = this.selectedIndex - this.searchedUsers.length;
       const blog = this.searchedPosts[blogIndex];
       this.onSearchItemClick();
       this.router.navigate(['/blog', blog.slug]);
+    } else {
+      // Selected item is in reading lists section
+      const listIndex = this.selectedIndex - this.searchedUsers.length - this.searchedPosts.length;
+      const list = this.searchedReadingLists[listIndex];
+      this.onSearchItemClick();
+      this.router.navigate(['/blog/reading-lists', list.id]);
     }
   }
 
@@ -651,6 +677,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
     this.searchActive = false;
     this.searchedUsers = [];
     this.searchedPosts = [];
+    this.searchedReadingLists = [];
     this.selectedIndex = -1;
   }
 

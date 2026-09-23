@@ -122,7 +122,11 @@ import { MatSnackBar } from '@angular/material/snack-bar';
       </mat-card>
 
       <mat-tab-group class="mt-2">
-        <mat-tab label="Posts">
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">article</mat-icon>
+            <span class="tab-label-text">Posts</span>
+          </ng-template>
           <div class="tab-content">
             <app-loading-spinner *ngIf="loadingPosts"></app-loading-spinner>
             <app-error-state *ngIf="postsLoadError && posts.length === 0"
@@ -140,7 +144,11 @@ import { MatSnackBar } from '@angular/material/snack-bar';
             </div>
           </div>
         </mat-tab>
-        <mat-tab [label]="'Followers (' + profile.followersCount + ')'">
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">group</mat-icon>
+            <span class="tab-label-text">Followers ({{ profile.followersCount }})</span>
+          </ng-template>
           <div class="tab-content">
             <div class="user-skeleton-list" *ngIf="loadingFollowers">
               <div class="user-skeleton-row" *ngFor="let s of [1,2,3]">
@@ -165,7 +173,11 @@ import { MatSnackBar } from '@angular/material/snack-bar';
             </div>
           </div>
         </mat-tab>
-        <mat-tab [label]="'Following (' + profile.followingCount + ')'">
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">how_to_reg</mat-icon>
+            <span class="tab-label-text">Following ({{ profile.followingCount }})</span>
+          </ng-template>
           <div class="tab-content">
             <div class="user-skeleton-list" *ngIf="loadingFollowing">
               <div class="user-skeleton-row" *ngFor="let s of [1,2,3]">
@@ -188,7 +200,11 @@ import { MatSnackBar } from '@angular/material/snack-bar';
             </div>
           </div>
         </mat-tab>
-        <mat-tab label="Reposts">
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">repeat</mat-icon>
+            <span class="tab-label-text">Reposts</span>
+          </ng-template>
           <div class="tab-content">
             <app-loading-spinner *ngIf="loadingReposts"></app-loading-spinner>
             <app-error-state *ngIf="repostsLoadError && reposts.length === 0"
@@ -209,7 +225,11 @@ import { MatSnackBar } from '@angular/material/snack-bar';
             </div>
           </div>
         </mat-tab>
-        <mat-tab label="Reading Lists">
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">collections_bookmark</mat-icon>
+            <span class="tab-label-text">Reading Lists</span>
+          </ng-template>
           <div class="tab-content">
             <app-loading-spinner *ngIf="loadingReadingLists"></app-loading-spinner>
             <app-error-state *ngIf="readingListsLoadError && readingLists.length === 0"
@@ -226,6 +246,30 @@ import { MatSnackBar } from '@angular/material/snack-bar';
             </a>
             <div *ngIf="!loadingReadingLists && !readingListsLoadError && readingLists.length === 0" class="empty-state">
               <p>No reading lists yet</p>
+            </div>
+          </div>
+        </mat-tab>
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">bookmark_added</mat-icon>
+            <span class="tab-label-text">Followed Lists</span>
+          </ng-template>
+          <div class="tab-content">
+            <app-loading-spinner *ngIf="loadingFollowedLists"></app-loading-spinner>
+            <app-error-state *ngIf="followedListsLoadError && followedLists.length === 0"
+                             message="Failed to load followed lists. Please try again."
+                             (onRetry)="loadFollowedLists()">
+            </app-error-state>
+            <a class="reading-list-item" *ngFor="let list of followedLists" [routerLink]="['/blog/reading-lists', list.id]">
+              <div class="reading-list-info">
+                <span class="reading-list-name">{{ list.name }}</span>
+                <span class="reading-list-desc" *ngIf="list.description">{{ list.description }}</span>
+                <span class="reading-list-stats">{{ list.itemCount }} posts &middot; by {{ list.userDisplayName || list.userName }}</span>
+              </div>
+              <mat-icon>chevron_right</mat-icon>
+            </a>
+            <div *ngIf="!loadingFollowedLists && !followedListsLoadError && followedLists.length === 0" class="empty-state">
+              <p>Not following any reading lists yet</p>
             </div>
           </div>
         </mat-tab>
@@ -374,6 +418,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     .reading-list-name { font-weight: var(--font-weight-bold); color: var(--color-text-primary); }
     .reading-list-desc { font-size: var(--font-size-sm); color: var(--color-text-secondary); }
     .reading-list-stats { font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-top: 2px; }
+    .tab-icon { font-size: 20px; width: 20px; height: 20px; margin-right: 8px; }
     .empty-state { text-align: center; padding: 48px 24px; color: var(--color-text-secondary); font-size: var(--font-size-base); }
     @media (max-width: 600px) {
       .profile-container { border: none; }
@@ -385,6 +430,9 @@ import { MatSnackBar } from '@angular/material/snack-bar';
       .profile-actions button { flex: 1; min-width: 120px; }
       .stats { gap: 16px; font-size: var(--font-size-sm); }
       .cover-photo { height: 140px; }
+      /* Tabs collapse to icons only so all of them fit without paging arrows */
+      .tab-label-text { display: none; }
+      .tab-icon { margin-right: 0; }
     }
   `]
 })
@@ -395,17 +443,20 @@ export class ProfileViewComponent implements OnInit {
   following: UserProfile[] = [];
   reposts: Repost[] = [];
   readingLists: ReadingList[] = [];
+  followedLists: ReadingList[] = [];
   loading = true;
   loadingPosts = false;
   loadingFollowers = false;
   loadingFollowing = false;
   loadingReposts = false;
   loadingReadingLists = false;
+  loadingFollowedLists = false;
   postsLoadError = false;
   followersLoadError = false;
   followingLoadError = false;
   repostsLoadError = false;
   readingListsLoadError = false;
+  followedListsLoadError = false;
   adminRole = '';
   adminIsActive = true;
   private adminUserId = '';
@@ -447,6 +498,7 @@ export class ProfileViewComponent implements OnInit {
         this.loadFollowing();
         this.loadReposts();
         this.loadReadingLists();
+        this.loadFollowedLists();
         this.loadAdminData();
       },
       error: () => {
@@ -544,6 +596,16 @@ export class ProfileViewComponent implements OnInit {
     this.readingListService.getByUser(this.profile.id, { page: 1, pageSize: 20 }).subscribe({
       next: (result) => { this.readingLists = result.items; this.loadingReadingLists = false; },
       error: () => { this.loadingReadingLists = false; this.readingListsLoadError = true; }
+    });
+  }
+
+  loadFollowedLists(): void {
+    if (!this.profile) return;
+    this.loadingFollowedLists = true;
+    this.followedListsLoadError = false;
+    this.readingListService.getFollowedByUser(this.profile.id, { page: 1, pageSize: 20 }).subscribe({
+      next: (result) => { this.followedLists = result.items; this.loadingFollowedLists = false; },
+      error: () => { this.loadingFollowedLists = false; this.followedListsLoadError = true; }
     });
   }
 

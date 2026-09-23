@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using BlogSpot.Application.DTOs.Common;
 using BlogSpot.Application.DTOs.ReadingList;
+using BlogSpot.Application.DTOs.User;
 using BlogSpot.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -91,5 +92,29 @@ public class ReadingListController : ControllerBase
         var userId = GetCurrentUserId()!.Value;
         var following = await _readingListService.ToggleFollowAsync(userId, id, ct);
         return Ok(new { following });
+    }
+
+    [HttpGet("{id:guid}/followers")]
+    public async Task<ActionResult<PagedResult<UserProfileDto>>> GetFollowers(
+        Guid id, [FromQuery] PaginationParams pagination, CancellationToken ct)
+    {
+        var result = await _readingListService.GetFollowersAsync(id, GetCurrentUserId(), pagination, ct);
+        return Ok(result);
+    }
+
+    [HttpGet("search")]
+    public async Task<ActionResult<PagedResult<ReadingListDto>>> Search(
+        [FromQuery] string q, [FromQuery] PaginationParams pagination, CancellationToken ct)
+    {
+        var result = await _readingListService.SearchAsync(q, GetCurrentUserId(), pagination, ct);
+        return Ok(result);
+    }
+
+    [HttpGet("followed/{userId:guid}")]
+    public async Task<ActionResult<PagedResult<ReadingListDto>>> GetFollowedByUser(
+        Guid userId, [FromQuery] PaginationParams pagination, CancellationToken ct)
+    {
+        var result = await _readingListService.GetFollowedByUserAsync(userId, GetCurrentUserId(), pagination, ct);
+        return Ok(result);
     }
 }

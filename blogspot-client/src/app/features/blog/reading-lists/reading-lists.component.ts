@@ -6,6 +6,7 @@ import { AuthService } from '@core/services/auth.service';
 import { ReadingListService } from '@core/services/reading-list.service';
 import { ReadingList } from '@core/models/reading-list.model';
 import { ReadingListFormDialogComponent, ReadingListFormResult } from '@shared/components/reading-list-form-dialog/reading-list-form-dialog.component';
+import { ReadingListFollowersDialogComponent } from '@shared/components/reading-list-followers-dialog/reading-list-followers-dialog.component';
 
 @Component({
   selector: 'app-reading-lists',
@@ -41,8 +42,14 @@ import { ReadingListFormDialogComponent, ReadingListFormResult } from '@shared/c
           </div>
           <p class="list-description" *ngIf="list.description">{{ list.description }}</p>
           <div class="list-stats">
-            <span>{{ list.itemCount }} posts</span>
-            <span *ngIf="list.isPublic">&middot; {{ list.followerCount }} followers</span>
+            <span>{{ list.itemCount }} {{ list.itemCount === 1 ? 'post' : 'posts' }}</span>
+            <ng-container *ngIf="list.isPublic">
+              <span class="stat-dot">&middot;</span>
+              <button type="button" class="followers-link" [disabled]="list.followerCount === 0"
+                      (click)="showFollowers(list, $event)">
+                {{ list.followerCount }} {{ list.followerCount === 1 ? 'follower' : 'followers' }}
+              </button>
+            </ng-container>
           </div>
         </div>
         <div class="list-actions">
@@ -57,11 +64,12 @@ import { ReadingListFormDialogComponent, ReadingListFormResult } from '@shared/c
     </div>
   `,
   styles: [`
-    .reading-lists-container { width: 100%; padding: 16px 24px; box-sizing: border-box; min-height: calc(100vh - 56px); }
+    .reading-lists-container { width: 100%; max-width: 900px; margin: 0 auto; padding: 16px 24px; box-sizing: border-box; min-height: calc(100vh - 56px); }
     .header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
     .header-row h2 { margin: 0; font-size: var(--font-size-2xl); font-weight: var(--font-weight-extrabold); color: var(--color-text-primary); }
     .list-card {
-      display: flex;
+      display: flex !important;
+      flex-direction: row !important;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
@@ -70,13 +78,21 @@ import { ReadingListFormDialogComponent, ReadingListFormResult } from '@shared/c
       border: 1px solid var(--color-border) !important;
       background: var(--card-bg) !important;
       padding: 16px 20px !important;
+      transition: border-color 0.2s ease;
     }
+    .list-card:hover { border-color: var(--color-primary) !important; }
     .list-main { flex: 1; min-width: 0; cursor: pointer; }
     .list-title-row { display: flex; align-items: center; gap: 8px; }
     .list-title-row h3 { margin: 0; font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); color: var(--color-text-primary); }
     .visibility-icon { font-size: 16px; width: 16px; height: 16px; color: var(--color-text-secondary); }
     .list-description { margin: 4px 0; color: var(--color-text-secondary); font-size: var(--font-size-base); }
-    .list-stats { font-size: var(--font-size-sm); color: var(--color-text-secondary); }
+    .list-stats { display: flex; align-items: center; gap: 6px; font-size: var(--font-size-sm); color: var(--color-text-secondary); }
+    .followers-link {
+      background: none; border: none; padding: 0;
+      font: inherit; color: var(--color-text-secondary); cursor: pointer;
+    }
+    .followers-link:not(:disabled):hover { color: var(--color-primary); text-decoration: underline; }
+    .followers-link:disabled { cursor: default; }
     .list-actions { display: flex; gap: 4px; flex-shrink: 0; }
     .empty-state { text-align: center; padding: 64px 24px; color: var(--color-text-secondary); }
     .empty-state mat-icon { font-size: 56px; width: 56px; height: 56px; color: var(--color-border); margin-bottom: 12px; }
@@ -140,6 +156,15 @@ export class ReadingListsComponent implements OnInit {
         this.lists = this.lists.filter(l => l.id !== list.id);
         this.snackBar.open('Reading list deleted', 'Close', { duration: 2000 });
       }
+    });
+  }
+
+  showFollowers(list: ReadingList, event: Event): void {
+    event.stopPropagation();
+    if (list.followerCount === 0) return;
+    this.dialog.open(ReadingListFollowersDialogComponent, {
+      data: { listId: list.id, listName: list.name },
+      width: '420px'
     });
   }
 }

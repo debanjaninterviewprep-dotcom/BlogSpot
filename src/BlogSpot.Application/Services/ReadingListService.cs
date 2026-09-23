@@ -1,6 +1,7 @@
 using BlogSpot.Application.Constants;
 using BlogSpot.Application.DTOs.Common;
 using BlogSpot.Application.DTOs.ReadingList;
+using BlogSpot.Application.DTOs.User;
 using BlogSpot.Application.Interfaces;
 using BlogSpot.Domain.Entities;
 using BlogSpot.Domain.Interfaces;
@@ -142,32 +143,9 @@ public class ReadingListService : IReadingListService
             .Take(pagination.PageSize)
             .ToListAsync(ct);
 
-        var listIds = lists.Select(l => l.Id).ToList();
-        var itemCounts = await _uow.ReadingListItems.Query()
-            .Where(i => listIds.Contains(i.ReadingListId))
-            .GroupBy(i => i.ReadingListId)
-            .Select(g => new { ReadingListId = g.Key, Count = g.Count() })
-            .ToDictionaryAsync(x => x.ReadingListId, x => x.Count, ct);
-        var followerCounts = await _uow.ReadingListFollows.Query()
-            .Where(f => listIds.Contains(f.ReadingListId))
-            .GroupBy(f => f.ReadingListId)
-            .Select(g => new { ReadingListId = g.Key, Count = g.Count() })
-            .ToDictionaryAsync(x => x.ReadingListId, x => x.Count, ct);
-        var followedIds = currentUserId.HasValue
-            ? (await _uow.ReadingListFollows.Query()
-                .Where(f => listIds.Contains(f.ReadingListId) && f.UserId == currentUserId.Value)
-                .Select(f => f.ReadingListId)
-                .ToListAsync(ct)).ToHashSet()
-            : new HashSet<Guid>();
-
-        var items = lists.Select(l => MapToDto(
-            l, l.User.UserName, l.User.Profile?.DisplayName, l.User.Profile?.ProfilePictureUrl,
-            itemCounts.GetValueOrDefault(l.Id), followerCounts.GetValueOrDefault(l.Id), followedIds.Contains(l.Id)
-        )).ToList();
-
         return new PagedResult<ReadingListDto>
         {
-            Items = items,
+            Items = await MapWithCountsAsync(lists, currentUserId, ct),
             TotalCount = totalCount,
             Page = pagination.Page,
             PageSize = pagination.PageSize
@@ -247,6 +225,134 @@ public class ReadingListService : IReadingListService
         }
 
         return true;
+    }
+
+    public async Task<PagedResult<UserProfileDto>> GetFollowersAsync(Guid listId, Guid? currentUserId, PaginationParams pagination, CancellationToken ct = default)
+    {
+        var list = await _uow.ReadingLists.GetByIdAsync(listId, ct)
+            ?? throw new KeyNotFoundException("Reading list not found.");
+
+        if (!list.IsPublic && list.UserId != currentUserId)
+            throw new UnauthorizedAccessException("This reading list is private.");
+
+        var query = _uow.ReadingListFollows.Query()
+            .Where(f => f.ReadingListId == listId)
+            .Include(f => f.User).ThenInclude(u => u.Profile)
+            .Include(f => f.User).ThenInclude(u => u.Followers)
+            .Include(f => f.User).ThenInclude(u => u.Following)
+            .Include(f => f.User).ThenInclude(u => u.BlogPosts)
+            .OrderByDescending(f => f.CreatedAt);
+
+        var totalCount = await query.CountAsync(ct);
+        var followers = await query
+            .Skip((pagination.Page - 1) * pagination.PageSize)
+            .Take(pagination.PageSize)
+            .Select(f => f.User)
+            .ToListAsync(ct);
+
+        return new PagedResult<UserProfileDto>
+        {
+            Items = followers.Select(u => new UserProfileDto
+            {
+                Id = u.Id,
+                UserName = u.UserName,
+                DisplayName = u.Profile?.DisplayName,
+                ProfilePictureUrl = u.Profile?.ProfilePictureUrl,
+                JoinedAt = u.CreatedAt,
+                FollowersCount = u.Followers?.Count ?? 0,
+                FollowingCount = u.Following?.Count ?? 0,
+                PostsCount = u.BlogPosts?.Count(p => p.IsPublished) ?? 0,
+                IsFollowedByCurrentUser = currentUserId.HasValue &&
+                    (u.Followers?.Any(f => f.FollowerId == currentUserId.Value) ?? false)
+            }).ToList(),
+            TotalCount = totalCount,
+            Page = pagination.Page,
+            PageSize = pagination.PageSize
+        };
+    }
+
+    public async Task<PagedResult<ReadingListDto>> GetFollowedByUserAsync(Guid userId, Guid? currentUserId, PaginationParams pagination, CancellationToken ct = default)
+    {
+        var followedIds = _uow.ReadingListFollows.Query()
+            .Where(f => f.UserId == userId)
+            .Select(f => f.ReadingListId);
+
+        var query = _uow.ReadingLists.Query()
+            .Include(r => r.User).ThenInclude(u => u.Profile)
+            .Where(r => r.IsPublic && followedIds.Contains(r.Id))
+            .OrderByDescending(r => r.CreatedAt)
+            .ThenBy(r => r.Id);
+
+        var totalCount = await query.CountAsync(ct);
+        var lists = await query
+            .Skip((pagination.Page - 1) * pagination.PageSize)
+            .Take(pagination.PageSize)
+            .ToListAsync(ct);
+
+        return new PagedResult<ReadingListDto>
+        {
+            Items = await MapWithCountsAsync(lists, currentUserId, ct),
+            TotalCount = totalCount,
+            Page = pagination.Page,
+            PageSize = pagination.PageSize
+        };
+    }
+
+    public async Task<PagedResult<ReadingListDto>> SearchAsync(string query, Guid? currentUserId, PaginationParams pagination, CancellationToken ct = default)
+    {
+        var normalizedQuery = (query ?? string.Empty).ToLower().Trim();
+        if (normalizedQuery.Length == 0)
+            return new PagedResult<ReadingListDto> { Items = new List<ReadingListDto>(), TotalCount = 0, Page = pagination.Page, PageSize = pagination.PageSize };
+
+        // Private lists stay hidden from everyone but their owner, matching GetByUserAsync.
+        var baseQuery = _uow.ReadingLists.Query()
+            .Include(r => r.User).ThenInclude(u => u.Profile)
+            .Where(r => (r.IsPublic || r.UserId == currentUserId) &&
+                (r.Name.ToLower().Contains(normalizedQuery) ||
+                 (r.Description != null && r.Description.ToLower().Contains(normalizedQuery))))
+            .OrderByDescending(r => r.CreatedAt)
+            .ThenBy(r => r.Id);
+
+        var totalCount = await baseQuery.CountAsync(ct);
+        var lists = await baseQuery
+            .Skip((pagination.Page - 1) * pagination.PageSize)
+            .Take(pagination.PageSize)
+            .ToListAsync(ct);
+
+        return new PagedResult<ReadingListDto>
+        {
+            Items = await MapWithCountsAsync(lists, currentUserId, ct),
+            TotalCount = totalCount,
+            Page = pagination.Page,
+            PageSize = pagination.PageSize
+        };
+    }
+
+    private async Task<List<ReadingListDto>> MapWithCountsAsync(
+        List<Domain.Entities.ReadingList> lists, Guid? currentUserId, CancellationToken ct)
+    {
+        var listIds = lists.Select(l => l.Id).ToList();
+        var itemCounts = await _uow.ReadingListItems.Query()
+            .Where(i => listIds.Contains(i.ReadingListId))
+            .GroupBy(i => i.ReadingListId)
+            .Select(g => new { ReadingListId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.ReadingListId, x => x.Count, ct);
+        var followerCounts = await _uow.ReadingListFollows.Query()
+            .Where(f => listIds.Contains(f.ReadingListId))
+            .GroupBy(f => f.ReadingListId)
+            .Select(g => new { ReadingListId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.ReadingListId, x => x.Count, ct);
+        var followedIds = currentUserId.HasValue
+            ? (await _uow.ReadingListFollows.Query()
+                .Where(f => listIds.Contains(f.ReadingListId) && f.UserId == currentUserId.Value)
+                .Select(f => f.ReadingListId)
+                .ToListAsync(ct)).ToHashSet()
+            : new HashSet<Guid>();
+
+        return lists.Select(l => MapToDto(
+            l, l.User.UserName, l.User.Profile?.DisplayName, l.User.Profile?.ProfilePictureUrl,
+            itemCounts.GetValueOrDefault(l.Id), followerCounts.GetValueOrDefault(l.Id), followedIds.Contains(l.Id)
+        )).ToList();
     }
 
     private static ReadingListDto MapToDto(

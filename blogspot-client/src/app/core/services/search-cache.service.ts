@@ -4,12 +4,15 @@ import { map, catchError } from 'rxjs/operators';
 import { BlogService } from './blog.service';
 import { UserService } from './user.service';
 import { FeedService } from './feed.service';
+import { ReadingListService } from './reading-list.service';
 import { BlogPost } from '../models/blog.model';
 import { UserProfile } from '../models/user.model';
+import { ReadingList } from '../models/reading-list.model';
 
 export interface SearchResult {
   bloggers: (UserProfile & { highlightedName?: string; highlightedHandle?: string })[];
   blogs: (BlogPost & { highlightedTitle?: string })[];
+  readingLists: (ReadingList & { highlightedName?: string })[];
 }
 
 @Injectable({
@@ -25,7 +28,8 @@ export class SearchCacheService {
   constructor(
     private blogService: BlogService,
     private userService: UserService,
-    private feedService: FeedService
+    private feedService: FeedService,
+    private readingListService: ReadingListService
   ) {}
 
   /** Load posts from feed endpoints into cache */
@@ -71,10 +75,10 @@ export class SearchCacheService {
     });
   }
 
-  /** Search blogs from cache + users via API call */
+  /** Search blogs from cache + users and reading lists via API call */
   searchAll(query: string, limit: number = 5): Observable<SearchResult> {
     if (!query || query.length === 0) {
-      return of({ bloggers: [], blogs: [] });
+      return of({ bloggers: [], blogs: [], readingLists: [] });
     }
 
     const lowerQuery = query.toLowerCase();
@@ -91,18 +95,26 @@ export class SearchCacheService {
         highlightedTitle: this.highlightMatch(blog.title || '', lowerQuery)
       }));
 
-    // Search users via API (no cache available for users)
-    return this.userService.searchUsers(query, { page: 1, pageSize: limit }).pipe(
-      map((res: any) => {
-        const users = (res.items || []) as UserProfile[];
-        const bloggers = users.map(user => ({
+    // Users and reading lists have no local cache, so both are fetched per keystroke
+    return forkJoin({
+      users: this.userService.searchUsers(query, { page: 1, pageSize: limit })
+        .pipe(catchError(() => of({ items: [] } as any))),
+      lists: this.readingListService.search(query, { page: 1, pageSize: limit })
+        .pipe(catchError(() => of({ items: [] } as any)))
+    }).pipe(
+      map(({ users, lists }: any) => ({
+        bloggers: ((users.items || []) as UserProfile[]).map(user => ({
           ...user,
           highlightedName: this.highlightMatch(user.displayName || user.userName || '', lowerQuery),
           highlightedHandle: this.highlightMatch(user.userName || '', lowerQuery)
-        }));
-        return { bloggers, blogs };
-      }),
-      catchError(() => of({ bloggers: [], blogs }))
+        })),
+        blogs,
+        readingLists: ((lists.items || []) as ReadingList[]).map(list => ({
+          ...list,
+          highlightedName: this.highlightMatch(list.name || '', lowerQuery)
+        }))
+      })),
+      catchError(() => of({ bloggers: [], blogs, readingLists: [] }))
     );
   }
 

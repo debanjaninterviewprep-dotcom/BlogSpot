@@ -21,9 +21,10 @@ export interface AddToReadingListDialogData {
           <span class="list-name">{{ list.name }}</span>
           <span class="list-meta">{{ list.itemCount }} posts &middot; {{ list.isPublic ? 'Public' : 'Private' }}</span>
         </div>
-        <button mat-stroked-button [disabled]="addedIds.has(list.id)" (click)="add(list)">
-          {{ addedIds.has(list.id) ? 'Added' : 'Add' }}
-        </button>
+        <span class="added-label" *ngIf="addedIds.has(list.id)">
+          <mat-icon>check_circle</mat-icon> Added
+        </span>
+        <button mat-stroked-button *ngIf="!addedIds.has(list.id)" (click)="add(list)">Add</button>
       </div>
 
       <div class="empty-state" *ngIf="!loading && lists.length === 0">
@@ -50,6 +51,16 @@ export interface AddToReadingListDialogData {
     .list-info { display: flex; flex-direction: column; min-width: 0; }
     .list-name { font-weight: var(--font-weight-bold); color: var(--color-text-primary); }
     .list-meta { font-size: var(--font-size-xs); color: var(--color-text-secondary); }
+    .added-label {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-success);
+    }
+    .added-label mat-icon { font-size: 18px; width: 18px; height: 18px; }
     .empty-state { padding: 24px 0; text-align: center; color: var(--color-text-secondary); }
     .new-list-btn { width: 100%; margin-top: 12px; }
   `]

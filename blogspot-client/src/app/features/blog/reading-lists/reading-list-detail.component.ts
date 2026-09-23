@@ -1,11 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService } from '@core/services/auth.service';
 import { BlogService } from '@core/services/blog.service';
 import { ReadingListService } from '@core/services/reading-list.service';
 import { ReadingListDetail } from '@core/models/reading-list.model';
 import { ReactionType } from '@core/models/blog.model';
+import { ReadingListFormDialogComponent, ReadingListFormResult } from '@shared/components/reading-list-form-dialog/reading-list-form-dialog.component';
+import { ReadingListFollowersDialogComponent } from '@shared/components/reading-list-followers-dialog/reading-list-followers-dialog.component';
 
 @Component({
   selector: 'app-reading-list-detail',
@@ -23,6 +26,9 @@ import { ReactionType } from '@core/models/blog.model';
           <mat-icon class="visibility-icon" [matTooltip]="list.isPublic ? 'Public' : 'Private'">
             {{ list.isPublic ? 'public' : 'lock' }}
           </mat-icon>
+          <button mat-icon-button *ngIf="isOwnList" (click)="editList()" matTooltip="Edit" aria-label="Edit reading list">
+            <mat-icon>edit</mat-icon>
+          </button>
         </div>
         <p class="list-description" *ngIf="list.description">{{ list.description }}</p>
         <div class="owner-row">
@@ -30,7 +36,15 @@ import { ReactionType } from '@core/models/blog.model';
             <img [src]="(list.userProfilePictureUrl | imageUrl) || 'assets/default-avatar.svg'" [alt]="list.userName" class="owner-avatar">
             <span>{{ list.userDisplayName || list.userName }}</span>
           </a>
-          <span class="stats">{{ list.itemCount }} posts &middot; {{ list.followerCount }} followers</span>
+          <span class="stats">
+            {{ list.itemCount }} {{ list.itemCount === 1 ? 'post' : 'posts' }}
+            <ng-container *ngIf="list.isPublic">
+              &middot;
+              <button type="button" class="followers-link" [disabled]="list.followerCount === 0" (click)="showFollowers()">
+                {{ list.followerCount }} {{ list.followerCount === 1 ? 'follower' : 'followers' }}
+              </button>
+            </ng-container>
+          </span>
         </div>
         <button mat-raised-button *ngIf="!isOwnList && authService.isLoggedIn"
                 [color]="list.isFollowedByCurrentUser ? '' : 'primary'"
@@ -79,7 +93,13 @@ import { ReactionType } from '@core/models/blog.model';
     .owner-row { display: flex; align-items: center; gap: 16px; margin: 12px 0; }
     .owner-link { display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--color-text-primary); font-weight: var(--font-weight-medium); }
     .owner-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
-    .stats { font-size: var(--font-size-sm); color: var(--color-text-secondary); }
+    .stats { display: flex; align-items: center; gap: 4px; font-size: var(--font-size-sm); color: var(--color-text-secondary); }
+    .followers-link {
+      background: none; border: none; padding: 0;
+      font: inherit; color: var(--color-text-secondary); cursor: pointer;
+    }
+    .followers-link:not(:disabled):hover { color: var(--color-primary); text-decoration: underline; }
+    .followers-link:disabled { cursor: default; }
     .posts-section { padding: 8px 0; }
     .post-item { border-bottom: 1px solid var(--color-border); }
     .remove-btn { margin: 0 0 12px 20px; color: var(--color-text-secondary); }
@@ -97,6 +117,7 @@ export class ReadingListDetailComponent implements OnInit {
     private readingListService: ReadingListService,
     private blogService: BlogService,
     public authService: AuthService,
+    private dialog: MatDialog,
     private snackBar: MatSnackBar
   ) {}
 
@@ -130,6 +151,26 @@ export class ReadingListDetailComponent implements OnInit {
           this.list.followerCount += result.following ? 1 : -1;
         }
       }
+    });
+  }
+
+  editList(): void {
+    if (!this.list) return;
+    const ref = this.dialog.open(ReadingListFormDialogComponent, { data: { list: this.list }, width: '480px' });
+    ref.afterClosed().subscribe((result: ReadingListFormResult | undefined) => {
+      if (!result || !this.list) return;
+      this.readingListService.update(this.list.id, result).subscribe(updated => {
+        if (this.list) this.list = { ...this.list, ...updated };
+        this.snackBar.open('Reading list updated', 'Close', { duration: 2000 });
+      });
+    });
+  }
+
+  showFollowers(): void {
+    if (!this.list || this.list.followerCount === 0) return;
+    this.dialog.open(ReadingListFollowersDialogComponent, {
+      data: { listId: this.list.id, listName: this.list.name },
+      width: '420px'
     });
   }
 

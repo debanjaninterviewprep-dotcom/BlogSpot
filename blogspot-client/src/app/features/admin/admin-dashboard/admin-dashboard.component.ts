@@ -68,26 +68,26 @@ import { ExportService } from '@core/services/export.service';
                 </button>
               </mat-menu>
             </div>
-            <table mat-table [dataSource]="users" class="full-width" multiTemplateDataRows>
+            <table mat-table [dataSource]="users" class="full-width responsive-table" multiTemplateDataRows>
               <ng-container matColumnDef="userName">
                 <th mat-header-cell *matHeaderCellDef>Username</th>
-                <td mat-cell *matCellDef="let user">
+                <td mat-cell *matCellDef="let user" data-label="Username">
                   <a [routerLink]="['/profile', user.userName]" class="user-link">{{ user.userName }}</a>
                 </td>
               </ng-container>
               <ng-container matColumnDef="email">
                 <th mat-header-cell *matHeaderCellDef>Email</th>
-                <td mat-cell *matCellDef="let user">{{ user.email }}</td>
+                <td mat-cell *matCellDef="let user" data-label="Email">{{ user.email }}</td>
               </ng-container>
               <ng-container matColumnDef="role">
                 <th mat-header-cell *matHeaderCellDef>Role</th>
-                <td mat-cell *matCellDef="let user">
+                <td mat-cell *matCellDef="let user" data-label="Role">
                   <mat-chip [class.admin-chip]="user.role === 'Admin'">{{ user.role }}</mat-chip>
                 </td>
               </ng-container>
               <ng-container matColumnDef="status">
                 <th mat-header-cell *matHeaderCellDef>Status</th>
-                <td mat-cell *matCellDef="let user">
+                <td mat-cell *matCellDef="let user" data-label="Status">
                   <mat-chip [class.active-chip]="user.isActive" [class.inactive-chip]="!user.isActive">
                     {{ user.isActive ? 'Active' : 'Inactive' }}
                   </mat-chip>
@@ -95,19 +95,19 @@ import { ExportService } from '@core/services/export.service';
               </ng-container>
               <ng-container matColumnDef="posts">
                 <th mat-header-cell *matHeaderCellDef>Posts</th>
-                <td mat-cell *matCellDef="let user">{{ user.postsCount }}</td>
+                <td mat-cell *matCellDef="let user" data-label="Posts">{{ user.postsCount }}</td>
               </ng-container>
               <ng-container matColumnDef="comments">
                 <th mat-header-cell *matHeaderCellDef>Comments</th>
-                <td mat-cell *matCellDef="let user">{{ user.commentsCount }}</td>
+                <td mat-cell *matCellDef="let user" data-label="Comments">{{ user.commentsCount }}</td>
               </ng-container>
               <ng-container matColumnDef="joined">
                 <th mat-header-cell *matHeaderCellDef>Joined</th>
-                <td mat-cell *matCellDef="let user">{{ user.createdAt | date:'mediumDate' }}</td>
+                <td mat-cell *matCellDef="let user" data-label="Joined">{{ user.createdAt | date:'mediumDate' }}</td>
               </ng-container>
               <ng-container matColumnDef="actions">
                 <th mat-header-cell *matHeaderCellDef>Actions</th>
-                <td mat-cell *matCellDef="let user">
+                <td mat-cell *matCellDef="let user" data-label="Actions">
                   <button mat-icon-button (click)="toggleEdit(user)"
                           [attr.aria-label]="editingUserId === user.id ? 'Close' : 'Manage user'"
                           [matTooltip]="editingUserId === user.id ? 'Close' : 'Manage'">
@@ -169,32 +169,32 @@ import { ExportService } from '@core/services/export.service';
                 </button>
               </mat-menu>
             </div>
-            <table mat-table [dataSource]="posts" class="full-width">
+            <table mat-table [dataSource]="posts" class="full-width responsive-table">
               <ng-container matColumnDef="title">
                 <th mat-header-cell *matHeaderCellDef>Title</th>
-                <td mat-cell *matCellDef="let post">
+                <td mat-cell *matCellDef="let post" data-label="Title">
                   <a [routerLink]="['/blog', post.slug]" class="post-link">{{ post.title | slice:0:50 }}</a>
                 </td>
               </ng-container>
               <ng-container matColumnDef="author">
                 <th mat-header-cell *matHeaderCellDef>Author</th>
-                <td mat-cell *matCellDef="let post">{{ post.authorUserName }}</td>
+                <td mat-cell *matCellDef="let post" data-label="Author">{{ post.authorUserName }}</td>
               </ng-container>
               <ng-container matColumnDef="likes">
                 <th mat-header-cell *matHeaderCellDef>Likes</th>
-                <td mat-cell *matCellDef="let post">{{ post.likeCount }}</td>
+                <td mat-cell *matCellDef="let post" data-label="Likes">{{ post.likeCount }}</td>
               </ng-container>
               <ng-container matColumnDef="comments">
                 <th mat-header-cell *matHeaderCellDef>Comments</th>
-                <td mat-cell *matCellDef="let post">{{ post.commentCount }}</td>
+                <td mat-cell *matCellDef="let post" data-label="Comments">{{ post.commentCount }}</td>
               </ng-container>
               <ng-container matColumnDef="date">
                 <th mat-header-cell *matHeaderCellDef>Date</th>
-                <td mat-cell *matCellDef="let post">{{ post.createdAt | date:'shortDate' }}</td>
+                <td mat-cell *matCellDef="let post" data-label="Date">{{ post.createdAt | date:'shortDate' }}</td>
               </ng-container>
               <ng-container matColumnDef="actions">
                 <th mat-header-cell *matHeaderCellDef>Actions</th>
-                <td mat-cell *matCellDef="let post">
+                <td mat-cell *matCellDef="let post" data-label="Actions">
                   <button mat-icon-button color="warn" (click)="deletePost(post)" matTooltip="Delete Post" aria-label="Delete post">
                     <mat-icon>delete</mat-icon>
                   </button>
@@ -228,26 +228,26 @@ import { ExportService } from '@core/services/export.service';
                 </button>
               </mat-menu>
             </div>
-            <table mat-table [dataSource]="comments" class="full-width">
+            <table mat-table [dataSource]="comments" class="full-width responsive-table">
               <ng-container matColumnDef="content">
                 <th mat-header-cell *matHeaderCellDef>Comment</th>
-                <td mat-cell *matCellDef="let c">{{ c.content | slice:0:80 }}</td>
+                <td mat-cell *matCellDef="let c" data-label="Comment">{{ c.content | slice:0:80 }}</td>
               </ng-container>
               <ng-container matColumnDef="user">
                 <th mat-header-cell *matHeaderCellDef>User</th>
-                <td mat-cell *matCellDef="let c">{{ c.userName }}</td>
+                <td mat-cell *matCellDef="let c" data-label="User">{{ c.userName }}</td>
               </ng-container>
               <ng-container matColumnDef="post">
                 <th mat-header-cell *matHeaderCellDef>Post</th>
-                <td mat-cell *matCellDef="let c">{{ c.postTitle | slice:0:30 }}</td>
+                <td mat-cell *matCellDef="let c" data-label="Post">{{ c.postTitle | slice:0:30 }}</td>
               </ng-container>
               <ng-container matColumnDef="date">
                 <th mat-header-cell *matHeaderCellDef>Date</th>
-                <td mat-cell *matCellDef="let c">{{ c.createdAt | date:'shortDate' }}</td>
+                <td mat-cell *matCellDef="let c" data-label="Date">{{ c.createdAt | date:'shortDate' }}</td>
               </ng-container>
               <ng-container matColumnDef="actions">
                 <th mat-header-cell *matHeaderCellDef>Actions</th>
-                <td mat-cell *matCellDef="let c">
+                <td mat-cell *matCellDef="let c" data-label="Actions">
                   <button mat-icon-button color="warn" (click)="deleteComment(c)" matTooltip="Delete Comment" aria-label="Delete comment">
                     <mat-icon>delete</mat-icon>
                   </button>
@@ -266,18 +266,18 @@ import { ExportService } from '@core/services/export.service';
             <div class="tab-toolbar">
               <span class="tab-count">{{ emailsTotalCount }} emails</span>
             </div>
-            <table mat-table [dataSource]="emails" class="full-width">
+            <table mat-table [dataSource]="emails" class="full-width responsive-table">
               <ng-container matColumnDef="toEmail">
                 <th mat-header-cell *matHeaderCellDef>To</th>
-                <td mat-cell *matCellDef="let e">{{ e.toEmail }}</td>
+                <td mat-cell *matCellDef="let e" data-label="To">{{ e.toEmail }}</td>
               </ng-container>
               <ng-container matColumnDef="subject">
                 <th mat-header-cell *matHeaderCellDef>Subject</th>
-                <td mat-cell *matCellDef="let e">{{ e.subject | slice:0:50 }}</td>
+                <td mat-cell *matCellDef="let e" data-label="Subject">{{ e.subject | slice:0:50 }}</td>
               </ng-container>
               <ng-container matColumnDef="status">
                 <th mat-header-cell *matHeaderCellDef>Status</th>
-                <td mat-cell *matCellDef="let e">
+                <td mat-cell *matCellDef="let e" data-label="Status">
                   <mat-chip [class.sent-chip]="e.status === 'Sent'"
                             [class.queued-chip]="e.status === 'Queued'"
                             [class.failed-chip]="e.status === 'Failed'">
@@ -287,15 +287,15 @@ import { ExportService } from '@core/services/export.service';
               </ng-container>
               <ng-container matColumnDef="createdAt">
                 <th mat-header-cell *matHeaderCellDef>Queued</th>
-                <td mat-cell *matCellDef="let e">{{ e.createdAt | date:'short' }}</td>
+                <td mat-cell *matCellDef="let e" data-label="Queued">{{ e.createdAt | date:'short' }}</td>
               </ng-container>
               <ng-container matColumnDef="sentAt">
                 <th mat-header-cell *matHeaderCellDef>Sent</th>
-                <td mat-cell *matCellDef="let e">{{ e.sentAt ? (e.sentAt | date:'short') : '—' }}</td>
+                <td mat-cell *matCellDef="let e" data-label="Sent">{{ e.sentAt ? (e.sentAt | date:'short') : '—' }}</td>
               </ng-container>
               <ng-container matColumnDef="error">
                 <th mat-header-cell *matHeaderCellDef>Error</th>
-                <td mat-cell *matCellDef="let e" class="error-cell">{{ e.error || '—' }}</td>
+                <td mat-cell *matCellDef="let e" class="error-cell" data-label="Error">{{ e.error || '—' }}</td>
               </ng-container>
 
               <tr mat-header-row *matHeaderRowDef="emailColumns"></tr>
@@ -607,9 +607,79 @@ import { ExportService } from '@core/services/export.service';
       .sidebar-heading { display: none; }
     }
 
+    @media (max-width: 768px) {
+      h1 { font-size: var(--font-size-xl); }
+      .sidebar-link { padding: 8px 10px; font-size: var(--font-size-sm); gap: 6px; }
+      .sidebar-link mat-icon { font-size: 18px; width: 18px; height: 18px; }
+
+      .tab-toolbar { flex-direction: column; align-items: stretch; gap: 10px; }
+      .tab-search { max-width: none; }
+      .export-btn { width: 100%; }
+
+      /* Tables become stacked cards: each row is a card, each cell a label/value line */
+      .responsive-table,
+      .responsive-table tbody,
+      .responsive-table tr,
+      .responsive-table td { display: block; width: 100%; box-sizing: border-box; }
+      /* styles.scss forces .mat-mdc-table { min-width: 500px } below 600px — undo it here */
+      .responsive-table { min-width: 0; }
+      .responsive-table thead { display: none; }
+      .responsive-table tr {
+        border: 1px solid var(--color-border);
+        border-radius: 12px;
+        margin-bottom: 12px;
+        padding: 4px 14px;
+        background: var(--card-bg);
+      }
+      .responsive-table td {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        text-align: right;
+        word-break: break-word;
+        min-height: 0 !important;
+        padding: 9px 0 !important;
+        border-bottom: 1px solid var(--color-border) !important;
+      }
+      .responsive-table td:last-child { border-bottom: none !important; }
+      .responsive-table td::before {
+        content: attr(data-label);
+        flex-shrink: 0;
+        text-align: left;
+        font-size: var(--font-size-xs);
+        font-weight: var(--font-weight-semibold);
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: var(--color-text-secondary);
+      }
+      .error-cell { max-width: none; }
+
+      /* The Users table's expandable edit row joins the card above it */
+      .responsive-table tr.expanded-row {
+        margin-bottom: 0;
+        border-bottom: none;
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+      }
+      .responsive-table tr.edit-row { border: none; padding: 0; margin: 0; background: transparent; }
+      .responsive-table tr.edit-row td { display: block; text-align: left; padding: 0 !important; border-bottom: none !important; }
+      .responsive-table tr.edit-row td::before { content: none; }
+      .edit-panel {
+        border: 1px solid var(--color-border);
+        border-top: 1px dashed var(--color-border);
+        border-radius: 0 0 12px 12px;
+        margin-bottom: 12px;
+      }
+
+      .job-card { flex-direction: column; align-items: stretch; gap: 14px; }
+      .job-card button { width: 100%; }
+    }
+
     @media (max-width: 600px) {
       .edit-panel { flex-direction: column; align-items: flex-start; gap: 14px; }
       .data-tools-form { flex-direction: column; align-items: stretch; }
+      .form-field select { min-width: 0; width: 100%; }
     }
   `],
   animations: [

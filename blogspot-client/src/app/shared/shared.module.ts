@@ -36,6 +36,7 @@ import { ErrorStateComponent } from './components/error-state/error-state.compon
 import { PostLikersDialogComponent } from './components/post-likers-dialog/post-likers-dialog.component';
 import { RepostDialogComponent } from './components/repost-dialog/repost-dialog.component';
 import { ReadingListFormDialogComponent } from './components/reading-list-form-dialog/reading-list-form-dialog.component';
+import { ReadingListFollowersDialogComponent } from './components/reading-list-followers-dialog/reading-list-followers-dialog.component';
 import { AddToReadingListDialogComponent } from './components/add-to-reading-list-dialog/add-to-reading-list-dialog.component';
 import { ImageUrlPipe } from './pipes/image-url.pipe';
 import { FormatContentPipe } from './pipes/format-content.pipe';
@@ -77,6 +78,7 @@ const materialModules = [
     PostLikersDialogComponent,
     RepostDialogComponent,
     ReadingListFormDialogComponent,
+    ReadingListFollowersDialogComponent,
     AddToReadingListDialogComponent,
     ImageUrlPipe,
     FormatContentPipe,
@@ -102,6 +104,7 @@ const materialModules = [
     PostLikersDialogComponent,
     RepostDialogComponent,
     ReadingListFormDialogComponent,
+    ReadingListFollowersDialogComponent,
     AddToReadingListDialogComponent,
     ImageUrlPipe,
     FormatContentPipe,

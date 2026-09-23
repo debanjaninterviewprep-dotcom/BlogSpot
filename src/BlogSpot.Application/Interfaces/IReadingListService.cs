@@ -1,5 +1,6 @@
 using BlogSpot.Application.DTOs.Common;
 using BlogSpot.Application.DTOs.ReadingList;
+using BlogSpot.Application.DTOs.User;
 
 namespace BlogSpot.Application.Interfaces;
 
@@ -13,4 +14,7 @@ public interface IReadingListService
     Task AddPostAsync(Guid userId, Guid listId, Guid postId, CancellationToken ct = default);
     Task RemovePostAsync(Guid userId, Guid listId, Guid postId, CancellationToken ct = default);
     Task<bool> ToggleFollowAsync(Guid userId, Guid listId, CancellationToken ct = default);
+    Task<PagedResult<UserProfileDto>> GetFollowersAsync(Guid listId, Guid? currentUserId, PaginationParams pagination, CancellationToken ct = default);
+    Task<PagedResult<ReadingListDto>> GetFollowedByUserAsync(Guid userId, Guid? currentUserId, PaginationParams pagination, CancellationToken ct = default);
+    Task<PagedResult<ReadingListDto>> SearchAsync(string query, Guid? currentUserId, PaginationParams pagination, CancellationToken ct = default);
 }

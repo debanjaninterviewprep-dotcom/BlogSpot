@@ -619,6 +619,22 @@ body.dark-theme {
     background: #1e1e3a !important;
     color: #9998b3 !important;
   }
+  /* Same trap for stroked/text buttons: the prebuilt theme's disabled ink is rgba(0,0,0,.38)
+     and its outline rgba(0,0,0,.12), both invisible here. Set the MDC tokens and the element. */
+  .mat-mdc-outlined-button:disabled,
+  .mat-mdc-stroked-button:disabled {
+    --mdc-outlined-button-disabled-label-text-color: #9998b3 !important;
+    --mdc-outlined-button-disabled-outline-color: #3a3860 !important;
+    border-color: #3a3860 !important;
+    color: #9998b3 !important;
+  }
+  .mat-mdc-button:disabled {
+    --mdc-text-button-disabled-label-text-color: #9998b3 !important;
+    color: #9998b3 !important;
+  }
+  .mat-mdc-outlined-button:disabled .mdc-button__label,
+  .mat-mdc-stroked-button:disabled .mdc-button__label,
+  .mat-mdc-button:disabled .mdc-button__label { color: #9998b3 !important; }
   .mat-mdc-icon-button { color: #b0afc5 !important; }
 
   /* Radio Buttons */
@@ -810,6 +826,9 @@ body { padding-top: 56px; }
   mat-card-actions { flex-wrap: wrap; }
   .tab-content { overflow-x: auto; }
   .mat-mdc-table { min-width: 500px; }
+
+  /* Tab labels collapse to icons on phones, so tabs can be much narrower than the 72px set above */
+  .mat-mdc-tab { min-width: 0 !important; padding: 0 8px !important; }
 
   h1 { font-size: 1.4rem !important; }
   h2 { font-size: 1.2rem !important; }

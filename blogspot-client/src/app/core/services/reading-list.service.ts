@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '@environments/environment';
 import { ReadingList, ReadingListDetail, CreateReadingList, UpdateReadingList } from '../models/reading-list.model';
+import { UserProfile } from '../models/user.model';
 import { PagedResult, PaginationParams } from '../models/pagination.model';
 
 @Injectable({
@@ -49,5 +50,18 @@ export class ReadingListService {
 
   toggleFollow(listId: string): Observable<{ following: boolean }> {
     return this.http.post<{ following: boolean }>(`${this.apiUrl}/${listId}/follow`, {});
+  }
+
+  getFollowers(listId: string, pagination: PaginationParams): Observable<PagedResult<UserProfile>> {
+    return this.http.get<PagedResult<UserProfile>>(`${this.apiUrl}/${listId}/followers`, { params: this.buildPaginationParams(pagination) });
+  }
+
+  search(query: string, pagination: PaginationParams): Observable<PagedResult<ReadingList>> {
+    const params = this.buildPaginationParams(pagination).set('q', query);
+    return this.http.get<PagedResult<ReadingList>>(`${this.apiUrl}/search`, { params });
+  }
+
+  getFollowedByUser(userId: string, pagination: PaginationParams): Observable<PagedResult<ReadingList>> {
+    return this.http.get<PagedResult<ReadingList>>(`${this.apiUrl}/followed/${userId}`, { params: this.buildPaginationParams(pagination) });
   }
 }
