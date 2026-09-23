@@ -53,6 +53,32 @@
   --font-weight-extrabold: 800;
 }
 
+/* Every component reads the tokens above, so re-declaring them per breakpoint
+   rescales text on every page at once instead of per-component media queries. */
+@media (max-width: 600px) {
+  :root {
+    --font-size-xs: 11px;
+    --font-size-sm: 12px;
+    --font-size-base: 13px;
+    --font-size-md: 14px;
+    --font-size-lg: 16px;
+    --font-size-xl: 18px;
+    --font-size-2xl: 20px;
+  }
+}
+
+@media (max-width: 400px) {
+  :root {
+    --font-size-xs: 10px;
+    --font-size-sm: 11px;
+    --font-size-base: 12px;
+    --font-size-md: 13px;
+    --font-size-lg: 15px;
+    --font-size-xl: 17px;
+    --font-size-2xl: 18px;
+  }
+}
+
 /* Visible keyboard-focus ring app-wide (mouse clicks don't trigger :focus-visible) */
 :focus-visible {
   outline: 2px solid var(--color-primary);
@@ -833,6 +859,8 @@ body { padding-top: 56px; }
   h1 { font-size: 1.4rem !important; }
   h2 { font-size: 1.2rem !important; }
   h3 { font-size: 1.05rem !important; }
+  /* Display numbers that aren't headings, so the rules above don't reach them */
+  .stat-value { font-size: 26px !important; }
 
   .stats-grid {
     grid-template-columns: 1fr 1fr !important;

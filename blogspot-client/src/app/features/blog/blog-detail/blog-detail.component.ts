@@ -122,7 +122,7 @@ import { RepostDialogComponent, RepostDialogResult } from '../../../shared/compo
             </button>
             <button mat-button class="like-count-btn" *ngIf="post.likeCount" (click)="openLikers()"
                     aria-label="See who liked this post">
-              {{ post.likeCount }} {{ post.likeCount === 1 ? 'Like' : 'Likes' }}
+              {{ post.likeCount }} <span class="count-label">{{ post.likeCount === 1 ? 'Like' : 'Likes' }}</span>
             </button>
 
             <div class="emoji-reactions">
@@ -137,9 +137,25 @@ import { RepostDialogComponent, RepostDialogResult } from '../../../shared/compo
               </button>
             </div>
 
+            <!-- Narrow screens get one trigger instead of a row of emoji buttons -->
+            <button mat-icon-button class="reaction-btn reaction-menu-btn"
+                    [class.active]="!!post.currentUserReaction"
+                    [matMenuTriggerFor]="reactionMenu"
+                    aria-label="React to this post">
+              <span class="reaction-emoji" *ngIf="currentReactionEmoji">{{ currentReactionEmoji }}</span>
+              <mat-icon *ngIf="!currentReactionEmoji">add_reaction</mat-icon>
+              <span class="clap-count-badge" *ngIf="post.currentUserReaction === 'Clap' && (post.currentUserReactionCount || 0) > 1">{{ post.currentUserReactionCount }}</span>
+            </button>
+            <mat-menu #reactionMenu="matMenu">
+              <button mat-menu-item *ngFor="let r of reactionTypes" (click)="toggleReaction(r.type)">
+                <span class="reaction-emoji menu-emoji">{{ r.emoji }}</span>
+                <span>{{ reactionTooltip(r.type) }}</span>
+              </button>
+            </mat-menu>
+
             <span class="comment-count">
               <mat-icon>comment</mat-icon>
-              {{ post.commentCount }} Comments
+              {{ post.commentCount }} <span class="count-label">Comments</span>
             </span>
           </div>
 
@@ -479,8 +495,11 @@ import { RepostDialogComponent, RepostDialogResult } from '../../../shared/compo
     .repost-btn:hover { color: var(--color-success); }
     .repost-btn.active { color: var(--color-success); }
     .emoji-reactions { display: flex; align-items: center; gap: 4px; }
+    .menu-emoji { margin-right: 10px; font-size: 18px; line-height: 1; }
     .reaction-btn { width: 36px; height: 36px; position: relative; display: inline-flex; align-items: center; justify-content: center; }
     .reaction-btn.active { background: var(--color-primary-light); border-radius: 50%; }
+    /* Declared after .reaction-btn so this wins — the trigger is mobile-only */
+    .reaction-menu-btn { display: none; }
     .reaction-emoji { font-size: 18px; line-height: 1; }
     .clap-count-badge {
       position: absolute;
@@ -598,6 +617,25 @@ import { RepostDialogComponent, RepostDialogResult } from '../../../shared/compo
       0% { background-position: 200% 0; }
       100% { background-position: -200% 0; }
     }
+
+    @media (max-width: 600px) {
+      .post-title { line-height: 1.25; margin-bottom: 12px; }
+      /* Keep every action on one row: reactions collapse to a menu and the
+         "Likes"/"Comments" words drop, leaving room for save + reading list. */
+      .post-engagement { gap: 4px; }
+      .reaction-bar { gap: 2px; flex: 1; min-width: 0; }
+      .emoji-reactions { display: none; }
+      .reaction-menu-btn { display: inline-flex; }
+      .count-label { display: none; }
+      .like-count-btn { margin-left: -4px; }
+      /* Material's 64px min-width / 48px icon buttons don't leave room for 7 actions */
+      .reaction-bar .mat-mdc-button { min-width: 0 !important; padding: 0 8px !important; }
+      .post-engagement .mat-mdc-icon-button { width: 40px; height: 40px; padding: 8px; }
+      .comment-count { gap: 2px; font-size: var(--font-size-sm); }
+      .comment-count mat-icon { font-size: 18px; width: 18px; height: 18px; }
+      .post-actions-secondary { gap: 0; flex-shrink: 0; }
+      .reply, .reply-form { margin-left: 20px; }
+    }
   `]
 })
 export class BlogDetailComponent implements OnInit {
@@ -627,6 +665,10 @@ export class BlogDetailComponent implements OnInit {
     { type: 'Fire' as ReactionType, emoji: '🔥' },
     { type: 'Clap' as ReactionType, emoji: '👏' },
   ];
+
+  get currentReactionEmoji(): string | null {
+    return this.reactionTypes.find(r => r.type === this.post?.currentUserReaction)?.emoji ?? null;
+  }
 
   // Poll
   selectedPollOptionId: string | null = null;

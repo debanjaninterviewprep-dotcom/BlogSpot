@@ -993,7 +993,7 @@ AppComponent template: <app-navbar> + <router-outlet> with @routeFade animation
 | **RegisterComponent** | Auth | Registration form | 3-step OTP flow, password strength validator (8+ chars, upper/lower/digit/special), real-time validation checkmarks |
 | **FeedComponent** | Feed | Content feed | 3 tabs, infinite scroll (load more), post cards with engagement, sidebar with suggested users (logged in) or guest promo card |
 | **BlogCreateComponent** | Blog | Rich text editor | Quill editor (ngx-quill), grammar check (LanguageTool), tags input (Enter/comma), category dropdown, save-as-draft, publish now / schedule (Material calendar + time, 1-hour min lead time), optional poll authoring (question + 2-6 options + duration select, locked once votes exist) |
-| **BlogDetailComponent** | Blog | Post viewer | Read progress bar, author info, poll display (vote UI or percentage-bar results), engagement bar (like burst animation, emoji reactions, bookmark), threaded comments with replies |
+| **BlogDetailComponent** | Blog | Post viewer | Read progress bar, author info, poll display (vote UI or percentage-bar results), engagement bar (like burst animation, emoji reactions, repost, bookmark, add-to-reading-list), threaded comments with replies. Below 600px the three inline emoji buttons collapse into a single `mat-menu` trigger and the "Likes"/"Comments" words are dropped, so save and reading-list stay on screen |
 | **BlogSearchComponent** | Blog | Search results | Three tabs (Posts / People / Reading Lists), each with its own count, paging and error state. Full-text posts via `BlogController`, people via `UserController`, lists via `GET /readinglist/search`. Tab labels are icon + text; below 600px the text is hidden so the strip is icon-only |
 | **BookmarksComponent** | Blog | Saved posts | Paginated bookmarked posts |
 | **DraftsComponent** | Blog | Draft management | Cards with preview, continue editing, delete |
@@ -1002,7 +1002,7 @@ AppComponent template: <app-navbar> + <router-outlet> with @routeFade animation
 | **ProfileEditComponent** | Profile | Edit profile | Upload avatar/cover, bio/skills/social links, notification preference toggles |
 | **AnalyticsComponent** | Profile | Creator analytics | Stat cards (views/reactions/comments/followers), top posts table |
 | **NotificationsPageComponent** | Profile | Full notification list | Unread highlight, mark all read, click-to-navigate by type, load more |
-| **AdminDashboardComponent** | Admin | Admin panel | Left sidebar with 3 sections — Data Management (Users/Posts/Comments/Emails tabs, inline edit, export to Excel), Data Tools (dropdown + submit: seed data or format posts), Job Runner (manually trigger email queue, post scheduler, health check). Responsive: sidebar collapses to a wrapped button row ≤1024px; below 768px all four `mat-table`s switch to a stacked card layout (`.responsive-table` — `thead` hidden, each row a card, each cell a `data-label` / value line) instead of squeezing 6-8 columns onto a phone |
+| **AdminDashboardComponent** | Admin | Admin panel | Left sidebar with 3 sections — Data Management (Users/Posts/Comments/Emails tabs, inline edit, export to Excel), Data Tools (dropdown + submit: seed data or format posts), Job Runner (manually trigger email queue, post scheduler, health check). Responsive: sidebar collapses to a wrapped button row ≤1024px; below 768px each table sits in a `.table-scroll` container and keeps a `min-width` so columns stay readable and scroll sideways, with the Actions column pinned to the right via Material's `stickyEnd` (which also needs `border-collapse: separate` on the table) |
 
 ## 5. Services API Mapping
 
@@ -1050,7 +1050,7 @@ Components use optimistic updates for likes/follows/bookmarks.
 
 | Component | Inputs | Outputs | Usage |
 |-----------|--------|---------|-------|
-| `PostCardComponent` | `post: BlogPost` | `onLike`, `onBookmark`, `onReaction`, `onRepost` | Feed, Search, Bookmarks, Profile posts/reposts tabs |
+| `PostCardComponent` | `post: BlogPost` | `onLike`, `onBookmark`, `onReaction`, `onRepost` | Feed, Search, Bookmarks, Profile posts/reposts tabs. Below 600px the emoji reaction row collapses into one `mat-menu` trigger so the full action bar still fits |
 | `RepostDialogComponent` | `data: { post: BlogPost }` (MAT_DIALOG_DATA) | Closes with `RepostDialogResult` (`{ quote: string }`), or `undefined` if cancelled — an object rather than a bare string so an empty quote stays distinguishable from a cancel | Quote-repost text entry, opened from `PostCardComponent`'s repost menu |
 | `ReadingListFollowersDialogComponent` | `data: { listId, listName }` (MAT_DIALOG_DATA) | — (closes with no value) | Paginated follower list of a reading list, opened by clicking the follower count on the My Reading Lists page or a list's detail header. Closes itself on `NavigationStart` so tapping a profile link works |
 | `AddToReadingListDialogComponent` | `data: { postId }` (MAT_DIALOG_DATA) | — (closes with no value) | Save a post into one of your lists, with an inline "New Reading List" shortcut. Once added, the row swaps the Add button for a green check + "Added" label rather than a disabled button (a disabled Material button's ink is theme-hardcoded and was invisible in dark mode) |
@@ -1719,7 +1719,7 @@ Table row updates in-place
 - `blogspot-client/src/app/core/services/blog.service.ts` — frontend API calls
 - `blogspot-client/src/app/features/feed/feed.component.ts` — feed UI changes
 - `blogspot-client/src/app/features/blog/blog-detail/blog-detail.component.ts` — post viewer
-- `blogspot-client/src/styles.scss` — global theming. The prebuilt `indigo-pink` Material theme hardcodes near-black ink on several components, so `body.dark-theme` carries explicit overrides for each one (buttons — including the **disabled** raised/outlined/stroked/text variants — chips, tabs, dialogs, menus, select and datepicker overlays, form-field and radio/toggle labels). When a control "isn't visible in dark mode", check whether its selector is missing from that block before looking anywhere else
+- `blogspot-client/src/styles.scss` — global theming. Defines the design tokens (colour + a `--font-size-xs…2xl` type scale) at `:root`; the type scale is **re-declared inside `@media (max-width: 600px)` and `(max-width: 400px)`**, so text rescales on every page at once — add new sizes as tokens rather than literals or they won't shrink on mobile. The prebuilt `indigo-pink` Material theme hardcodes near-black ink on several components, so `body.dark-theme` carries explicit overrides for each one (buttons — including the **disabled** raised/outlined/stroked/text variants — chips, tabs, dialogs, menus, select and datepicker overlays, form-field and radio/toggle labels). When a control "isn't visible in dark mode", check whether its selector is missing from that block before looking anywhere else
 
 ## Critical Business Flows
 1. Registration with OTP verification

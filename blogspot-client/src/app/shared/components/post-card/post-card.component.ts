@@ -100,6 +100,23 @@ import { RepostDialogComponent, RepostDialogResult } from '../repost-dialog/repo
           </button>
         </div>
 
+        <!-- Narrow screens get one trigger instead of a row of emoji buttons -->
+        <button class="action-btn reaction-btn reaction-menu-btn"
+                [class.active]="!!post.currentUserReaction"
+                [matMenuTriggerFor]="reactionMenu"
+                aria-label="React to this post">
+          <span class="reaction-emoji" *ngIf="currentReactionEmoji">{{ currentReactionEmoji }}</span>
+          <mat-icon *ngIf="!currentReactionEmoji">add_reaction</mat-icon>
+          <span class="clap-count-badge" *ngIf="post.currentUserReaction === 'Clap' && (post.currentUserReactionCount || 0) > 1">{{ post.currentUserReactionCount }}</span>
+        </button>
+        <mat-menu #reactionMenu="matMenu">
+          <button mat-menu-item *ngFor="let r of reactionTypes"
+                  (click)="onReaction.emit({postId: post.id, type: r.type})">
+            <span class="reaction-emoji menu-emoji">{{ r.emoji }}</span>
+            <span>{{ r.type }}{{ post.reactionCounts[r.type] ? ' (' + post.reactionCounts[r.type] + ')' : '' }}</span>
+          </button>
+        </mat-menu>
+
         <span class="spacer"></span>
 
         <button class="action-btn view-btn" aria-label="View count">
@@ -328,6 +345,8 @@ import { RepostDialogComponent, RepostDialogResult } from '../repost-dialog/repo
     .reaction-btn:hover { background: var(--color-bg-hover); }
     .reaction-btn.active { background: var(--color-primary-light); }
     .reaction-emoji { font-size: 16px; line-height: 1; }
+    .reaction-menu-btn { display: none; }
+    .menu-emoji { margin-right: 10px; font-size: 18px; line-height: 1; }
     .clap-count-badge {
       position: absolute;
       top: -2px;
@@ -351,6 +370,11 @@ import { RepostDialogComponent, RepostDialogResult } from '../repost-dialog/repo
       .post-images { gap: 4px; }
       .post-image { width: 160px; height: 110px; }
       .action-icon-wrap { width: 30px; height: 30px; }
+      /* One reaction trigger instead of three, so every action still fits on one row */
+      .reaction-group { display: none; }
+      .reaction-menu-btn { display: inline-flex; }
+      .actions-bar { gap: 0; }
+      .action-count { padding-right: 2px; }
     }
   `]
 })
@@ -368,6 +392,10 @@ export class PostCardComponent {
     { type: 'Fire' as ReactionType, emoji: '🔥' },
     { type: 'Clap' as ReactionType, emoji: '👏' },
   ];
+
+  get currentReactionEmoji(): string | null {
+    return this.reactionTypes.find(r => r.type === this.post?.currentUserReaction)?.emoji ?? null;
+  }
 
   stripHtml(html: string): string {
     if (!html) return '';
