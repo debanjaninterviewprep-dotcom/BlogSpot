@@ -714,7 +714,32 @@ app.Run()
 | **EmailProcessorJob** (Infra) | BackgroundService, configurable interval via `Email:JobIntervalMinutes` (15 min in prod), batches queued emails (50/batch, 3 retries), calls ProcessQueueAsync(). OTP emails never reach this job — they are sent inline by `SendOtpAsync` |
 | **PostSchedulerService** (App) | BackgroundService, configurable interval via `PostScheduler:JobIntervalMinutes` (15 min configured), delegates to `BlogService.PublishDuePostsAsync` which publishes due scheduled posts (Status=Scheduled, ScheduledPublishAt ≤ now), emails authors "now live", and broadcasts the all-users announcement when the author is an Admin |
 
-## 5. Repositories
+## 5. Activity Logging — which scenarios are recorded
+
+**The rule:** an operation is logged when it **changes state** or **affects authentication**. Reads are never logged — no feed, search, profile view, follower list or reading-list browse produces a row. Action names live in `Application/Constants/ActivityActions.cs`; write via `_log.Info/Warn/Error(...)`.
+
+| Scenario | Actions recorded | Level | Written by |
+|----------|------------------|-------|------------|
+| **Auth & account** | `Register`, `Login`, `Logout`, `TokenRefreshed`, `OtpSent`, `OtpVerified` | Info | AuthService, AuthController |
+| ↳ rejected sign-in | `LoginFailed` (bad credentials / lockout) | **Warn** | AuthController |
+| **Content authoring** | `PostBlog`, `PostScheduled`, `PostAutoPublished` (scheduler published it), `UpdatePost`, `DeletePost`, `ImageAdded`, `ImageRemoved`, `DraftSaved`, `DraftDeleted` | Info | BlogService |
+| **Engagement** | `LikePost`, `Reaction`, `Bookmark`, `Repost`, `PollVote`, `Comment`, `LikeComment`, `DeleteComment` | Info | BlogService |
+| **Social graph** | `Follow`, `Unfollow`, `RemoveFollower` | Info | UserService |
+| **Reading lists** | `ReadingList` (create/update/delete, add/remove post), `ReadingListFollow` (follow/unfollow) | Info | ReadingListService |
+| **Profile** | `ProfileUpdated` — covers profile info, picture, cover photo **and** notification preferences | Info | UserService |
+| **Admin** | `AdminAction` (toggle status, change role, delete post/comment, seed, format posts, manual job runs), `ReportEmailed` (exports data off-platform, so recipient + report type are recorded) | Info | AdminService, AdminController |
+| **System failures** | `EmailFailed` (only after all 3 retries are exhausted), `OtpSendFailed` (Brevo rejected the OTP), `UnhandledException` (caught by middleware) | **Error** | EmailQueueService, ExceptionHandlingMiddleware |
+
+**Level convention:** `Info` = state changed successfully · `Warn` = rejected but expected · `Error` = a system/integration failure needing attention.
+
+**Deliberately not logged** (and why):
+- **Every read/query** — no audit value, and it would multiply write traffic on a metered DB.
+- **Notification create / mark-as-read / mark-all-read** — very high volume, negligible forensic value.
+- **Interim email retries** — only the terminal (3rd) failure is recorded; attempts 1–2 stay in `ILogger`.
+
+**Cost:** `ActivityLogService.WriteAsync` does its own `SaveChangesAsync`, so each call is a separate round-trip and commit. Keep it off high-frequency paths. Current volume is ~26 rows/day (~525 KB/month). The highest-volume logged path is `Reaction` — a clap increment writes a row on every click.
+
+## 6. Repositories
 
 ### Generic Repository (`Repository<T>`)
 All entities use a single generic repository implementation:
@@ -742,7 +767,7 @@ Rules for new code:
 - Split queries are not executed in a single transaction, so concurrent writes can theoretically be observed mid-flight across the child SELECTs. Acceptable for this read-heavy workload.
 - Do not add `AsNoTracking()` to `BlogService.GetFullPostQuery()` — `GetPostBySlugAsync` mutates `ViewCount` on the returned entity and saves it.
 
-## 6. Domain Models & DTOs
+## 7. Domain Models & DTOs
 
 ### Entities
 
@@ -797,7 +822,7 @@ PostStatus:       Draft = 0, Scheduled = 1, Published = 2, Archived = 3
 | **PagedResult\<T\>** | Items[], TotalCount, Page, PageSize, TotalPages, HasPreviousPage, HasNextPage |
 | **SearchResultDto** | Posts[], Users[], Tags[], TotalResults |
 
-## 7. Dependency Injection Graph
+## 8. Dependency Injection Graph
 
 ```
 Program.cs
@@ -823,7 +848,7 @@ Program.cs
     └── Authorization Policies (AdminOnly, UserOrAdmin)
 ```
 
-## 8. All Interfaces
+## 9. All Interfaces
 
 ### Application Layer
 
@@ -899,7 +924,7 @@ IUnitOfWork:
   - SaveChangesAsync() → int
 ```
 
-## 9. Background Jobs
+## 10. Background Jobs
 
 Two long-running `BackgroundService` workers run inside the API process:
 
