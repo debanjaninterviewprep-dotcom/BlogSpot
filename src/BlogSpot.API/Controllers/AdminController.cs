@@ -1,3 +1,4 @@
+using BlogSpot.Application.Constants;
 using BlogSpot.Application.DTOs.Admin;
 using BlogSpot.Application.DTOs.Common;
 using BlogSpot.Application.Interfaces;
@@ -140,6 +141,9 @@ public class AdminController : ControllerBase
             $"BlogSpot Admin Report - {request.ReportType}",
             request.ReportHtml,
             ct);
+
+        await _log.Info(ActivityActions.ReportEmailed, nameof(AdminController), User.Identity?.Name,
+            $"Sent '{request.ReportType}' report to {request.ToEmail}", ct);
 
         return Ok(new { message = "Report email queued successfully." });
     }

@@ -999,6 +999,8 @@ public class BlogService : IBlogService
 
             if (post.Author != null)
                 await NotifyAllUsersOfAdminPostAsync(post, post.Author, ct);
+
+            await _log.Info(ActivityActions.PostAutoPublished, nameof(BlogService), post.Author?.UserName, post.Title, ct);
         }
 
         return duePosts.Count;

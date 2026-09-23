@@ -34,4 +34,8 @@ public static class ActivityActions
     public const string ReadingList = "ReadingList";
     public const string ReadingListFollow = "ReadingListFollow";
     public const string PollVote = "PollVote";
+    public const string PostAutoPublished = "PostAutoPublished";
+    public const string ReportEmailed = "ReportEmailed";
+    public const string EmailFailed = "EmailFailed";
+    public const string OtpSendFailed = "OtpSendFailed";
 }

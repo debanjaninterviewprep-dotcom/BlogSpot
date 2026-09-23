@@ -3,6 +3,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using BlogSpot.Application.Constants;
 using BlogSpot.Application.DTOs.Common;
 using BlogSpot.Application.Interfaces;
 using BlogSpot.Domain.Entities;
@@ -20,13 +21,15 @@ public class EmailQueueService : IEmailQueueService
     private readonly IConfiguration _config;
     private readonly ILogger<EmailQueueService> _logger;
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IActivityLogService _log;
 
-    public EmailQueueService(IUnitOfWork uow, IConfiguration config, ILogger<EmailQueueService> logger, IHttpClientFactory httpClientFactory)
+    public EmailQueueService(IUnitOfWork uow, IConfiguration config, ILogger<EmailQueueService> logger, IHttpClientFactory httpClientFactory, IActivityLogService log)
     {
         _uow = uow;
         _config = config;
         _logger = logger;
         _httpClientFactory = httpClientFactory;
+        _log = log;
     }
 
     public async Task EnqueueAsync(string toEmail, string subject, string body, CancellationToken ct = default)
@@ -80,7 +83,12 @@ public class EmailQueueService : IEmailQueueService
                 email.RetryCount++;
                 email.Error = ex.Message;
                 if (email.RetryCount >= 3)
+                {
                     email.Status = EmailStatus.Failed;
+                    // Only the terminal failure is audited; the interim retries stay in ILogger.
+                    await _log.Error(ActivityActions.EmailFailed, nameof(EmailQueueService), null,
+                        $"Gave up sending '{email.Subject}' to {email.ToEmail} after 3 attempts: {ex.Message}", ct);
+                }
 
                 _logger.LogWarning(ex, "Failed to send email to {Email}, attempt {Retry}", email.ToEmail, email.RetryCount);
             }
@@ -161,6 +169,7 @@ public class EmailQueueService : IEmailQueueService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to send OTP email to {Email}", email);
+            await _log.Error(ActivityActions.OtpSendFailed, nameof(EmailQueueService), null, $"{email}: {ex.Message}", ct);
             throw new InvalidOperationException("Could not send the verification code. Please try again.");
         }
 

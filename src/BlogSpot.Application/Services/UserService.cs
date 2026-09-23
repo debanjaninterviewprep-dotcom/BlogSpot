@@ -408,6 +408,9 @@ public class UserService : IUserService
         _uow.Profiles.Update(profile);
         await _uow.SaveChangesAsync(ct);
 
+        var user = await _uow.Users.GetByIdAsync(userId, ct);
+        await _log.Info(ActivityActions.ProfileUpdated, nameof(UserService), user?.UserName, "Notification preferences updated", ct);
+
         return dto;
     }
 }
