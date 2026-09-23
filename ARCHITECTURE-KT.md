@@ -994,7 +994,7 @@ AppComponent template: <app-navbar> + <router-outlet> with @routeFade animation
 | **FeedComponent** | Feed | Content feed | 3 tabs, infinite scroll (load more), post cards with engagement, sidebar with suggested users (logged in) or guest promo card |
 | **BlogCreateComponent** | Blog | Rich text editor | Quill editor (ngx-quill), grammar check (LanguageTool), tags input (Enter/comma), category dropdown, save-as-draft, publish now / schedule (Material calendar + time, 1-hour min lead time), optional poll authoring (question + 2-6 options + duration select, locked once votes exist) |
 | **BlogDetailComponent** | Blog | Post viewer | Read progress bar, author info, poll display (vote UI or percentage-bar results), engagement bar (like burst animation, emoji reactions, bookmark), threaded comments with replies |
-| **BlogSearchComponent** | Blog | Search results | Two tabs (Posts + People), full-text search, pagination |
+| **BlogSearchComponent** | Blog | Search results | Three tabs (Posts / People / Reading Lists), each with its own count, paging and error state. Full-text posts via `BlogController`, people via `UserController`, lists via `GET /readinglist/search`. Tab labels are icon + text; below 600px the text is hidden so the strip is icon-only |
 | **BookmarksComponent** | Blog | Saved posts | Paginated bookmarked posts |
 | **DraftsComponent** | Blog | Draft management | Cards with preview, continue editing, delete |
 | **ScheduledPostsComponent** | Blog | Scheduled posts list | Cards showing publish time (`date:'medium'`), edit/reschedule button, empty state |
