@@ -501,6 +501,9 @@ Sets Status = Published, IsPublished = true, ScheduledPublishAt = null
 If the author is an Admin → "New Post on BlogSpot" bulk email queued to all other active users
 (same announcement an immediately-published admin post sends at create time)
        ↓
+ActivityLogService.Info("PostAutoPublished", ...) → one row per post, so a background
+publish leaves the same audit trail as a manual one
+       ↓
 Author can review upcoming posts anytime at /blog/scheduled
 ```
 
@@ -691,7 +694,7 @@ app.Run()
 | POST | `/jobs/post-scheduler` | — | message | Manually publish any due scheduled posts now |
 | POST | `/jobs/health-check` | — | message | Manually check DB connectivity + latency |
 | GET | `/emails` | pagination | `PagedResult<EmailQueueDto>` | Email queue |
-| POST | `/send-report-email` | `SendReportEmailRequest` | message | Send custom report |
+| POST | `/send-report-email` | `SendReportEmailRequest` | message | Send custom report — audited as `ReportEmailed` (records report type + recipient, since this exports user/post/comment data off-platform) |
 | GET | `/activity-logs` | filter params | `PagedResult<ActivityLogDto>` | Filtered logs |
 
 ## 4. Services — Business Logic
