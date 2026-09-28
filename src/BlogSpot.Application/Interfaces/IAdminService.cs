@@ -16,6 +16,7 @@ public interface IAdminService
     Task AdminDeleteCommentAsync(Guid commentId, string? actorUserName = null, CancellationToken ct = default);
 
     Task<string> SeedDummyDataAsync(string? actorUserName = null, CancellationToken ct = default);
+    Task<string> SeedPhase1Async(string? actorUserName = null, CancellationToken ct = default);
     Task<string> FormatExistingPostsAsync(string? actorUserName = null, CancellationToken ct = default);
 
     // Manual job triggers

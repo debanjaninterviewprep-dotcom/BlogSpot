@@ -90,6 +90,13 @@ public class AdminController : ControllerBase
         return Ok(new { message = result });
     }
 
+    [HttpPost("seed-phase-1")]
+    public async Task<ActionResult> SeedPhase1Data(CancellationToken ct)
+    {
+        var result = await _adminService.SeedPhase1Async(User.Identity?.Name, ct);
+        return Ok(new { message = result });
+    }
+
     [HttpPost("format-posts")]
     public async Task<ActionResult> FormatExistingPosts(CancellationToken ct)
     {

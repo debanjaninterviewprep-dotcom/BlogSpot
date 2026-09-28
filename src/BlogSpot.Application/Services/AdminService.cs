@@ -2,6 +2,7 @@ using BlogSpot.Application.Constants;
 using BlogSpot.Application.DTOs.Admin;
 using BlogSpot.Application.DTOs.Common;
 using BlogSpot.Application.Interfaces;
+using BlogSpot.Application.Services.SeedData;
 using BlogSpot.Domain.Entities;
 using BlogSpot.Domain.Enums;
 using BlogSpot.Domain.Interfaces;
@@ -495,6 +496,227 @@ public class AdminService : IAdminService
         var seedSummary = $"Seeded {users.Count} users, {posts.Count} posts, {follows.Count} follows, {likes.Count} likes, {comments.Count} comments. All passwords: Test@1234";
         await _log.Info(ActivityActions.AdminAction, nameof(AdminService), actorUserName, seedSummary, ct);
         return seedSummary;
+    }
+
+    /// <summary>
+    /// Seed Phase 1 data: Science, Sports, Cinema, Health, Travel (34 blogs + 5 reading lists + followers)
+    /// This is a separate endpoint and does NOT modify existing seeded data
+    /// </summary>
+    public async Task<string> SeedPhase1Async(string? actorUserName = null, CancellationToken ct = default)
+    {
+        // Get existing users (created by SeedDummyDataAsync)
+        var existingUsers = await _uow.Users.Query().ToListAsync(ct);
+        if (existingUsers.Count < 30)
+            return "Error: Please run the initial seed (/seed) first to create 30 base users.";
+
+        var random = new Random(42);
+
+        // Get or create Phase 1 tags
+        var phase1Tags = new[] { "Science", "Sports", "Cinema", "Health", "Travel" };
+        var existingTags = await _uow.Tags.Query().ToListAsync(ct);
+        var tagsToAdd = new List<Tag>();
+
+        foreach (var tagName in phase1Tags)
+        {
+            if (!existingTags.Any(t => t.Name == tagName))
+            {
+                tagsToAdd.Add(new Tag { Name = tagName, NormalizedName = tagName.ToUpperInvariant() });
+            }
+        }
+
+        if (tagsToAdd.Any())
+        {
+            await _uow.Tags.AddRangeAsync(tagsToAdd, ct);
+            await _uow.SaveChangesAsync(ct);
+            existingTags.AddRange(tagsToAdd);
+        }
+
+        // Load Phase 1 blogs from JSON files
+        var seedDataPath = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "BlogSpot.API", "Data", "SeedData");
+        var phase1BlogsByCategory = new Dictionary<string, List<Phase1BlogSeedData>>();
+
+        try
+        {
+            foreach (var category in new[] { "Science", "Sports", "Cinema", "Health", "Travel" })
+            {
+                var blogs = await Phase1SeedDataLoader.LoadCategoryBlogsAsync(seedDataPath, category);
+                phase1BlogsByCategory[category] = blogs;
+            }
+        }
+        catch (Exception ex)
+        {
+            return $"Error loading Phase 1 data files: {ex.Message}";
+        }
+
+        // Create Phase 1 blog posts
+        var phase1Posts = new List<BlogPost>();
+        var phase1PostTags = new List<BlogPostTag>();
+
+        foreach (var categoryEntry in phase1BlogsByCategory)
+        {
+            foreach (var blogData in categoryEntry.Value)
+            {
+                var author = existingUsers[random.Next(existingUsers.Count)];
+                var slug = blogData.Title.ToLowerInvariant()
+                    .Replace(":", "").Replace("?", "").Replace("'", "")
+                    .Replace("  ", " ").Replace(" ", "-")
+                    .Replace(".", "").Replace(",", "");
+
+                var post = new BlogPost
+                {
+                    Title = blogData.Title,
+                    Content = blogData.Content,
+                    Summary = blogData.Summary,
+                    Slug = slug,
+                    IsPublished = true,
+                    IsDraft = false,
+                    AuthorId = author.Id,
+                    ViewCount = random.Next(10, 300),
+                    ReadingTimeMinutes = random.Next(3, 10),
+                    Category = blogData.Category,
+                    CreatedAt = DateTime.UtcNow.AddDays(-random.Next(5, 45)).AddHours(-random.Next(0, 24))
+                };
+                phase1Posts.Add(post);
+
+                // Add tags
+                foreach (var tagName in blogData.Tags)
+                {
+                    var tag = existingTags.FirstOrDefault(t => t.Name == tagName);
+                    if (tag != null)
+                        phase1PostTags.Add(new BlogPostTag { BlogPostId = post.Id, TagId = tag.Id });
+                }
+            }
+        }
+
+        await _uow.BlogPosts.AddRangeAsync(phase1Posts, ct);
+        await _uow.SaveChangesAsync(ct);
+
+        // Save post tags
+        _dbContext.Set<BlogPostTag>().AddRange(phase1PostTags);
+        await _dbContext.SaveChangesAsync(ct);
+
+        // Create engagement data for Phase 1 blogs
+        var phase1Likes = new List<Like>();
+        foreach (var post in phase1Posts)
+        {
+            var likerCount = random.Next(10, 30);
+            var likers = existingUsers.OrderBy(_ => random.Next()).Take(likerCount);
+            foreach (var liker in likers)
+                phase1Likes.Add(new Like { UserId = liker.Id, BlogPostId = post.Id });
+        }
+        await _uow.Likes.AddRangeAsync(phase1Likes, ct);
+        await _uow.SaveChangesAsync(ct);
+
+        // Create comments for Phase 1 blogs
+        var commentTexts = new[]
+        {
+            "Excellent article! Learned so much from this.",
+            "Great insights! Very informative and well-written.",
+            "This is exactly what I was looking for. Thank you!",
+            "Bookmarked for future reference. Outstanding content.",
+            "Really appreciate the depth and clarity. Well done!",
+            "This has genuinely helped me understand the topic better.",
+            "Sharing this with my colleagues. It's fantastic!",
+            "The examples make everything so clear. Love it!",
+            "Been struggling with this concept for months. Finally it clicks!",
+            "One of the best explanations I've read on this topic.",
+            "This deserves way more recognition. Brilliant work!",
+            "Practical and actionable. Exactly what I needed.",
+            "The writing style makes complex topics accessible.",
+            "Saved my day! This solved my problem perfectly.",
+            "Comprehensive and thorough. Kudos!",
+        };
+
+        var phase1Comments = new List<Comment>();
+        foreach (var post in phase1Posts)
+        {
+            var commentCount = random.Next(5, 15);
+            for (int c = 0; c < commentCount; c++)
+            {
+                var commenter = existingUsers[random.Next(existingUsers.Count)];
+                phase1Comments.Add(new Comment
+                {
+                    BlogPostId = post.Id,
+                    UserId = commenter.Id,
+                    Content = commentTexts[random.Next(commentTexts.Length)],
+                    CreatedAt = post.CreatedAt.AddHours(random.Next(2, 168))
+                });
+            }
+        }
+        await _uow.Comments.AddRangeAsync(phase1Comments, ct);
+        await _uow.SaveChangesAsync(ct);
+
+        // Create Phase 1 reading lists
+        var phase1ReadingLists = new List<ReadingList>();
+        var readingListConfig = Phase1SeedDataLoader.GetPhase1ReadingListsConfig();
+
+        foreach (var (name, description, ownerIndex, category) in readingListConfig)
+        {
+            var owner = existingUsers[ownerIndex];
+            var readingList = new ReadingList
+            {
+                Name = name,
+                Description = description,
+                IsPublic = true,
+                UserId = owner.Id,
+                CreatedAt = DateTime.UtcNow.AddDays(-random.Next(10, 60))
+            };
+            phase1ReadingLists.Add(readingList);
+        }
+
+        await _uow.ReadingLists.AddRangeAsync(phase1ReadingLists, ct);
+        await _uow.SaveChangesAsync(ct);
+
+        // Add blogs to reading lists (5-8 per list)
+        var readingListItems = new List<ReadingListItem>();
+        var blogsPerCategory = phase1Posts.GroupBy(p => p.Category).ToDictionary(g => g.Key, g => g.ToList());
+
+        for (int i = 0; i < phase1ReadingLists.Count; i++)
+        {
+            var readingList = phase1ReadingLists[i];
+            var (_, _, _, category) = readingListConfig[i];
+
+            if (blogsPerCategory.TryGetValue(category, out var categoryBlogs))
+            {
+                var blogsToAdd = categoryBlogs.OrderBy(_ => random.Next()).Take(random.Next(5, 9));
+                foreach (var blog in blogsToAdd)
+                {
+                    readingListItems.Add(new ReadingListItem
+                    {
+                        ReadingListId = readingList.Id,
+                        BlogPostId = blog.Id
+                    });
+                }
+            }
+        }
+
+        await _uow.ReadingListItems.AddRangeAsync(readingListItems, ct);
+        await _uow.SaveChangesAsync(ct);
+
+        // Create reading list followers (6-20 per list, no self-follows)
+        var readingListFollowers = new List<ReadingListFollow>();
+
+        foreach (var readingList in phase1ReadingLists)
+        {
+            var followerCount = random.Next(6, 21);
+            var potentialFollowers = existingUsers.Where(u => u.Id != readingList.UserId).OrderBy(_ => random.Next()).Take(followerCount);
+
+            foreach (var follower in potentialFollowers)
+            {
+                readingListFollowers.Add(new ReadingListFollow
+                {
+                    ReadingListId = readingList.Id,
+                    UserId = follower.Id
+                });
+            }
+        }
+
+        await _uow.ReadingListFollows.AddRangeAsync(readingListFollowers, ct);
+        await _uow.SaveChangesAsync(ct);
+
+        var phase1Summary = $"✅ Phase 1 Seeded: {phase1Posts.Count} blogs, {phase1ReadingLists.Count} reading lists, {phase1Likes.Count} likes, {phase1Comments.Count} comments, {readingListFollowers.Count} reading list followers.";
+        await _log.Info(ActivityActions.AdminAction, nameof(AdminService), actorUserName, phase1Summary, ct);
+        return phase1Summary;
     }
 
     public async Task<string> FormatExistingPostsAsync(string? actorUserName = null, CancellationToken ct = default)
