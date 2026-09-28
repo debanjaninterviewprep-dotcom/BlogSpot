@@ -33,10 +33,15 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 
+# Copy seed data files for Phase 1 implementation
+RUN mkdir -p /app/Data/SeedData
+COPY src/BlogSpot.API/Data/SeedData/ /app/Data/SeedData/
+
 # Create uploads directory with proper permissions for non-root user
 USER root
 RUN mkdir -p wwwroot/uploads/images wwwroot/uploads/files && \
-    chown -R app:app wwwroot/uploads
+    chown -R app:app wwwroot/uploads && \
+    chown -R app:app /app/Data
 USER app
 
 ENTRYPOINT ["dotnet", "BlogSpot.API.dll"]
