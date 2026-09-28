@@ -504,11 +504,15 @@ public class AdminService : IAdminService
     /// </summary>
     public async Task<string> SeedPhase1Async(string? actorUserName = null, CancellationToken ct = default)
     {
-        // Get existing users (created by SeedDummyDataAsync)
-        var existingUsers = await _uow.Users.Query().ToListAsync(ct);
+        // Get existing REGULAR users only (not admin) - created by SeedDummyDataAsync
+        var existingUsers = await _uow.Users.Query()
+            .Where(u => u.Role != UserRole.Admin)
+            .ToListAsync(ct);
         if (existingUsers.Count < 30)
             return "Error: Please run the initial seed (/seed) first to create 30 base users.";
 
+        // Also get all users (including admin) for engagement data like likes and comments
+        var allUsers = await _uow.Users.Query().ToListAsync(ct);
         var random = new Random(42);
 
         // Get or create Phase 1 tags
@@ -594,12 +598,12 @@ public class AdminService : IAdminService
         _dbContext.Set<BlogPostTag>().AddRange(phase1PostTags);
         await _dbContext.SaveChangesAsync(ct);
 
-        // Create engagement data for Phase 1 blogs
+        // Create engagement data for Phase 1 blogs (use allUsers to include admin for diversity)
         var phase1Likes = new List<Like>();
         foreach (var post in phase1Posts)
         {
             var likerCount = random.Next(10, 30);
-            var likers = existingUsers.OrderBy(_ => random.Next()).Take(likerCount);
+            var likers = allUsers.OrderBy(_ => random.Next()).Take(likerCount);
             foreach (var liker in likers)
                 phase1Likes.Add(new Like { UserId = liker.Id, BlogPostId = post.Id });
         }
@@ -675,9 +679,11 @@ public class AdminService : IAdminService
             var readingList = phase1ReadingLists[i];
             var (_, _, _, category) = readingListConfig[i];
 
-            if (blogsPerCategory.TryGetValue(category, out var categoryBlogs))
+            if (blogsPerCategory.TryGetValue(category, out var categoryBlogs) && categoryBlogs.Count > 0)
             {
-                var blogsToAdd = categoryBlogs.OrderBy(_ => random.Next()).Take(random.Next(5, 9));
+                // Take 5-8 blogs, or fewer if category has fewer blogs
+                var count = Math.Min(random.Next(5, 9), categoryBlogs.Count);
+                var blogsToAdd = categoryBlogs.OrderBy(_ => random.Next()).Take(count);
                 foreach (var blog in blogsToAdd)
                 {
                     readingListItems.Add(new ReadingListItem
@@ -686,6 +692,12 @@ public class AdminService : IAdminService
                         BlogPostId = blog.Id
                     });
                 }
+            }
+            else
+            {
+                // Log warning if category has no blogs
+                var availableCategories = string.Join(", ", blogsPerCategory.Keys);
+                await _log.Warn(ActivityActions.AdminAction, nameof(AdminService), actorUserName, $"Phase 1: No blogs found for category '{category}' in reading list. Available categories: {availableCategories}", ct);
             }
         }
 
@@ -698,7 +710,8 @@ public class AdminService : IAdminService
         foreach (var readingList in phase1ReadingLists)
         {
             var followerCount = random.Next(6, 21);
-            var potentialFollowers = existingUsers.Where(u => u.Id != readingList.UserId).OrderBy(_ => random.Next()).Take(followerCount);
+            // For followers, use allUsers but exclude the owner to prevent self-follows
+            var potentialFollowers = allUsers.Where(u => u.Id != readingList.UserId).OrderBy(_ => random.Next()).Take(followerCount);
 
             foreach (var follower in potentialFollowers)
             {
