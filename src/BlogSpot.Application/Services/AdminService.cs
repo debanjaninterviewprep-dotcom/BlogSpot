@@ -653,9 +653,12 @@ public class AdminService : IAdminService
         var phase1ReadingLists = new List<ReadingList>();
         var readingListConfig = Phase1SeedDataLoader.GetPhase1ReadingListsConfig();
 
-        foreach (var (name, description, ownerIndex, category) in readingListConfig)
+        foreach (var (name, description, ownerUsername, category) in readingListConfig)
         {
-            var owner = existingUsers[ownerIndex];
+            var owner = existingUsers.FirstOrDefault(u => u.UserName == ownerUsername);
+            if (owner == null)
+                return $"Error: Seeded user '{ownerUsername}' not found. Please run the initial seed (/seed) first.";
+
             var readingList = new ReadingList
             {
                 Name = name,

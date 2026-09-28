@@ -114,15 +114,15 @@ public static class Phase1SeedDataLoader
     /// <summary>
     /// Get reading list configuration for Phase 1
     /// </summary>
-    public static List<(string Name, string Description, int OwnerId, string Category)> GetPhase1ReadingListsConfig()
+    public static List<(string Name, string Description, string OwnerUsername, string Category)> GetPhase1ReadingListsConfig()
     {
-        return new List<(string, string, int, string)>
+        return new List<(string, string, string, string)>
         {
-            ("Essential Science Readings", "Curated collection of foundational science and research articles covering physics, biology, and cutting-edge discoveries", 0, "Science"),
-            ("Sports Champions Guide", "Comprehensive guide to the world's greatest sports, athletes, and competitions", 1, "Sports"),
-            ("Entertainment Deep Dive", "Explore cinema, music, and pop culture's most influential works and personalities", 2, "Cinema"),
-            ("Wellness & Vitality", "Holistic health knowledge covering physical fitness, mental wellness, and nutrition science", 3, "Health"),
-            ("World Travel Essentials", "Travel guides, cultural insights, and tips for exploring the world sustainably", 4, "Travel"),
+            ("Essential Science Readings", "Curated collection of foundational science and research articles covering physics, biology, and cutting-edge discoveries", "arjun_sharma", "Science"),
+            ("Sports Champions Guide", "Comprehensive guide to the world's greatest sports, athletes, and competitions", "priya_iyer", "Sports"),
+            ("Entertainment Deep Dive", "Explore cinema, music, and pop culture's most influential works and personalities", "rahul_verma", "Cinema"),
+            ("Wellness & Vitality", "Holistic health knowledge covering physical fitness, mental wellness, and nutrition science", "sneha_kulkarni", "Health"),
+            ("World Travel Essentials", "Travel guides, cultural insights, and tips for exploring the world sustainably", "amit_patel", "Travel"),
         };
     }
 }
