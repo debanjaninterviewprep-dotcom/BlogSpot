@@ -34,6 +34,17 @@ export interface AdminComment {
   createdAt: string;
 }
 
+export interface AdminReadingList {
+  id: string;
+  name: string;
+  description?: string;
+  ownerUserName: string;
+  isPublic: boolean;
+  itemCount: number;
+  followerCount: number;
+  createdAt: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -71,6 +82,19 @@ export class AdminService {
 
   deleteComment(commentId: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/comments/${commentId}`);
+  }
+
+  getReadingLists(pagination: PaginationParams): Observable<PagedResult<AdminReadingList>> {
+    const params = this.buildParams(pagination);
+    return this.http.get<PagedResult<AdminReadingList>>(`${this.apiUrl}/reading-lists`, { params });
+  }
+
+  toggleReadingListVisibility(readingListId: string): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/reading-lists/${readingListId}/toggle-visibility`, {});
+  }
+
+  deleteReadingList(readingListId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/reading-lists/${readingListId}`);
   }
 
   seedData(): Observable<{ message: string }> {

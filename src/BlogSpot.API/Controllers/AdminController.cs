@@ -81,6 +81,30 @@ public class AdminController : ControllerBase
         return NoContent();
     }
 
+    // --- Reading Lists ---
+
+    [HttpGet("reading-lists")]
+    public async Task<ActionResult<PagedResult<AdminReadingListDto>>> GetReadingLists(
+        [FromQuery] PaginationParams pagination, CancellationToken ct)
+    {
+        var result = await _adminService.GetAllReadingListsAsync(pagination, ct);
+        return Ok(result);
+    }
+
+    [HttpPut("reading-lists/{readingListId:guid}/toggle-visibility")]
+    public async Task<ActionResult> ToggleReadingListVisibility(Guid readingListId, CancellationToken ct)
+    {
+        await _adminService.ToggleReadingListVisibilityAsync(readingListId, User.Identity?.Name, ct);
+        return NoContent();
+    }
+
+    [HttpDelete("reading-lists/{readingListId:guid}")]
+    public async Task<ActionResult> DeleteReadingList(Guid readingListId, CancellationToken ct)
+    {
+        await _adminService.AdminDeleteReadingListAsync(readingListId, User.Identity?.Name, ct);
+        return NoContent();
+    }
+
     // --- Seed ---
 
     [HttpPost("seed")]

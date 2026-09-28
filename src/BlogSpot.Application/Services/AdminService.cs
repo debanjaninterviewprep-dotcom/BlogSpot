@@ -251,6 +251,88 @@ public class AdminService : IAdminService
             </div>", ct);
     }
 
+    public async Task<PagedResult<AdminReadingListDto>> GetAllReadingListsAsync(PaginationParams pagination, CancellationToken ct = default)
+    {
+        IQueryable<ReadingList> query = _uow.ReadingLists.Query()
+            .Include(r => r.User)
+            .Include(r => r.Items)
+            .Include(r => r.Followers);
+
+        if (!string.IsNullOrWhiteSpace(pagination.Search))
+        {
+            var search = pagination.Search.Trim().ToLower();
+            query = query.Where(r => r.Name.ToLower().Contains(search) || r.User.UserName.ToLower().Contains(search));
+        }
+
+        var ordered = query.OrderByDescending(r => r.CreatedAt);
+
+        var totalCount = await ordered.CountAsync(ct);
+        var readingLists = await ordered
+            .Skip((pagination.Page - 1) * pagination.PageSize)
+            .Take(pagination.PageSize)
+            .ToListAsync(ct);
+
+        return new PagedResult<AdminReadingListDto>
+        {
+            Items = readingLists.Select(r => new AdminReadingListDto
+            {
+                Id = r.Id,
+                Name = r.Name,
+                Description = r.Description,
+                OwnerUserName = r.User.UserName,
+                IsPublic = r.IsPublic,
+                ItemCount = r.Items.Count,
+                FollowerCount = r.Followers.Count,
+                CreatedAt = r.CreatedAt
+            }).ToList(),
+            TotalCount = totalCount,
+            Page = pagination.Page,
+            PageSize = pagination.PageSize
+        };
+    }
+
+    public async Task ToggleReadingListVisibilityAsync(Guid readingListId, string? actorUserName = null, CancellationToken ct = default)
+    {
+        var readingList = await _uow.ReadingLists.GetByIdAsync(readingListId, ct)
+            ?? throw new KeyNotFoundException("Reading list not found.");
+
+        readingList.IsPublic = !readingList.IsPublic;
+        readingList.UpdatedAt = DateTime.UtcNow;
+        _uow.ReadingLists.Update(readingList);
+        await _uow.SaveChangesAsync(ct);
+
+        var visibility = readingList.IsPublic ? "public" : "private";
+        await _log.Info(ActivityActions.AdminAction, nameof(AdminService), actorUserName, $"Set reading list '{readingList.Name}' to {visibility}", ct);
+    }
+
+    public async Task AdminDeleteReadingListAsync(Guid readingListId, string? actorUserName = null, CancellationToken ct = default)
+    {
+        var readingList = await _uow.ReadingLists.Query()
+            .Include(r => r.User)
+            .FirstOrDefaultAsync(r => r.Id == readingListId, ct)
+            ?? throw new KeyNotFoundException("Reading list not found.");
+
+        var ownerEmail = readingList.User.Email;
+        var ownerName = readingList.User.UserName;
+        var listName = readingList.Name;
+
+        // Items and followers are removed by the configured cascade delete
+        _uow.ReadingLists.Remove(readingList);
+        await _uow.SaveChangesAsync(ct);
+
+        await _log.Info(ActivityActions.AdminAction, nameof(AdminService), actorUserName, $"Deleted reading list '{listName}' owned by {ownerName}", ct);
+
+        await _emailQueueService.EnqueueAsync(ownerEmail,
+            "BlogSpot - Your reading list has been removed",
+            $@"<div style='font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px'>
+                <h2 style='color:#f4212e'>Reading List Removed</h2>
+                <p>Hi <strong>{ownerName}</strong>,</p>
+                <p>Your reading list <strong>{listName}</strong> has been removed by an administrator for violating our community guidelines.</p>
+                <p>If you believe this is a mistake, please contact support.</p>
+                <p style='color:#536471;font-size:13px;margin-top:24px'>-- The BlogSpot Team</p>
+            </div>", ct);
+    }
+
     public async Task<string> SeedDummyDataAsync(string? actorUserName = null, CancellationToken ct = default)
     {
         // Check if already seeded (more than 5 users means data exists)

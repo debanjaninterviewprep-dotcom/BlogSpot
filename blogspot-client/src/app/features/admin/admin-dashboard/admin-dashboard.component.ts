@@ -3,7 +3,7 @@ import { PageEvent } from '@angular/material/paginator';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 import { Subject, debounceTime, takeUntil } from 'rxjs';
-import { AdminService, AdminUser, AdminPost, AdminComment, EmailQueueItem } from '@core/services/admin.service';
+import { AdminService, AdminUser, AdminPost, AdminComment, AdminReadingList, EmailQueueItem } from '@core/services/admin.service';
 import { AuthService } from '@core/services/auth.service';
 import { ExportService } from '@core/services/export.service';
 
@@ -27,6 +27,9 @@ import { ExportService } from '@core/services/export.service';
             </button>
             <button class="sidebar-link" [class.active]="activeSection === 'comments'" (click)="setSection('comments')">
               <mat-icon>comment</mat-icon> Comments
+            </button>
+            <button class="sidebar-link" [class.active]="activeSection === 'reading-lists'" (click)="setSection('reading-lists')">
+              <mat-icon>bookmarks</mat-icon> Reading Lists
             </button>
             <button class="sidebar-link" [class.active]="activeSection === 'emails'" (click)="setSection('emails')">
               <mat-icon>email</mat-icon> Emails
@@ -265,6 +268,105 @@ import { ExportService } from '@core/services/export.service';
             </div>
             <mat-paginator [length]="commentsTotalCount" [pageSize]="10"
                            (page)="onCommentsPageChange($event)">
+            </mat-paginator>
+          </div>
+
+        <div class="tab-content" *ngIf="activeSection === 'reading-lists'">
+            <div class="tab-toolbar">
+              <span class="tab-count">{{ readingListsTotalCount }} reading lists</span>
+              <div class="tab-search">
+                <mat-icon>search</mat-icon>
+                <input type="text" placeholder="Filter by name or owner..." [(ngModel)]="readingListsFilter" (input)="onReadingListsFilterChange()">
+              </div>
+              <button mat-stroked-button [matMenuTriggerFor]="readingListsExportMenu" class="export-btn">
+                <mat-icon>download</mat-icon> Export Report
+              </button>
+              <mat-menu #readingListsExportMenu="matMenu">
+                <button mat-menu-item (click)="exportReadingLists()">
+                  <mat-icon>table_chart</mat-icon> Download Excel
+                </button>
+                <button mat-menu-item (click)="exportViaEmail('reading-lists')">
+                  <mat-icon>email</mat-icon> Send via Email
+                </button>
+              </mat-menu>
+            </div>
+            <div class="table-scroll">
+            <table mat-table [dataSource]="readingLists" class="full-width responsive-table" multiTemplateDataRows>
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef>Name</th>
+                <td mat-cell *matCellDef="let rl">
+                  <a [routerLink]="['/blog/reading-lists', rl.id]" class="post-link">{{ rl.name | slice:0:50 }}</a>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="owner">
+                <th mat-header-cell *matHeaderCellDef>Owner</th>
+                <td mat-cell *matCellDef="let rl">
+                  <a [routerLink]="['/profile', rl.ownerUserName]" class="user-link">{{ rl.ownerUserName }}</a>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="visibility">
+                <th mat-header-cell *matHeaderCellDef>Visibility</th>
+                <td mat-cell *matCellDef="let rl">
+                  <mat-chip [class.active-chip]="rl.isPublic" [class.inactive-chip]="!rl.isPublic">
+                    {{ rl.isPublic ? 'Public' : 'Private' }}
+                  </mat-chip>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="posts">
+                <th mat-header-cell *matHeaderCellDef>Posts</th>
+                <td mat-cell *matCellDef="let rl">{{ rl.itemCount }}</td>
+              </ng-container>
+              <ng-container matColumnDef="followers">
+                <th mat-header-cell *matHeaderCellDef>Followers</th>
+                <td mat-cell *matCellDef="let rl">{{ rl.followerCount }}</td>
+              </ng-container>
+              <ng-container matColumnDef="date">
+                <th mat-header-cell *matHeaderCellDef>Created</th>
+                <td mat-cell *matCellDef="let rl">{{ rl.createdAt | date:'shortDate' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="actions" stickyEnd>
+                <th mat-header-cell *matHeaderCellDef>Actions</th>
+                <td mat-cell *matCellDef="let rl">
+                  <button mat-icon-button (click)="toggleReadingListEdit(rl)"
+                          [attr.aria-label]="editingReadingListId === rl.id ? 'Close' : 'Manage reading list'"
+                          [matTooltip]="editingReadingListId === rl.id ? 'Close' : 'Manage'">
+                    <mat-icon>{{ editingReadingListId === rl.id ? 'close' : 'tune' }}</mat-icon>
+                  </button>
+                  <button mat-icon-button color="warn" (click)="deleteReadingList(rl)" matTooltip="Delete Reading List" aria-label="Delete reading list">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </td>
+              </ng-container>
+
+              <!-- Expandable edit row -->
+              <ng-container matColumnDef="editPanel">
+                <td mat-cell *matCellDef="let rl" [attr.colspan]="readingListColumns.length">
+                  <div class="edit-panel" *ngIf="editingReadingListId === rl.id" @slideDown>
+                    <div class="edit-field">
+                      <label>Visibility</label>
+                      <button class="status-toggle" [class.active]="rl.isPublic"
+                              (click)="toggleReadingListVisibility(rl)">
+                        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                        {{ rl.isPublic ? 'Public' : 'Private' }}
+                      </button>
+                    </div>
+                    <div class="edit-field">
+                      <label>Description</label>
+                      <span class="readonly-text">{{ rl.description || '—' }}</span>
+                    </div>
+                  </div>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="readingListColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: readingListColumns;"
+                  [class.expanded-row]="editingReadingListId === row.id"></tr>
+              <tr mat-row *matRowDef="let row; columns: ['editPanel']"
+                  class="edit-row"></tr>
+            </table>
+            </div>
+            <mat-paginator [length]="readingListsTotalCount" [pageSize]="10"
+                           (page)="onReadingListsPageChange($event)">
             </mat-paginator>
           </div>
 
@@ -577,6 +679,11 @@ import { ExportService } from '@core/services/export.service';
       transition: border-color 0.15s;
     }
     .edit-field select:focus { border-color: var(--color-primary); }
+    .edit-field .readonly-text {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-primary, #0f1419);
+      max-width: 420px;
+    }
 
     /* Toggle Switch */
     .status-toggle {
@@ -684,6 +791,13 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   commentsFilter = '';
   commentColumns = ['content', 'user', 'post', 'date', 'actions'];
 
+  // Reading Lists
+  readingLists: AdminReadingList[] = [];
+  readingListsTotalCount = 0;
+  readingListsFilter = '';
+  editingReadingListId: string | null = null;
+  readingListColumns = ['name', 'owner', 'visibility', 'posts', 'followers', 'date', 'actions'];
+
   // Emails
   emails: EmailQueueItem[] = [];
   emailsTotalCount = 0;
@@ -693,7 +807,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   isFormatting = false;
   isPhase1Seeding = false;
 
-  activeSection: 'users' | 'posts' | 'comments' | 'emails' | 'data-tools' | 'jobs' = 'users';
+  activeSection: 'users' | 'posts' | 'comments' | 'reading-lists' | 'emails' | 'data-tools' | 'jobs' = 'users';
   selectedDataTool: 'format-posts' | 'seed-data' | 'seed-phase-1' = 'format-posts';
   runningJob: string | null = null;
 
@@ -701,6 +815,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   private usersSearch$ = new Subject<void>();
   private postsSearch$ = new Subject<void>();
   private commentsSearch$ = new Subject<void>();
+  private readingListsSearch$ = new Subject<void>();
 
   constructor(
     private adminService: AdminService,
@@ -713,11 +828,13 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     this.loadUsers(1);
     this.loadPosts(1);
     this.loadComments(1);
+    this.loadReadingLists(1);
     this.loadEmails(1);
 
     this.usersSearch$.pipe(debounceTime(300), takeUntil(this.destroy$)).subscribe(() => this.loadUsers(1));
     this.postsSearch$.pipe(debounceTime(300), takeUntil(this.destroy$)).subscribe(() => this.loadPosts(1));
     this.commentsSearch$.pipe(debounceTime(300), takeUntil(this.destroy$)).subscribe(() => this.loadComments(1));
+    this.readingListsSearch$.pipe(debounceTime(300), takeUntil(this.destroy$)).subscribe(() => this.loadReadingLists(1));
   }
 
   ngOnDestroy(): void {
@@ -737,7 +854,11 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     this.commentsSearch$.next();
   }
 
-  setSection(section: 'users' | 'posts' | 'comments' | 'emails' | 'data-tools' | 'jobs'): void {
+  onReadingListsFilterChange(): void {
+    this.readingListsSearch$.next();
+  }
+
+  setSection(section: 'users' | 'posts' | 'comments' | 'reading-lists' | 'emails' | 'data-tools' | 'jobs'): void {
     this.activeSection = section;
   }
 
@@ -768,6 +889,15 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
+  loadReadingLists(page: number): void {
+    this.adminService.getReadingLists({ page, pageSize: 10, search: this.readingListsFilter.trim() || undefined }).subscribe({
+      next: (result) => {
+        this.readingLists = result.items;
+        this.readingListsTotalCount = result.totalCount;
+      }
+    });
+  }
+
   onUsersPageChange(event: PageEvent): void {
     this.loadUsers(event.pageIndex + 1);
   }
@@ -778,6 +908,10 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
   onCommentsPageChange(event: PageEvent): void {
     this.loadComments(event.pageIndex + 1);
+  }
+
+  onReadingListsPageChange(event: PageEvent): void {
+    this.loadReadingLists(event.pageIndex + 1);
   }
 
   loadEmails(page: number): void {
@@ -843,6 +977,32 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
+  toggleReadingListEdit(readingList: AdminReadingList): void {
+    this.editingReadingListId = this.editingReadingListId === readingList.id ? null : readingList.id;
+  }
+
+  toggleReadingListVisibility(readingList: AdminReadingList): void {
+    this.adminService.toggleReadingListVisibility(readingList.id).subscribe({
+      next: () => {
+        readingList.isPublic = !readingList.isPublic;
+        this.snackBar.open(`Reading list set to ${readingList.isPublic ? 'public' : 'private'}`, 'Close', { duration: 3000 });
+      },
+      error: () => this.snackBar.open('Failed to change visibility', 'Close', { duration: 3000 })
+    });
+  }
+
+  deleteReadingList(readingList: AdminReadingList): void {
+    if (!confirm(`Delete reading list "${readingList.name}"? Its items and followers will be removed too.`)) return;
+    this.adminService.deleteReadingList(readingList.id).subscribe({
+      next: () => {
+        this.readingLists = this.readingLists.filter(r => r.id !== readingList.id);
+        this.readingListsTotalCount--;
+        this.snackBar.open('Reading list deleted', 'Close', { duration: 3000 });
+      },
+      error: () => this.snackBar.open('Failed to delete reading list', 'Close', { duration: 3000 })
+    });
+  }
+
   seedData(): void {
     if (!confirm('This will seed 30 users, 40 posts, and thousands of interactions. Proceed?')) return;
     this.isSeeding = true;
@@ -869,6 +1029,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
         this.isPhase1Seeding = false;
         this.snackBar.open(res.message, 'Close', { duration: 8000 });
         this.loadPosts(1);
+        this.loadReadingLists(1);
       },
       error: (err: any) => {
         this.isPhase1Seeding = false;
@@ -969,6 +1130,24 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
+  exportReadingLists(): void {
+    this.adminService.getReadingLists({ page: 1, pageSize: 1000 }).subscribe({
+      next: (result) => {
+        const data = result.items.map(r => ({
+          Name: r.name,
+          Owner: r.ownerUserName,
+          Visibility: r.isPublic ? 'Public' : 'Private',
+          Posts: r.itemCount,
+          Followers: r.followerCount,
+          Description: r.description || '',
+          'Created Date': new Date(r.createdAt).toLocaleDateString()
+        }));
+        this.exportService.exportToExcel(data, 'BlogSpot_ReadingLists', 'Reading Lists');
+        this.snackBar.open('Reading lists report downloaded', 'Close', { duration: 2000 });
+      }
+    });
+  }
+
   exportViaEmail(type: string): void {
     const adminEmail = this.authService.currentUser?.email;
     if (!adminEmail) {
@@ -982,7 +1161,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       const rows = data.map(row => '<tr>' + Object.values(row).map(v => `<td style="padding:6px 12px;border:1px solid #ddd">${v}</td>`).join('') + '</tr>').join('');
       return `<div style="font-family:sans-serif"><h2 style="color:#1d9bf0">BlogSpot ${type.charAt(0).toUpperCase() + type.slice(1)} Report</h2><table style="border-collapse:collapse;width:100%">${headers}${rows}</table></div>`;
     };
-
     if (type === 'users') {
       this.adminService.getUsers({ page: 1, pageSize: 10000 }).subscribe({
         next: (result) => {
@@ -1008,6 +1186,16 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
         next: (result) => {
           const data = result.items.map(c => ({ Comment: c.content, User: c.userName, Post: c.postTitle, Date: new Date(c.createdAt).toLocaleDateString() }));
           this.adminService.sendReportEmail(adminEmail, 'Comments', buildHtml(data)).subscribe({
+            next: () => this.snackBar.open('Report emailed to ' + adminEmail, 'Close', { duration: 3000 }),
+            error: () => this.snackBar.open('Failed to queue email', 'Close', { duration: 3000 })
+          });
+        }
+      });
+    } else if (type === 'reading-lists') {
+      this.adminService.getReadingLists({ page: 1, pageSize: 10000 }).subscribe({
+        next: (result) => {
+          const data = result.items.map(r => ({ Name: r.name, Owner: r.ownerUserName, Visibility: r.isPublic ? 'Public' : 'Private', Posts: r.itemCount, Followers: r.followerCount, Date: new Date(r.createdAt).toLocaleDateString() }));
+          this.adminService.sendReportEmail(adminEmail, 'Reading Lists', buildHtml(data)).subscribe({
             next: () => this.snackBar.open('Report emailed to ' + adminEmail, 'Close', { duration: 3000 }),
             error: () => this.snackBar.open('Failed to queue email', 'Close', { duration: 3000 })
           });
