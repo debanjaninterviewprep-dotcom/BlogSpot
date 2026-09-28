@@ -323,12 +323,13 @@ import { ExportService } from '@core/services/export.service';
                 <label>Action</label>
                 <select [(ngModel)]="selectedDataTool">
                   <option value="format-posts">Format All Posts</option>
-                  <option value="seed-data">Seed Dummy Data</option>
+                  <option value="seed-data">Seed Dummy Data (40 Tech Blogs)</option>
+                  <option value="seed-phase-1">Seed Phase 1 (34 New Blogs)</option>
                 </select>
               </div>
-              <button mat-raised-button color="primary" (click)="runDataTool()" [disabled]="isSeeding || isFormatting">
-                <mat-icon>{{ (isSeeding || isFormatting) ? 'hourglass_empty' : 'play_arrow' }}</mat-icon>
-                {{ (isSeeding || isFormatting) ? 'Running...' : 'Submit' }}
+              <button mat-raised-button color="primary" (click)="runDataTool()" [disabled]="isSeeding || isFormatting || isPhase1Seeding">
+                <mat-icon>{{ (isSeeding || isFormatting || isPhase1Seeding) ? 'hourglass_empty' : 'play_arrow' }}</mat-icon>
+                {{ (isSeeding || isFormatting || isPhase1Seeding) ? 'Running...' : 'Submit' }}
               </button>
             </div>
           </div>
@@ -690,9 +691,10 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
   isSeeding = false;
   isFormatting = false;
+  isPhase1Seeding = false;
 
   activeSection: 'users' | 'posts' | 'comments' | 'emails' | 'data-tools' | 'jobs' = 'users';
-  selectedDataTool: 'format-posts' | 'seed-data' = 'format-posts';
+  selectedDataTool: 'format-posts' | 'seed-data' | 'seed-phase-1' = 'format-posts';
   runningJob: string | null = null;
 
   private destroy$ = new Subject<void>();
@@ -859,6 +861,22 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
+  seedPhase1Data(): void {
+    if (!confirm('This will add 34 new blogs (Science, Sports, Cinema, Health, Travel), 5 reading lists, and ~1000 interactions. Proceed?')) return;
+    this.isPhase1Seeding = true;
+    this.adminService.seedPhase1Data().subscribe({
+      next: (res: { message: string }) => {
+        this.isPhase1Seeding = false;
+        this.snackBar.open(res.message, 'Close', { duration: 8000 });
+        this.loadPosts(1);
+      },
+      error: (err: any) => {
+        this.isPhase1Seeding = false;
+        this.snackBar.open(err.error?.message || 'Phase 1 seeding failed', 'Close', { duration: 5000 });
+      }
+    });
+  }
+
   formatPosts(): void {
     if (!confirm('This will convert all plain-text blog posts to formatted HTML. Proceed?')) return;
     this.isFormatting = true;
@@ -877,8 +895,10 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   runDataTool(): void {
     if (this.selectedDataTool === 'format-posts') {
       this.formatPosts();
-    } else {
+    } else if (this.selectedDataTool === 'seed-data') {
       this.seedData();
+    } else if (this.selectedDataTool === 'seed-phase-1') {
+      this.seedPhase1Data();
     }
   }
 
