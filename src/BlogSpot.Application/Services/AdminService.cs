@@ -551,9 +551,12 @@ public class AdminService : IAdminService
             return $"Error loading Phase 1 data files: {ex.Message}";
         }
 
-        // Create Phase 1 blog posts
+        // Create Phase 1 blog posts (skip any whose slug already exists so re-runs are idempotent)
         var phase1Posts = new List<BlogPost>();
         var phase1PostTags = new List<BlogPostTag>();
+        var existingSlugs = (await _uow.BlogPosts.Query().Select(p => p.Slug).ToListAsync(ct))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var skippedPostCount = 0;
 
         foreach (var categoryEntry in phase1BlogsByCategory)
         {
@@ -564,6 +567,12 @@ public class AdminService : IAdminService
                     .Replace(":", "").Replace("?", "").Replace("'", "")
                     .Replace("  ", " ").Replace(" ", "-")
                     .Replace(".", "").Replace(",", "");
+
+                if (!existingSlugs.Add(slug))
+                {
+                    skippedPostCount++;
+                    continue;
+                }
 
                 var post = new BlogPost
                 {
@@ -649,12 +658,23 @@ public class AdminService : IAdminService
         await _uow.Comments.AddRangeAsync(phase1Comments, ct);
         await _uow.SaveChangesAsync(ct);
 
-        // Create Phase 1 reading lists
+        // Create Phase 1 reading lists (skip any that already exist so re-runs are idempotent)
         var phase1ReadingLists = new List<ReadingList>();
         var readingListConfig = Phase1SeedDataLoader.GetPhase1ReadingListsConfig();
+        var configNames = readingListConfig.Select(c => c.Name).ToList();
+        var existingListNames = (await _uow.ReadingLists.Query()
+                .Where(rl => configNames.Contains(rl.Name))
+                .Select(rl => rl.Name)
+                .ToListAsync(ct))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var createdListCategories = new List<string>();
 
         foreach (var (name, description, ownerUsername, category) in readingListConfig)
         {
+            if (existingListNames.Contains(name))
+                continue;
+
             var owner = existingUsers.FirstOrDefault(u => u.UserName == ownerUsername);
             if (owner == null)
                 return $"Error: Seeded user '{ownerUsername}' not found. Please run the initial seed (/seed) first.";
@@ -668,31 +688,38 @@ public class AdminService : IAdminService
                 CreatedAt = DateTime.UtcNow.AddDays(-random.Next(10, 60))
             };
             phase1ReadingLists.Add(readingList);
+            createdListCategories.Add(category);
         }
 
         await _uow.ReadingLists.AddRangeAsync(phase1ReadingLists, ct);
         await _uow.SaveChangesAsync(ct);
 
-        // Add blogs to reading lists (5-8 per list)
+        // Add blogs to reading lists (5-8 per list), sourcing from all posts in the DB for each category
         var readingListItems = new List<ReadingListItem>();
-        var blogsPerCategory = phase1Posts.GroupBy(p => p.Category).ToDictionary(g => g.Key, g => g.ToList());
+        var phase1Categories = readingListConfig.Select(c => c.Category).ToList();
+        var blogsPerCategory = (await _uow.BlogPosts.Query()
+                .Where(p => p.Category != null && phase1Categories.Contains(p.Category))
+                .Select(p => new { p.Id, p.Category })
+                .ToListAsync(ct))
+            .GroupBy(p => p.Category!)
+            .ToDictionary(g => g.Key, g => g.Select(p => p.Id).ToList());
 
         for (int i = 0; i < phase1ReadingLists.Count; i++)
         {
             var readingList = phase1ReadingLists[i];
-            var (_, _, _, category) = readingListConfig[i];
+            var category = createdListCategories[i];
 
             if (blogsPerCategory.TryGetValue(category, out var categoryBlogs) && categoryBlogs.Count > 0)
             {
                 // Take 5-8 blogs, or fewer if category has fewer blogs
                 var count = Math.Min(random.Next(5, 9), categoryBlogs.Count);
                 var blogsToAdd = categoryBlogs.OrderBy(_ => random.Next()).Take(count);
-                foreach (var blog in blogsToAdd)
+                foreach (var blogId in blogsToAdd)
                 {
                     readingListItems.Add(new ReadingListItem
                     {
                         ReadingListId = readingList.Id,
-                        BlogPostId = blog.Id
+                        BlogPostId = blogId
                     });
                 }
             }
@@ -729,7 +756,7 @@ public class AdminService : IAdminService
         await _uow.ReadingListFollows.AddRangeAsync(readingListFollowers, ct);
         await _uow.SaveChangesAsync(ct);
 
-        var phase1Summary = $"✅ Phase 1 Seeded: {phase1Posts.Count} blogs, {phase1ReadingLists.Count} reading lists, {phase1Likes.Count} likes, {phase1Comments.Count} comments, {readingListFollowers.Count} reading list followers.";
+        var phase1Summary = $"✅ Phase 1 Seeded: {phase1Posts.Count} blogs ({skippedPostCount} skipped as duplicates), {phase1ReadingLists.Count} reading lists, {readingListItems.Count} reading list items, {phase1Likes.Count} likes, {phase1Comments.Count} comments, {readingListFollowers.Count} reading list followers.";
         await _log.Info(ActivityActions.AdminAction, nameof(AdminService), actorUserName, phase1Summary, ct);
         return phase1Summary;
     }
