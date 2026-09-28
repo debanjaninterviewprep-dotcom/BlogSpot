@@ -10,10 +10,57 @@ public static class Phase1SeedDataLoader
     private static readonly string[] Phase1Categories = { "Science", "Sports", "Cinema", "Health", "Travel" };
 
     /// <summary>
+    /// Find the seed data directory by checking multiple possible locations
+    /// </summary>
+    private static string FindSeedDataDirectory()
+    {
+        // Try multiple possible paths
+        var possiblePaths = new[]
+        {
+            // Path from API project (debug)
+            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "BlogSpot.API", "Data", "SeedData"),
+            
+            // Path from API project (release)
+            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "BlogSpot.API", "Data", "SeedData"),
+            
+            // Absolute path attempt - look for Data/SeedData from app root
+            Path.Combine(AppContext.BaseDirectory, "Data", "SeedData"),
+            
+            // Try from parent directories
+            Path.Combine(AppContext.BaseDirectory, "..", "Data", "SeedData"),
+            Path.Combine(AppContext.BaseDirectory, "..", "..", "Data", "SeedData"),
+            
+            // Try from current working directory
+            Path.Combine(Directory.GetCurrentDirectory(), "Data", "SeedData"),
+            Path.Combine(Directory.GetCurrentDirectory(), "SeedData"),
+            
+            // Docker container path - files might be copied to a specific location
+            "/app/Data/SeedData",
+            "/app/SeedData",
+        };
+
+        foreach (var path in possiblePaths)
+        {
+            try
+            {
+                if (Directory.Exists(path))
+                {
+                    return path;
+                }
+            }
+            catch { /* Ignore path resolution errors */ }
+        }
+
+        // If none found, return the first option (for better error message)
+        return possiblePaths[0];
+    }
+
+    /// <summary>
     /// Load all Phase 1 blogs from JSON files in the SeedData directory
     /// </summary>
-    public static async Task<Dictionary<string, List<Phase1BlogSeedData>>> LoadPhase1BlogsAsync(string seedDataPath)
+    public static async Task<Dictionary<string, List<Phase1BlogSeedData>>> LoadPhase1BlogsAsync(string? seedDataPath = null)
     {
+        seedDataPath ??= FindSeedDataDirectory();
         var result = new Dictionary<string, List<Phase1BlogSeedData>>();
 
         foreach (var category in Phase1Categories)
@@ -23,7 +70,7 @@ public static class Phase1SeedDataLoader
 
             if (!File.Exists(filePath))
             {
-                throw new FileNotFoundException($"Phase 1 seed data file not found: {filePath}");
+                throw new FileNotFoundException($"Phase 1 seed data file not found: {filePath}. Searched in: {seedDataPath}");
             }
 
             var jsonContent = await File.ReadAllTextAsync(filePath);
@@ -44,14 +91,15 @@ public static class Phase1SeedDataLoader
     /// <summary>
     /// Get a specific category's blogs
     /// </summary>
-    public static async Task<List<Phase1BlogSeedData>> LoadCategoryBlogsAsync(string seedDataPath, string category)
+    public static async Task<List<Phase1BlogSeedData>> LoadCategoryBlogsAsync(string? seedDataPath, string category)
     {
+        seedDataPath ??= FindSeedDataDirectory();
         var fileName = $"phase1-{category.ToLowerInvariant()}-blogs.json";
         var filePath = Path.Combine(seedDataPath, fileName);
 
         if (!File.Exists(filePath))
         {
-            throw new FileNotFoundException($"Phase 1 seed data file not found: {filePath}");
+            throw new FileNotFoundException($"Phase 1 seed data file not found: {filePath}. Searched in: {seedDataPath}");
         }
 
         var jsonContent = await File.ReadAllTextAsync(filePath);

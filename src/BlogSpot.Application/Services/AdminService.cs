@@ -532,14 +532,13 @@ public class AdminService : IAdminService
         }
 
         // Load Phase 1 blogs from JSON files
-        var seedDataPath = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "BlogSpot.API", "Data", "SeedData");
         var phase1BlogsByCategory = new Dictionary<string, List<Phase1BlogSeedData>>();
 
         try
         {
             foreach (var category in new[] { "Science", "Sports", "Cinema", "Health", "Travel" })
             {
-                var blogs = await Phase1SeedDataLoader.LoadCategoryBlogsAsync(seedDataPath, category);
+                var blogs = await Phase1SeedDataLoader.LoadCategoryBlogsAsync(null, category);
                 phase1BlogsByCategory[category] = blogs;
             }
         }
