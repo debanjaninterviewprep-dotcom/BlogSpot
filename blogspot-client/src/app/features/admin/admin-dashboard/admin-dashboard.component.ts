@@ -428,11 +428,12 @@ import { ExportService } from '@core/services/export.service';
                   <option value="seed-data">Seed Dummy Data (40 Tech Blogs)</option>
                   <option value="seed-phase-1">Seed Phase 1 (34 New Blogs)</option>
                   <option value="seed-phase-2">Seed Phase 2 (33 New Blogs)</option>
+                  <option value="seed-phase-3">Seed Phase 3 (31 New Blogs)</option>
                 </select>
               </div>
-              <button mat-raised-button color="primary" (click)="runDataTool()" [disabled]="isSeeding || isFormatting || isPhase1Seeding || isPhase2Seeding">
-                <mat-icon>{{ (isSeeding || isFormatting || isPhase1Seeding || isPhase2Seeding) ? 'hourglass_empty' : 'play_arrow' }}</mat-icon>
-                {{ (isSeeding || isFormatting || isPhase1Seeding || isPhase2Seeding) ? 'Running...' : 'Submit' }}
+              <button mat-raised-button color="primary" (click)="runDataTool()" [disabled]="isSeeding || isFormatting || isPhase1Seeding || isPhase2Seeding || isPhase3Seeding">
+                <mat-icon>{{ (isSeeding || isFormatting || isPhase1Seeding || isPhase2Seeding || isPhase3Seeding) ? 'hourglass_empty' : 'play_arrow' }}</mat-icon>
+                {{ (isSeeding || isFormatting || isPhase1Seeding || isPhase2Seeding || isPhase3Seeding) ? 'Running...' : 'Submit' }}
               </button>
             </div>
           </div>
@@ -808,9 +809,10 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   isFormatting = false;
   isPhase1Seeding = false;
   isPhase2Seeding = false;
+  isPhase3Seeding = false;
 
   activeSection: 'users' | 'posts' | 'comments' | 'reading-lists' | 'emails' | 'data-tools' | 'jobs' = 'users';
-  selectedDataTool: 'format-posts' | 'seed-data' | 'seed-phase-1' | 'seed-phase-2' = 'format-posts';
+  selectedDataTool: 'format-posts' | 'seed-data' | 'seed-phase-1' | 'seed-phase-2' | 'seed-phase-3' = 'format-posts';
   runningJob: string | null = null;
 
   private destroy$ = new Subject<void>();
@@ -1057,6 +1059,23 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
+  seedPhase3Data(): void {
+    if (!confirm('This will add 31 new blogs (Business, Psychology, Food, Geopolitics, Philosophy), 5 reading lists, and ~1000 interactions. Proceed?')) return;
+    this.isPhase3Seeding = true;
+    this.adminService.seedPhase3Data().subscribe({
+      next: (res: { message: string }) => {
+        this.isPhase3Seeding = false;
+        this.snackBar.open(res.message, 'Close', { duration: 8000 });
+        this.loadPosts(1);
+        this.loadReadingLists(1);
+      },
+      error: (err: any) => {
+        this.isPhase3Seeding = false;
+        this.snackBar.open(err.error?.message || 'Phase 3 seeding failed', 'Close', { duration: 5000 });
+      }
+    });
+  }
+
   formatPosts(): void {
     if (!confirm('This will convert all plain-text blog posts to formatted HTML. Proceed?')) return;
     this.isFormatting = true;
@@ -1081,6 +1100,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       this.seedPhase1Data();
     } else if (this.selectedDataTool === 'seed-phase-2') {
       this.seedPhase2Data();
+    } else if (this.selectedDataTool === 'seed-phase-3') {
+      this.seedPhase3Data();
     }
   }
 

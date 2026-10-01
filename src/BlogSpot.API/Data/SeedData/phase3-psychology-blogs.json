@@ -1,0 +1,64 @@
+[
+  {
+    "title": "Cognitive Biases: Why Smart People Make Irrational Decisions",
+    "category": "Psychology",
+    "tags": ["Psychology", "CognitiveBias", "DecisionMaking", "BehavioralScience"],
+    "summary": "Explore the mental shortcuts that quietly distort judgment, even among highly intelligent and well-informed people.",
+    "content": "Intelligence offers surprisingly little protection against cognitive bias — the systematic mental shortcuts that distort judgment in predictable ways. Decades of research in behavioral psychology have cataloged dozens of these biases, revealing just how unreliable human reasoning can be under certain conditions. 🧠⚠️\n\n## 🎯 Confirmation Bias and Motivated Reasoning\n\nPeople naturally seek out information confirming existing beliefs while dismissing contradictory evidence, a tendency that intensifies rather than weakens with higher intelligence, since smarter people are simply better at constructing convincing justifications for conclusions they already wanted to reach.\n\n## ⚖️ Anchoring and the Power of First Numbers\n\nThe first number presented in a negotiation or estimate — even an arbitrary one — exerts outsized influence on all subsequent judgments, a phenomenon exploited deliberately in retail pricing, salary negotiations, and courtroom sentencing requests.\n\n## ✅ Debiasing Strategies That Actually Work\n\nSimply knowing about biases rarely prevents them; more effective approaches include actively seeking disconfirming evidence, using structured decision checklists, and bringing in outside perspectives specifically tasked with challenging the group's assumptions before a final decision locks in.",
+    "withPoll": true,
+    "pollQuestion": "Which cognitive bias do you think affects you most?",
+    "pollOptions": ["Confirmation Bias", "Anchoring Bias", "Sunk Cost Fallacy", "Overconfidence", "Not Sure"]
+  },
+  {
+    "title": "The Psychology of Habit Formation: Rewiring Your Brain for Change",
+    "category": "Psychology",
+    "tags": ["Psychology", "Habits", "BehaviorChange", "Neuroscience"],
+    "summary": "Discover the neuroscience behind how habits form and the evidence-based strategies for building good ones and breaking bad ones.",
+    "content": "Nearly half of daily human behavior runs on autopilot, driven by habits rather than conscious decisions. Understanding the neurological loop behind habit formation offers a practical roadmap for anyone trying to build better routines or finally break a stubborn bad one. 🔁🧠\n\n## 🔄 The Habit Loop: Cue, Routine, Reward\n\nEvery habit follows a three-part loop: a cue triggers the brain to initiate a routine, which delivers a reward that reinforces the cycle. Over repetition, this loop becomes encoded in the basal ganglia, requiring less and less conscious effort to execute.\n\n## 🎯 Why Willpower Alone Usually Fails\n\nRelying purely on willpower to resist an established habit cue is a losing long-term strategy, since willpower is a finite, depletable resource. Durable change instead comes from altering the environment to remove cues entirely or substituting a new routine that delivers a similar reward.\n\n## 🏗️ Building New Habits That Stick\n\nResearch-backed techniques include habit stacking (attaching a new habit to an existing one), starting absurdly small to minimize friction, and front-loading the reward so the new behavior feels immediately satisfying rather than only paying off in some distant future.",
+    "withPoll": false
+  },
+  {
+    "title": "Attachment Theory: How Early Bonds Shape Adult Relationships",
+    "category": "Psychology",
+    "tags": ["Psychology", "AttachmentTheory", "Relationships", "ChildDevelopment"],
+    "summary": "Learn how the bonds formed in early childhood continue to shape communication, trust, and conflict patterns well into adulthood.",
+    "content": "Developed by psychologist John Bowlby and later expanded through Mary Ainsworth's famous 'Strange Situation' experiments, attachment theory reveals how the earliest bonds between infant and caregiver create lasting templates for how we relate to others throughout life. 👶❤️\n\n## 🍼 The Four Attachment Styles\n\nResearch identifies secure, anxious, avoidant, and disorganized attachment styles, shaped largely by how consistently and sensitively a caregiver responded to a child's needs in the first years of life. These early patterns tend to persist, resurfacing in adult romantic and professional relationships.\n\n## 💔 How Attachment Shows Up in Adult Relationships\n\nSecurely attached adults tend to communicate needs directly and tolerate conflict comfortably, while anxiously attached individuals may crave reassurance and fear abandonment, and avoidantly attached individuals often withdraw from emotional closeness entirely — patterns that can create predictable friction between mismatched attachment styles.\n\n## 🌱 Earned Security: Attachment Can Change\n\nContrary to early assumptions, attachment style is not fixed for life. Consistent, emotionally attuned relationships in adulthood — whether romantic partnerships or therapy — can help individuals develop what researchers call 'earned secure attachment,' gradually rewriting patterns set in childhood.",
+    "withPoll": false
+  },
+  {
+    "title": "The Science of Happiness: What Actually Makes Us Content",
+    "category": "Psychology",
+    "tags": ["Psychology", "Happiness", "Wellbeing", "PositivePsychology"],
+    "summary": "Separate myth from evidence on what genuinely drives long-term happiness, and why many common assumptions about it are wrong.",
+    "content": "Positive psychology research has spent decades studying what actually makes people happy, often producing counterintuitive findings that challenge popular assumptions about wealth, achievement, and possessions. 😊🔬\n\n## 💰 Why Money Matters Less Than You Think\n\nIncome increases happiness meaningfully up to a point covering basic needs and modest comfort, but beyond that threshold, additional wealth produces steadily diminishing returns on wellbeing — a finding replicated across dozens of countries and income levels.\n\n## 🎯 The Hedonic Treadmill\n\nHumans adapt remarkably quickly to both positive and negative life changes, returning to a relatively stable baseline happiness level after the initial emotional spike from a new job, relationship, or purchase fades — a phenomenon known as hedonic adaptation.\n\n## 🤝 What Reliably Predicts Lasting Happiness\n\nAcross decades of research, strong social relationships consistently emerge as the single strongest predictor of sustained happiness, alongside a sense of purpose, regular physical activity, and practices like gratitude journaling that deliberately redirect attention toward what's going well.",
+    "withPoll": true,
+    "pollQuestion": "What contributes most to your own happiness?",
+    "pollOptions": ["Relationships & Family", "Career & Purpose", "Health & Fitness", "Financial Security", "Personal Growth"]
+  },
+  {
+    "title": "Groupthink: How Conformity Silences Good Ideas",
+    "category": "Psychology",
+    "tags": ["Psychology", "Groupthink", "SocialPsychology", "DecisionMaking"],
+    "summary": "Examine the social psychology phenomenon that causes cohesive groups to make dangerously flawed decisions.",
+    "content": "Coined by psychologist Irving Janis after analyzing disastrous policy decisions, groupthink describes how the desire for harmony and conformity within a tightly-knit group can override critical thinking, leading even brilliant individuals to collectively approve deeply flawed plans. 🫂⚠️\n\n## 🤐 The Illusion of Unanimity\n\nIn groupthink-prone teams, silence gets misread as agreement, dissenters self-censor to avoid conflict, and a false sense of consensus forms that nobody actually holds individually — creating decisions that no single member would have endorsed on their own.\n\n## 🛡️ Mindguards and Self-Appointed Gatekeepers\n\nGroupthink is often reinforced by informal 'mindguards' who shield the group from unwelcome information or dissenting opinions, protecting cohesion at the direct expense of decision quality, frequently without any conscious intent to suppress debate.\n\n## ✅ Structural Defenses Against Groupthink\n\nEffective countermeasures include explicitly assigning a devil's advocate role, seeking outside expert opinions before finalizing decisions, and having leaders withhold their own preference until after the group has debated independently — removing the subtle pressure to simply agree with the boss.",
+    "withPoll": false
+  },
+  {
+    "title": "The Impostor Syndrome Phenomenon: Why Capable People Doubt Themselves",
+    "category": "Psychology",
+    "tags": ["Psychology", "ImpostorSyndrome", "SelfEsteem", "Workplace"],
+    "summary": "Understand why high-achieving people often feel like frauds despite clear evidence of their competence, and how to manage it.",
+    "content": "First identified by psychologists Pauline Clance and Suzanne Imes in the late 1970s, impostor syndrome describes the persistent feeling of being a fraud despite objective evidence of competence and success — a pattern disproportionately common among high achievers. 🎭😰\n\n## 🎯 Who Experiences It, and Why\n\nImpostor feelings appear across genders and professions but are especially common among people entering new, high-stakes environments — new graduates, promoted employees, and members of underrepresented groups navigating spaces where they feel like outsiders.\n\n## 🧩 The Competence-Confidence Gap\n\nImpostor syndrome reveals a mismatch between actual competence and internal confidence: sufferers consistently attribute their successes to luck, timing, or external help, while treating any failure as proof of their 'real' inadequacy — a self-reinforcing cognitive distortion.\n\n## 🛠️ Breaking the Cycle\n\nEffective strategies include deliberately documenting accomplishments and positive feedback to counter selective memory, openly discussing these feelings with trusted peers (which reliably reveals how common the experience is), and reframing discomfort in a new role as evidence of growth rather than fraudulence.",
+    "withPoll": true,
+    "pollQuestion": "Have you ever experienced impostor syndrome?",
+    "pollOptions": ["Yes, Frequently", "Yes, Occasionally", "Rarely", "Never"]
+  },
+  {
+    "title": "Nudge Theory: Designing Choices That Shape Better Decisions",
+    "category": "Psychology",
+    "tags": ["Psychology", "NudgeTheory", "BehavioralEconomics", "PublicPolicy"],
+    "summary": "Explore how subtle changes in how choices are presented can meaningfully improve decisions without restricting anyone's freedom.",
+    "content": "Popularized by economist Richard Thaler and legal scholar Cass Sunstein, nudge theory demonstrates that the way choices are presented — their 'choice architecture' — can powerfully influence decisions without restricting any option or using financial incentives. 🎯🏛️\n\n## 🪄 The Power of Defaults\n\nOne of the most effective nudges simply changes the default option: countries that automatically enroll citizens in organ donation or retirement savings (with an easy opt-out) see dramatically higher participation than those requiring active opt-in, despite offering identical actual choices.\n\n## 🍎 Nudging Healthier, Smarter Choices\n\nSimple interventions — placing healthy food at eye level in cafeterias, sending personalized reminders for medical appointments, or simplifying complex paperwork — have produced outsized improvements in public health and financial outcomes at a fraction of the cost of traditional regulation or incentive programs.\n\n## ⚖️ The Ethics of Nudging\n\nCritics argue that nudges can tip into manipulation if used to serve institutional interests rather than the individual's own goals. Proponents counter that choice architecture is unavoidable — some default must always be set — so the real question is only whether it is designed thoughtfully and transparently.",
+    "withPoll": false
+  }
+]

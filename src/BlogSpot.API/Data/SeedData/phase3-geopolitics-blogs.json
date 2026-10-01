@@ -1,0 +1,46 @@
+[
+  {
+    "title": "The United Nations: Peacekeeping, Diplomacy, and Its Limits",
+    "category": "Geopolitics",
+    "tags": ["Geopolitics", "UnitedNations", "Diplomacy", "InternationalRelations"],
+    "summary": "Examine what the UN can and cannot actually accomplish, from peacekeeping missions to the gridlock of Security Council vetoes.",
+    "content": "Founded in 1945 from the ashes of World War II with a mandate to prevent future global conflicts, the United Nations remains the world's primary forum for international diplomacy — and also one of its most structurally constrained institutions. 🕊️🌐\n\n## 🏛️ How the UN Actually Works\n\nThe General Assembly gives every member nation an equal vote on non-binding resolutions, while the Security Council holds real enforcement power but grants five permanent members (US, UK, France, Russia, China) veto authority that can single-handedly block any binding action.\n\n## 🪖 Peacekeeping's Mixed Track Record\n\nUN peacekeeping missions have successfully stabilized some post-conflict regions, but have also failed catastrophically in cases like Rwanda and Srebrenica, where peacekeepers lacked the mandate or resources to intervene despite being present during mass atrocities.\n\n## ⚖️ The Veto Problem\n\nThe Security Council veto, designed to keep great powers inside the system rather than abandoning it, now frequently paralyzes the UN's ability to respond to conflicts involving a permanent member's interests or allies — a structural limitation that reform proposals have struggled to address for decades.",
+    "withPoll": true,
+    "pollQuestion": "Do you think the UN Security Council veto power should be reformed?",
+    "pollOptions": ["Yes, Abolish It", "Yes, Limit Its Use", "No, Keep As Is", "Not Sure"]
+  },
+  {
+    "title": "Trade Wars: How Tariffs Reshape the Global Economy",
+    "category": "Geopolitics",
+    "tags": ["Geopolitics", "TradeWar", "Tariffs", "Economics"],
+    "summary": "Understand how tariff disputes between major economies ripple through global supply chains and ordinary consumers' wallets.",
+    "content": "When major economies impose tariffs on each other in retaliatory escalation, the effects ripple far beyond the targeted industries — reshaping global supply chains, consumer prices, and diplomatic relationships for years after the headlines fade. 📦⚖️\n\n## 🎯 Why Countries Impose Tariffs\n\nGovernments impose tariffs to protect domestic industries from foreign competition, retaliate against perceived unfair trade practices, or use trade as diplomatic leverage in disputes unrelated to commerce — often all three motivations tangled together in a single dispute.\n\n## 💸 Who Actually Pays the Cost\n\nDespite political rhetoric framing tariffs as costing the foreign exporter, economic research consistently shows domestic importers and consumers absorb most of the actual cost through higher prices, since tariffs are paid at the border by the importing company, not foreign manufacturers.\n\n## 🏭 Supply Chain Realignment\n\nProlonged trade disputes push multinational companies to diversify manufacturing away from tariff-affected countries, accelerating trends like 'friend-shoring' and nearshoring — a restructuring of global supply chains that often outlasts the political dispute that originally triggered it.",
+    "withPoll": false
+  },
+  {
+    "title": "The South China Sea Dispute: A Flashpoint for Global Power",
+    "category": "Geopolitics",
+    "tags": ["Geopolitics", "SouthChinaSea", "InternationalRelations", "Security"],
+    "summary": "Explore why control of this strategic waterway has become one of the most dangerous geopolitical flashpoints of the 21st century.",
+    "content": "Beneath its contested waters lie not just territorial pride but massive shipping lanes, fishing grounds, and energy reserves, making the South China Sea one of the most consequential and dangerous geopolitical flashpoints in the modern world. 🌊⚓\n\n## 🗺️ Overlapping Claims\n\nChina claims sovereignty over nearly the entire South China Sea via its disputed 'nine-dash line,' directly overlapping with claims from Vietnam, the Philippines, Malaysia, Brunei, and Taiwan — creating a dense web of competing territorial assertions with no clear resolution.\n\n## 🚢 Why the Waterway Matters So Much\n\nAn estimated one-third of global shipping passes through these waters annually, carrying trillions of dollars in trade, while the seabed is believed to hold substantial untapped oil and natural gas reserves, giving every claimant enormous economic incentive to assert control.\n\n## ⚖️ International Law Versus Military Reality\n\nAn international tribunal ruled against China's expansive claims in 2016, a decision China has simply ignored while continuing to build militarized artificial islands — illustrating the gap between international legal rulings and what major powers are willing to accept when their strategic interests are at stake.",
+    "withPoll": false
+  },
+  {
+    "title": "Sanctions as Statecraft: Do Economic Penalties Actually Work",
+    "category": "Geopolitics",
+    "tags": ["Geopolitics", "Sanctions", "ForeignPolicy", "Economics"],
+    "summary": "Examine the track record of economic sanctions as a tool of foreign policy and whether they achieve their intended political goals.",
+    "content": "Economic sanctions have become one of the most frequently used tools of modern foreign policy, offering governments a way to punish adversaries without resorting to military force — but their actual track record at achieving stated political goals is far more mixed than their popularity suggests. 💼🚫\n\n## 🎯 The Theory Behind Sanctions\n\nSanctions aim to impose enough economic pain on a target government or its elites that they change the offending behavior, whether that's halting a nuclear program, ending a military occupation, or improving human rights conditions.\n\n## 📊 A Mixed Track Record\n\nAcademic studies estimate sanctions achieve their stated political objective in only around a third of cases, often succeeding more readily against smaller, trade-dependent economies while proving far less effective against larger, more self-sufficient, or authoritarian-controlled states.\n\n## 😔 The Humanitarian Cost Debate\n\nBroad sanctions frequently harm ordinary civilians disproportionately more than the targeted political elite, who often have the resources to insulate themselves — a core criticism that has pushed policymakers toward more 'targeted' sanctions aimed specifically at individual officials and their assets.",
+    "withPoll": true,
+    "pollQuestion": "Do you think economic sanctions are an effective foreign policy tool?",
+    "pollOptions": ["Yes, Usually Effective", "Sometimes, Depends on the Case", "Rarely Effective", "No, Mostly Harm Civilians"]
+  },
+  {
+    "title": "The New Space Race: Nations Competing Beyond Earth's Atmosphere",
+    "category": "Geopolitics",
+    "tags": ["Geopolitics", "SpaceRace", "Technology", "InternationalRelations"],
+    "summary": "Discover how space has re-emerged as a critical arena of geopolitical competition, from lunar bases to military satellite dominance.",
+    "content": "More than half a century after the original Cold War space race, a new and arguably more consequential competition is unfolding beyond Earth's atmosphere — this time involving not just two superpowers but a crowded field of nations and private companies. 🚀🌕\n\n## 🌕 The Race Back to the Moon\n\nMultiple nations and coalitions are racing to establish a sustained lunar presence, driven partly by scientific ambition and partly by the strategic value of lunar resources like water ice, which could support future deep-space missions and, implicitly, military or economic advantage.\n\n## 🛰️ Satellites as Strategic Infrastructure\n\nModern militaries and economies depend heavily on satellite networks for navigation, communication, and surveillance, making orbital assets both a critical vulnerability and a tempting target — spurring investment in anti-satellite weapons and defensive countermeasures by major powers.\n\n## 🏢 Private Companies Reshaping the Field\n\nCompanies like SpaceX have dramatically lowered launch costs through reusable rockets, democratizing access to orbit for smaller nations and private actors while blurring the line between national space programs and commercial enterprise in ways the original Cold War space race never anticipated.",
+    "withPoll": false
+  }
+]

@@ -113,6 +113,10 @@ export class AdminService {
     return this.http.post<{ message: string }>(`${this.apiUrl}/seed-phase-2`, {});
   }
 
+  seedPhase3Data(): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/seed-phase-3`, {});
+  }
+
   // --- Jobs (manual trigger) ---
 
   runJob(job: 'email-queue' | 'post-scheduler' | 'health-check'): Observable<{ message: string }> {
