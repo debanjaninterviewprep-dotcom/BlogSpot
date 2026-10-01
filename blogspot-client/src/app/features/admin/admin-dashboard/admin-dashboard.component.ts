@@ -427,11 +427,12 @@ import { ExportService } from '@core/services/export.service';
                   <option value="format-posts">Format All Posts</option>
                   <option value="seed-data">Seed Dummy Data (40 Tech Blogs)</option>
                   <option value="seed-phase-1">Seed Phase 1 (34 New Blogs)</option>
+                  <option value="seed-phase-2">Seed Phase 2 (33 New Blogs)</option>
                 </select>
               </div>
-              <button mat-raised-button color="primary" (click)="runDataTool()" [disabled]="isSeeding || isFormatting || isPhase1Seeding">
-                <mat-icon>{{ (isSeeding || isFormatting || isPhase1Seeding) ? 'hourglass_empty' : 'play_arrow' }}</mat-icon>
-                {{ (isSeeding || isFormatting || isPhase1Seeding) ? 'Running...' : 'Submit' }}
+              <button mat-raised-button color="primary" (click)="runDataTool()" [disabled]="isSeeding || isFormatting || isPhase1Seeding || isPhase2Seeding">
+                <mat-icon>{{ (isSeeding || isFormatting || isPhase1Seeding || isPhase2Seeding) ? 'hourglass_empty' : 'play_arrow' }}</mat-icon>
+                {{ (isSeeding || isFormatting || isPhase1Seeding || isPhase2Seeding) ? 'Running...' : 'Submit' }}
               </button>
             </div>
           </div>
@@ -806,9 +807,10 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   isSeeding = false;
   isFormatting = false;
   isPhase1Seeding = false;
+  isPhase2Seeding = false;
 
   activeSection: 'users' | 'posts' | 'comments' | 'reading-lists' | 'emails' | 'data-tools' | 'jobs' = 'users';
-  selectedDataTool: 'format-posts' | 'seed-data' | 'seed-phase-1' = 'format-posts';
+  selectedDataTool: 'format-posts' | 'seed-data' | 'seed-phase-1' | 'seed-phase-2' = 'format-posts';
   runningJob: string | null = null;
 
   private destroy$ = new Subject<void>();
@@ -1038,6 +1040,23 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
+  seedPhase2Data(): void {
+    if (!confirm('This will add 33 new blogs (History, Economics, Nature, Education, Art), 5 reading lists, and ~1000 interactions. Proceed?')) return;
+    this.isPhase2Seeding = true;
+    this.adminService.seedPhase2Data().subscribe({
+      next: (res: { message: string }) => {
+        this.isPhase2Seeding = false;
+        this.snackBar.open(res.message, 'Close', { duration: 8000 });
+        this.loadPosts(1);
+        this.loadReadingLists(1);
+      },
+      error: (err: any) => {
+        this.isPhase2Seeding = false;
+        this.snackBar.open(err.error?.message || 'Phase 2 seeding failed', 'Close', { duration: 5000 });
+      }
+    });
+  }
+
   formatPosts(): void {
     if (!confirm('This will convert all plain-text blog posts to formatted HTML. Proceed?')) return;
     this.isFormatting = true;
@@ -1060,6 +1079,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       this.seedData();
     } else if (this.selectedDataTool === 'seed-phase-1') {
       this.seedPhase1Data();
+    } else if (this.selectedDataTool === 'seed-phase-2') {
+      this.seedPhase2Data();
     }
   }
 
