@@ -1,0 +1,46 @@
+[
+  {
+    "title": "Smart Home Technology: Convenience, Privacy, and the Connected House",
+    "category": "NonDevTech",
+    "tags": ["NonDevTech", "SmartHome", "Technology", "Privacy"],
+    "summary": "Explore how smart home devices have transformed everyday living, along with the privacy tradeoffs that come with a connected house.",
+    "content": "From voice assistants to smart thermostats, connected home devices have moved from novelty gadgets to mainstream household fixtures, promising genuine convenience while raising legitimate questions about data privacy and security that many owners don't fully consider. 🏠📡\n\n## 🎛️ The Genuine Convenience Gains\n\nSmart thermostats that learn household patterns, voice-controlled lighting, and automated security systems offer real, measurable convenience and in some cases meaningful energy savings, explaining their rapid adoption across diverse household types.\n\n## 🔒 The Privacy Tradeoffs Few Consider\n\nMany smart home devices continuously collect data about household routines, conversations, and movement patterns, often transmitted to manufacturer servers with privacy policies most users never fully read — a tradeoff for convenience that raises genuine long-term data security questions.\n\n## 🛡️ Practical Security Considerations\n\nSecurity experts recommend practical precautions like changing default passwords immediately, keeping device firmware updated, and researching a manufacturer's data practices before purchase, since smart home devices have historically been common targets for security vulnerabilities and unauthorized access.",
+    "withPoll": true,
+    "pollQuestion": "How many smart home devices do you currently own?",
+    "pollOptions": ["None", "1-2 Devices", "3-5 Devices", "A Fully Connected Home"]
+  },
+  {
+    "title": "Wearable Tech Beyond Fitness: The Expanding World of Smart Devices",
+    "category": "NonDevTech",
+    "tags": ["NonDevTech", "WearableTech", "Technology", "Health"],
+    "summary": "Discover how wearable technology has expanded far beyond step-counting into health monitoring, accessibility, and beyond.",
+    "content": "What began with simple pedometers has evolved into a sophisticated wearable technology ecosystem capable of monitoring heart rhythm, blood oxygen, sleep quality, and increasingly specialized health metrics — transforming wearables from fitness novelty into genuine health monitoring tools. ⌚❤️\n\n## 🩺 From Step Counting to Medical-Grade Monitoring\n\nModern wearables can detect irregular heart rhythms, monitor blood oxygen saturation, and track sleep stages with increasing accuracy, with some devices now receiving regulatory approval as legitimate medical monitoring tools rather than purely consumer fitness gadgets.\n\n## ♿ Accessibility Applications Beyond Fitness\n\nWearable technology increasingly serves accessibility purposes too — fall detection for elderly users, haptic feedback navigation aids for visually impaired users, and continuous glucose monitors for diabetics — expanding the category well beyond its fitness-tracking origins.\n\n## ⚠️ Accuracy and Over-Reliance Concerns\n\nHealth experts caution that consumer wearable accuracy varies significantly by metric and device, and that over-reliance on wearable data without proper medical context can create unnecessary anxiety or false reassurance — wearables are best treated as supplementary tools rather than diagnostic replacements for professional medical care.",
+    "withPoll": false
+  },
+  {
+    "title": "The Right to Repair Movement: Why You Don't Fully Own Your Devices",
+    "category": "NonDevTech",
+    "tags": ["NonDevTech", "RightToRepair", "Technology", "ConsumerRights"],
+    "summary": "Explore the growing right-to-repair movement pushing back against manufacturers that make devices difficult or illegal to fix yourself.",
+    "content": "Many modern devices are deliberately designed to be difficult or impossible for owners to repair themselves, pushing consumers toward costly manufacturer repairs or premature replacement — a practice that has sparked a growing consumer rights movement demanding change. 🔧📱\n\n## 🔒 How Manufacturers Restrict Repairs\n\nCommon practices include proprietary screws requiring specialized tools, software locks that disable functionality when non-manufacturer parts are installed, and withholding repair manuals and replacement parts from independent repair shops and consumers alike.\n\n## ⚖️ The Legislative Pushback\n\nRight-to-repair advocates have successfully pushed for legislation in multiple jurisdictions requiring manufacturers to make repair documentation, tools, and parts available to consumers and independent repair shops, though enforcement and manufacturer compliance remain ongoing battles.\n\n## 🌍 The Environmental Dimension\n\nBeyond consumer cost concerns, right-to-repair advocates emphasize the environmental toll of premature device replacement — reduced repairability directly contributes to growing electronic waste, making this as much an environmental sustainability issue as a consumer rights one.",
+    "withPoll": true,
+    "pollQuestion": "Have you ever been unable to repair a device due to manufacturer restrictions?",
+    "pollOptions": ["Yes, Frequently", "Yes, Once or Twice", "No", "Wasn't Aware This Happens"]
+  },
+  {
+    "title": "Digital Minimalism: Reclaiming Attention From Your Devices",
+    "category": "NonDevTech",
+    "tags": ["NonDevTech", "DigitalMinimalism", "Technology", "Wellbeing"],
+    "summary": "Explore the digital minimalism movement advocating intentional, selective technology use rather than passive constant connectivity.",
+    "content": "As smartphone notifications and app design increasingly compete for every spare moment of attention, a growing digital minimalism movement advocates a different approach: deliberately curating technology use around clear values rather than defaulting to constant passive engagement. 📵🧠\n\n## 🎯 Intentionality Over Restriction\n\nUnlike simple digital detoxes, digital minimalism isn't about rejecting technology entirely — it's about deliberately evaluating which specific apps and digital habits genuinely serve personal values and removing or restricting those that don't, however popular they may be.\n\n## 🔔 Understanding Attention-Capture Design\n\nMany popular apps are deliberately engineered using variable reward mechanisms and infinite-scroll design specifically to maximize engagement time, understanding which many digital minimalists cite as the reason they've deliberately removed certain apps entirely rather than relying on willpower alone.\n\n## 🛠️ Practical Digital Minimalism Strategies\n\nCommon practices include scheduled 'digital declutters,' moving distracting apps off the home screen or removing them entirely, replacing passive scrolling habits with specific intentional activities, and auditing notification settings aggressively to reduce unplanned interruptions throughout the day.",
+    "withPoll": false
+  },
+  {
+    "title": "The E-Waste Crisis: Where Do Our Old Devices Really Go?",
+    "category": "NonDevTech",
+    "tags": ["NonDevTech", "EWaste", "Environment", "Technology"],
+    "summary": "Understand the growing global electronic waste problem and what happens to devices after they're discarded.",
+    "content": "As consumer electronics become cheaper and more disposable, global electronic waste has grown into one of the fastest-growing waste streams worldwide, much of it containing valuable recoverable materials alongside genuinely hazardous substances requiring careful handling. 🗑️📱\n\n## 📈 A Rapidly Growing Problem\n\nShortened product lifecycles, difficult-to-repair designs, and constant incentives to upgrade have combined to make electronic waste one of the fastest-growing categories of global waste, even as formal recycling infrastructure struggles to keep pace with the volume generated.\n\n## ☠️ Hazardous Materials and Health Risks\n\nElectronic waste often contains lead, mercury, and other hazardous materials that can contaminate soil and water when improperly processed, disproportionately affecting workers and communities in regions where much international e-waste ends up being informally dismantled.\n\n## ♻️ Toward a Circular Electronics Economy\n\nSolutions increasingly focus on extending product lifespans through better repairability, formal manufacturer take-back and recycling programs, and designing new devices specifically for easier material recovery at end-of-life — shifting the industry toward genuine circular economy principles rather than a disposable product model.",
+    "withPoll": false
+  }
+]

@@ -429,11 +429,12 @@ import { ExportService } from '@core/services/export.service';
                   <option value="seed-phase-1">Seed Phase 1 (34 New Blogs)</option>
                   <option value="seed-phase-2">Seed Phase 2 (33 New Blogs)</option>
                   <option value="seed-phase-3">Seed Phase 3 (31 New Blogs)</option>
+                  <option value="seed-phase-4">Seed Phase 4 (54 New Blogs)</option>
                 </select>
               </div>
-              <button mat-raised-button color="primary" (click)="runDataTool()" [disabled]="isSeeding || isFormatting || isPhase1Seeding || isPhase2Seeding || isPhase3Seeding">
-                <mat-icon>{{ (isSeeding || isFormatting || isPhase1Seeding || isPhase2Seeding || isPhase3Seeding) ? 'hourglass_empty' : 'play_arrow' }}</mat-icon>
-                {{ (isSeeding || isFormatting || isPhase1Seeding || isPhase2Seeding || isPhase3Seeding) ? 'Running...' : 'Submit' }}
+              <button mat-raised-button color="primary" (click)="runDataTool()" [disabled]="isSeeding || isFormatting || isPhase1Seeding || isPhase2Seeding || isPhase3Seeding || isPhase4Seeding">
+                <mat-icon>{{ (isSeeding || isFormatting || isPhase1Seeding || isPhase2Seeding || isPhase3Seeding || isPhase4Seeding) ? 'hourglass_empty' : 'play_arrow' }}</mat-icon>
+                {{ (isSeeding || isFormatting || isPhase1Seeding || isPhase2Seeding || isPhase3Seeding || isPhase4Seeding) ? 'Running...' : 'Submit' }}
               </button>
             </div>
           </div>
@@ -810,9 +811,10 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   isPhase1Seeding = false;
   isPhase2Seeding = false;
   isPhase3Seeding = false;
+  isPhase4Seeding = false;
 
   activeSection: 'users' | 'posts' | 'comments' | 'reading-lists' | 'emails' | 'data-tools' | 'jobs' = 'users';
-  selectedDataTool: 'format-posts' | 'seed-data' | 'seed-phase-1' | 'seed-phase-2' | 'seed-phase-3' = 'format-posts';
+  selectedDataTool: 'format-posts' | 'seed-data' | 'seed-phase-1' | 'seed-phase-2' | 'seed-phase-3' | 'seed-phase-4' = 'format-posts';
   runningJob: string | null = null;
 
   private destroy$ = new Subject<void>();
@@ -1076,6 +1078,23 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
+  seedPhase4Data(): void {
+    if (!confirm('This will add 54 new blogs (Society, Mythology, Hobbies, Innovation, Religion, Parenting, Self-Improvement, Non-Dev Technology, News, Environment), 10 reading lists, and ~1500 interactions. Proceed?')) return;
+    this.isPhase4Seeding = true;
+    this.adminService.seedPhase4Data().subscribe({
+      next: (res: { message: string }) => {
+        this.isPhase4Seeding = false;
+        this.snackBar.open(res.message, 'Close', { duration: 8000 });
+        this.loadPosts(1);
+        this.loadReadingLists(1);
+      },
+      error: (err: any) => {
+        this.isPhase4Seeding = false;
+        this.snackBar.open(err.error?.message || 'Phase 4 seeding failed', 'Close', { duration: 5000 });
+      }
+    });
+  }
+
   formatPosts(): void {
     if (!confirm('This will convert all plain-text blog posts to formatted HTML. Proceed?')) return;
     this.isFormatting = true;
@@ -1102,6 +1121,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       this.seedPhase2Data();
     } else if (this.selectedDataTool === 'seed-phase-3') {
       this.seedPhase3Data();
+    } else if (this.selectedDataTool === 'seed-phase-4') {
+      this.seedPhase4Data();
     }
   }
 

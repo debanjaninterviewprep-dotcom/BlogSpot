@@ -1,0 +1,46 @@
+[
+  {
+    "title": "Comparative Religion: What the World's Faiths Share in Common",
+    "category": "Religion",
+    "tags": ["Religion", "ComparativeReligion", "Culture", "Philosophy"],
+    "summary": "Explore the surprising common threads running through the world's major religious traditions despite their vastly different theologies.",
+    "content": "Despite wildly different theological frameworks, sacred texts, and rituals, the world's major religious traditions share a surprising number of core ethical and existential concerns — suggesting shared human needs that different cultures addressed through distinct but structurally similar frameworks. 🕊️🌍\n\n## ⚖️ The Golden Rule's Universal Presence\n\nVersions of the golden rule — treat others as you wish to be treated — appear independently across Christianity, Islam, Judaism, Buddhism, Hinduism, and Confucianism, among others, suggesting this ethical principle may reflect something close to a universal human moral intuition.\n\n## 🙏 Shared Existential Concerns\n\nNearly every major religion grapples with the same fundamental questions — the meaning of suffering, what happens after death, and how to live a morally good life — even when their specific answers diverge dramatically, reflecting shared human anxieties about mortality and purpose.\n\n## 🤝 Why Comparative Study Matters\n\nStudying religions comparatively, rather than in isolation, reveals that interfaith conflict often centers on specific doctrinal or political differences rather than fundamentally incompatible values — a perspective increasingly emphasized in interfaith dialogue efforts worldwide.",
+    "withPoll": true,
+    "pollQuestion": "Do you think major religions share more in common than they differ?",
+    "pollOptions": ["Yes, Mostly Similar Values", "Some Common Ground", "Mostly Different", "Depends on the Religion"]
+  },
+  {
+    "title": "The Science of Prayer and Ritual: Why Humans Seek the Sacred",
+    "category": "Religion",
+    "tags": ["Religion", "Ritual", "Psychology", "Neuroscience"],
+    "summary": "Examine what neuroscience and psychology reveal about why ritual and prayer practices provide measurable psychological benefits.",
+    "content": "Across virtually every culture and era, humans have developed ritual and prayer practices — and modern neuroscience is increasingly uncovering measurable psychological and even physiological benefits that may explain why these behaviors emerged and persisted so universally. 🧠🙏\n\n## 🧠 What Brain Imaging Reveals\n\nStudies on experienced meditators and prayer practitioners show altered activity in brain regions associated with attention, emotional regulation, and sense of self, suggesting these practices produce measurable neurological changes rather than purely symbolic or placebo effects.\n\n## 🔄 Ritual as Anxiety Management\n\nResearch on ritual behavior — both religious and secular — consistently finds that structured, repeated actions reduce anxiety during uncertain situations, from exam preparation to pre-performance rituals among elite athletes, suggesting ritual serves a genuine psychological regulatory function.\n\n## 🤝 The Social Bonding Function\n\nShared communal rituals — religious services, ceremonies, synchronized group activities — reliably strengthen social cohesion and group identity, a function evolutionary psychologists argue may have been as important to ritual's persistence across human history as any individual spiritual benefit.",
+    "withPoll": false
+  },
+  {
+    "title": "Religious Pluralism: Living Peacefully Across Faith Divides",
+    "category": "Religion",
+    "tags": ["Religion", "Pluralism", "Society", "Diversity"],
+    "summary": "Explore how diverse societies navigate coexistence among different faith traditions, and what makes pluralism succeed or fail.",
+    "content": "As migration and globalization bring increasingly diverse religious communities into shared societies, religious pluralism — the genuine coexistence of multiple faith traditions within one community — has become both a practical necessity and an ongoing social challenge. 🕌⛪\n\n## 🤝 What Distinguishes Pluralism From Mere Tolerance\n\nScholars distinguish passive tolerance (simply not persecuting other faiths) from genuine pluralism, which requires active engagement, mutual understanding, and institutional structures ensuring different religious communities can practice freely while participating fully in shared civic life.\n\n## 🏛️ Models That Have Worked\n\nCountries with long histories of religious diversity have developed varied approaches — from strict separation of religion and state to formal recognition of multiple official faiths — each navigating the balance between respecting religious difference and maintaining shared civic cohesion differently.\n\n## ⚠️ Where Pluralism Breaks Down\n\nReligious pluralism tends to fail not from theological disagreement alone but when religious identity becomes entangled with political power, economic competition, or historical grievance — suggesting that successful pluralism requires addressing underlying social and political tensions, not just religious tolerance in the abstract.",
+    "withPoll": false
+  },
+  {
+    "title": "Sacred Texts Compared: Stories That Shaped Civilizations",
+    "category": "Religion",
+    "tags": ["Religion", "SacredTexts", "Literature", "History"],
+    "summary": "Compare how different religious traditions' foundational texts shaped law, ethics, and culture across entire civilizations.",
+    "content": "Sacred texts have done more than guide individual belief — they've shaped legal systems, literature, art, and entire civilizational identities for thousands of years, making them among the most historically influential documents ever written. 📖🏛️\n\n## 📜 Law and Ethics Encoded in Scripture\n\nThe Torah's legal codes, the Quran's guidance on commerce and justice, and Confucian texts' social ethics directly shaped the legal and moral frameworks of entire civilizations for centuries, well beyond their purely religious function.\n\n## 🎨 Cultural and Artistic Influence\n\nSacred narratives have inspired some of history's greatest art, architecture, and literature — from Renaissance paintings depicting biblical scenes to Islamic calligraphy and Hindu temple sculpture — demonstrating how religious texts shaped aesthetic traditions far beyond their original religious context.\n\n## 🌍 Interpretation as an Ongoing Process\n\nEvery major sacred text has generated centuries of scholarly interpretation and reinterpretation, often producing significantly different understandings across different eras and communities — a reminder that sacred texts function as living traditions of interpretation, not static, singularly-understood documents.",
+    "withPoll": true,
+    "pollQuestion": "Which sacred text are you most interested in learning about?",
+    "pollOptions": ["The Bible", "The Quran", "The Bhagavad Gita", "Buddhist Sutras", "Not Particularly Interested"]
+  },
+  {
+    "title": "Secularism and Faith: Navigating Religion in a Modern World",
+    "category": "Religion",
+    "tags": ["Religion", "Secularism", "Society", "ModernLife"],
+    "summary": "Examine the evolving relationship between religious belief and secular public life in increasingly diverse modern societies.",
+    "content": "As more people worldwide identify as religiously unaffiliated while religious belief remains deeply important to billions of others, modern societies face an ongoing challenge: how to structure public institutions fairly for both religious and secular citizens alike. 🏛️🙏\n\n## 📉 The Rise of Religious 'Nones'\n\nMany countries have seen significant growth in religiously unaffiliated populations over recent decades, though this shift varies enormously by region and doesn't necessarily indicate declining spirituality so much as declining institutional religious affiliation specifically.\n\n## ⚖️ Secular Governance Doesn't Mean Anti-Religious\n\nSecularism, properly understood, means government neutrality toward religion rather than hostility to it — a distinction often lost in public debate, where secular governance is sometimes mischaracterized as inherently anti-faith rather than simply religiously non-discriminatory.\n\n## 🤝 Finding Common Ground in Pluralistic Societies\n\nThe most successful modern approaches tend to protect robust religious freedom for individuals and communities while maintaining religiously neutral public institutions — a balance that remains genuinely difficult to strike and continues generating legitimate debate in diverse democracies worldwide.",
+    "withPoll": false
+  }
+]

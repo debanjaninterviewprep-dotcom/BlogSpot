@@ -1371,6 +1371,270 @@ public class AdminService : IAdminService
         return phase3Summary;
     }
 
+    public async Task<string> SeedPhase4Async(string? actorUserName = null, CancellationToken ct = default)
+    {
+        // Get existing REGULAR users only (not admin) - created by SeedDummyDataAsync
+        var existingUsers = await _uow.Users.Query()
+            .Where(u => u.Role != UserRole.Admin)
+            .ToListAsync(ct);
+        if (existingUsers.Count < 30)
+            return "Error: Please run the initial seed (/seed) first to create 30 base users.";
+
+        // Also get all users (including admin) for engagement data like likes and comments
+        var allUsers = await _uow.Users.Query().ToListAsync(ct);
+        var random = new Random(45);
+
+        // Get or create Phase 4 tags
+        var phase4Categories = new[] { "Society", "Mythology", "Hobbies", "Innovation", "Religion", "Parenting", "SelfImprovement", "NonDevTech", "News", "Environment" };
+        var existingTags = await _uow.Tags.Query().ToListAsync(ct);
+        var tagsToAdd = new List<Tag>();
+
+        foreach (var tagName in phase4Categories)
+        {
+            if (!existingTags.Any(t => t.Name == tagName))
+            {
+                tagsToAdd.Add(new Tag { Name = tagName, NormalizedName = tagName.ToUpperInvariant() });
+            }
+        }
+
+        if (tagsToAdd.Any())
+        {
+            await _uow.Tags.AddRangeAsync(tagsToAdd, ct);
+            await _uow.SaveChangesAsync(ct);
+            existingTags.AddRange(tagsToAdd);
+        }
+
+        // Load Phase 4 blogs from JSON files
+        var phase4BlogsByCategory = new Dictionary<string, List<Phase1BlogSeedData>>();
+
+        try
+        {
+            foreach (var category in phase4Categories)
+            {
+                var blogs = await Phase4SeedDataLoader.LoadCategoryBlogsAsync(null, category);
+                phase4BlogsByCategory[category] = blogs;
+            }
+        }
+        catch (Exception ex)
+        {
+            return $"Error loading Phase 4 data files: {ex.Message}";
+        }
+
+        // Create Phase 4 blog posts (skip any whose slug already exists so re-runs are idempotent)
+        var phase4Posts = new List<BlogPost>();
+        var phase4PostsWithData = new List<(BlogPost Post, Phase1BlogSeedData Data)>();
+        var phase4PostTags = new List<BlogPostTag>();
+        var existingSlugs = (await _uow.BlogPosts.Query().Select(p => p.Slug).ToListAsync(ct))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var skippedPostCount = 0;
+
+        foreach (var categoryEntry in phase4BlogsByCategory)
+        {
+            foreach (var blogData in categoryEntry.Value)
+            {
+                var author = existingUsers[random.Next(existingUsers.Count)];
+                var slug = blogData.Title.ToLowerInvariant()
+                    .Replace(":", "").Replace("?", "").Replace("'", "")
+                    .Replace("  ", " ").Replace(" ", "-")
+                    .Replace(".", "").Replace(",", "");
+
+                if (!existingSlugs.Add(slug))
+                {
+                    skippedPostCount++;
+                    continue;
+                }
+
+                var post = new BlogPost
+                {
+                    Title = blogData.Title,
+                    Content = blogData.Content,
+                    Summary = blogData.Summary,
+                    Slug = slug,
+                    IsPublished = true,
+                    IsDraft = false,
+                    AuthorId = author.Id,
+                    ViewCount = random.Next(10, 300),
+                    ReadingTimeMinutes = random.Next(3, 10),
+                    Category = blogData.Category,
+                    CreatedAt = DateTime.UtcNow.AddDays(-random.Next(5, 45)).AddHours(-random.Next(0, 24))
+                };
+                phase4Posts.Add(post);
+                phase4PostsWithData.Add((post, blogData));
+
+                // Add tags
+                foreach (var tagName in blogData.Tags)
+                {
+                    var tag = existingTags.FirstOrDefault(t => t.Name == tagName);
+                    if (tag != null)
+                        phase4PostTags.Add(new BlogPostTag { BlogPostId = post.Id, TagId = tag.Id });
+                }
+            }
+        }
+
+        await _uow.BlogPosts.AddRangeAsync(phase4Posts, ct);
+        await _uow.SaveChangesAsync(ct);
+
+        // Save post tags
+        _dbContext.Set<BlogPostTag>().AddRange(phase4PostTags);
+        await _dbContext.SaveChangesAsync(ct);
+
+        // Create engagement data for Phase 4 blogs (use allUsers to include admin for diversity)
+        var phase4Likes = new List<Like>();
+        foreach (var post in phase4Posts)
+        {
+            var likerCount = random.Next(10, 30);
+            var likers = allUsers.OrderBy(_ => random.Next()).Take(likerCount);
+            foreach (var liker in likers)
+                phase4Likes.Add(new Like { UserId = liker.Id, BlogPostId = post.Id });
+        }
+        await _uow.Likes.AddRangeAsync(phase4Likes, ct);
+        await _uow.SaveChangesAsync(ct);
+
+        // Create comments for Phase 4 blogs
+        var commentTexts = new[]
+        {
+            "Excellent article! Learned so much from this.",
+            "Great insights! Very informative and well-written.",
+            "This is exactly what I was looking for. Thank you!",
+            "Bookmarked for future reference. Outstanding content.",
+            "Really appreciate the depth and clarity. Well done!",
+            "This has genuinely helped me understand the topic better.",
+            "Sharing this with my colleagues. It's fantastic!",
+            "The examples make everything so clear. Love it!",
+            "Been struggling with this concept for months. Finally it clicks!",
+            "One of the best explanations I've read on this topic.",
+            "This deserves way more recognition. Brilliant work!",
+            "Practical and actionable. Exactly what I needed.",
+            "The writing style makes complex topics accessible.",
+            "Saved my day! This solved my problem perfectly.",
+            "Comprehensive and thorough. Kudos!",
+        };
+
+        var phase4Comments = new List<Comment>();
+        foreach (var post in phase4Posts)
+        {
+            var commentCount = random.Next(5, 15);
+            for (int c = 0; c < commentCount; c++)
+            {
+                var commenter = existingUsers[random.Next(existingUsers.Count)];
+                phase4Comments.Add(new Comment
+                {
+                    BlogPostId = post.Id,
+                    UserId = commenter.Id,
+                    Content = commentTexts[random.Next(commentTexts.Length)],
+                    CreatedAt = post.CreatedAt.AddHours(random.Next(2, 168))
+                });
+            }
+        }
+        await _uow.Comments.AddRangeAsync(phase4Comments, ct);
+        await _uow.SaveChangesAsync(ct);
+
+        // Create Reactions, Reposts, and Polls (shared helper so future phases get this for free)
+        var engagementExtras = await SeedEngagementExtrasAsync(phase4PostsWithData, allUsers, random, ct);
+
+        // Create Phase 4 reading lists (skip any that already exist so re-runs are idempotent)
+        var phase4ReadingLists = new List<ReadingList>();
+        var readingListConfig = Phase4SeedDataLoader.GetPhase4ReadingListsConfig();
+        var configNames = readingListConfig.Select(c => c.Name).ToList();
+        var existingListNames = (await _uow.ReadingLists.Query()
+                .Where(rl => configNames.Contains(rl.Name))
+                .Select(rl => rl.Name)
+                .ToListAsync(ct))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var createdListCategories = new List<string>();
+
+        foreach (var (name, description, ownerUsername, category) in readingListConfig)
+        {
+            if (existingListNames.Contains(name))
+                continue;
+
+            var owner = existingUsers.FirstOrDefault(u => u.UserName == ownerUsername);
+            if (owner == null)
+                return $"Error: Seeded user '{ownerUsername}' not found. Please run the initial seed (/seed) first.";
+
+            var readingList = new ReadingList
+            {
+                Name = name,
+                Description = description,
+                IsPublic = true,
+                UserId = owner.Id,
+                CreatedAt = DateTime.UtcNow.AddDays(-random.Next(10, 60))
+            };
+            phase4ReadingLists.Add(readingList);
+            createdListCategories.Add(category);
+        }
+
+        await _uow.ReadingLists.AddRangeAsync(phase4ReadingLists, ct);
+        await _uow.SaveChangesAsync(ct);
+
+        // Add blogs to reading lists (5-8 per list), sourcing from all posts in the DB for each category
+        var readingListItems = new List<ReadingListItem>();
+        var phase4ListCategories = readingListConfig.Select(c => c.Category).ToList();
+        var blogsPerCategory = (await _uow.BlogPosts.Query()
+                .Where(p => p.Category != null && phase4ListCategories.Contains(p.Category))
+                .Select(p => new { p.Id, p.Category })
+                .ToListAsync(ct))
+            .GroupBy(p => p.Category!)
+            .ToDictionary(g => g.Key, g => g.Select(p => p.Id).ToList());
+
+        for (int i = 0; i < phase4ReadingLists.Count; i++)
+        {
+            var readingList = phase4ReadingLists[i];
+            var category = createdListCategories[i];
+
+            if (blogsPerCategory.TryGetValue(category, out var categoryBlogs) && categoryBlogs.Count > 0)
+            {
+                // Take 5-8 blogs, or fewer if category has fewer blogs
+                var count = Math.Min(random.Next(5, 9), categoryBlogs.Count);
+                var blogsToAdd = categoryBlogs.OrderBy(_ => random.Next()).Take(count);
+                foreach (var blogId in blogsToAdd)
+                {
+                    readingListItems.Add(new ReadingListItem
+                    {
+                        ReadingListId = readingList.Id,
+                        BlogPostId = blogId
+                    });
+                }
+            }
+            else
+            {
+                // Log warning if category has no blogs
+                var availableCategories = string.Join(", ", blogsPerCategory.Keys);
+                await _log.Warn(ActivityActions.AdminAction, nameof(AdminService), actorUserName, $"Phase 4: No blogs found for category '{category}' in reading list. Available categories: {availableCategories}", ct);
+            }
+        }
+
+        await _uow.ReadingListItems.AddRangeAsync(readingListItems, ct);
+        await _uow.SaveChangesAsync(ct);
+
+        // Create reading list followers (6-20 per list, no self-follows, never the admin account)
+        var readingListFollowers = new List<ReadingListFollow>();
+
+        foreach (var readingList in phase4ReadingLists)
+        {
+            var followerCount = random.Next(6, 21);
+            // For followers, use allUsers but exclude the owner and any admin to prevent self-follows/admin noise
+            var potentialFollowers = allUsers.Where(u => u.Id != readingList.UserId && u.Role != UserRole.Admin).OrderBy(_ => random.Next()).Take(followerCount);
+
+            foreach (var follower in potentialFollowers)
+            {
+                readingListFollowers.Add(new ReadingListFollow
+                {
+                    ReadingListId = readingList.Id,
+                    UserId = follower.Id
+                });
+            }
+        }
+
+        await _uow.ReadingListFollows.AddRangeAsync(readingListFollowers, ct);
+        await _uow.SaveChangesAsync(ct);
+
+        var phase4Summary = $"✅ Phase 4 Seeded: {phase4Posts.Count} blogs ({skippedPostCount} skipped as duplicates), {phase4ReadingLists.Count} reading lists, {readingListItems.Count} reading list items, {phase4Likes.Count} likes, {phase4Comments.Count} comments, {engagementExtras.Reactions} reactions, {engagementExtras.Reposts} reposts, {engagementExtras.Polls} polls ({engagementExtras.PollVotes} votes), {readingListFollowers.Count} reading list followers.";
+        await _log.Info(ActivityActions.AdminAction, nameof(AdminService), actorUserName, phase4Summary, ct);
+        return phase4Summary;
+    }
+
     /// <summary>
     /// Seeds Reactions (Love/Fire/Clap), Reposts (~40% with a quote), and Polls+Options+Votes
     /// (for blogs authored with poll data) for a batch of newly-created posts. Shared by every
